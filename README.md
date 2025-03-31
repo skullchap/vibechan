@@ -70,6 +70,9 @@ Just don't manually write logic. That’s illegal here.
 
 ## 🛠️ How To Contribute
 
+**New to VibeChan?**  
+Check out our [CONTRIBUTORS.md](CONTRIBUTORS.md) file to get an overview of the project architecture and learn how everything works!
+
 1. Fork the repo  
 2. Fire up your favorite AI coding environment  
 3. Prompt your way into a new feature, fix, or chaos  
