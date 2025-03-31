@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="assets/promo/chana.png" alt="Old Chana Logo" height="120"/>
-  <img src="assets/promo/arrow.png" alt="Arrow" height="120" style="margin: 0 20px;"/>
-  <img src="assets/promo/vibechan.png" alt="VibeChan Banner" height="120"/>
+  <img src="assets/promo/chana.png" alt="Old Chana Logo" height="150"/>
+  <img src="assets/promo/arrow.png" alt="Arrow" height="150" style="margin: 0 20px;"/>
+  <img src="assets/promo/vibechan.png" alt="VibeChan Banner" height="150"/>
 </p>
 
 # 🌀 VibeChan
