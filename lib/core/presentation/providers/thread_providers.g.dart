@@ -6,11 +6,11 @@ part of 'thread_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$threadRepositoryHash() => r'ff806c0b57f7d6d21c704f3ebfe1732278e892d6';
+String _$threadRepositoryHash() => r'60612995ed4a4d2199acdedbe5b9b63b4aa8d86d';
 
 /// See also [threadRepository].
 @ProviderFor(threadRepository)
-final threadRepositoryProvider = AutoDisposeProvider<ThreadRepository>.internal(
+final threadRepositoryProvider = Provider<ThreadRepository>.internal(
   threadRepository,
   name: r'threadRepositoryProvider',
   debugGetCreateSourceHash:
@@ -23,7 +23,7 @@ final threadRepositoryProvider = AutoDisposeProvider<ThreadRepository>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef ThreadRepositoryRef = AutoDisposeProviderRef<ThreadRepository>;
+typedef ThreadRepositoryRef = ProviderRef<ThreadRepository>;
 String _$catalogNotifierHash() => r'87d0a1ed4746a4b0b3575bd06ec46ae272701f5f';
 
 /// Copied from Dart SDK

@@ -16,21 +16,20 @@ class FourChanRepository implements BoardRepository, ThreadRepository {
   static const String _watchedThreadsKey = '4chan_watched_threads';
   List<Board>? _cachedBoards;
 
-  FourChanRepository(
-    @Named('4chan') this._dataSource,
-    this._prefs,
-  );
+  FourChanRepository(@Named('4chan') this._dataSource, this._prefs);
 
+  // --------------------
   // BaseBoardRepository implementation
+  // --------------------
   @override
-  Future<List<Board>> getAll() async {
+  Future<List<Board>> getBoards() async {
     _cachedBoards ??= await _dataSource.getBoards();
     return _cachedBoards!;
   }
 
   @override
-  Future<Board?> getById(String id) async {
-    final boards = await getAll();
+  Future<Board?> getBoardById(String id) async {
+    final boards = await getBoards();
     try {
       return boards.firstWhere((b) => b.id == id);
     } catch (e) {
@@ -38,77 +37,67 @@ class FourChanRepository implements BoardRepository, ThreadRepository {
     }
   }
 
-  @override
-  Future<void> create(Board board) {
-    throw UnimplementedError('Direct board creation not supported');
-  }
-
-  @override
-  Future<void> update(Board board) {
-    throw UnimplementedError('Direct board update not supported');
-  }
-
-  @override
-  Future<void> delete(String id) {
-    throw UnimplementedError('Direct board deletion not supported');
-  }
-
   // BoardRepository specific methods
   @override
   Future<List<Board>> getWorkSafeBoards() async {
-    final boards = await getAll();
+    final boards = await getBoards();
     return boards.where((b) => b.isWorksafe).toList();
   }
 
   @override
   Future<List<Board>> getNSFWBoards() async {
-    final boards = await getAll();
+    final boards = await getBoards();
     return boards.where((b) => !b.isWorksafe).toList();
   }
 
   @override
   Future<void> refreshBoards() async {
     _cachedBoards = null;
-    await getAll();
+    await getBoards();
   }
 
+  // --------------------
   // BaseThreadRepository implementation
+  // --------------------
   @override
-  Future<List<Thread>> getCatalog(String boardId) async {
+  Future<List<Thread>> getThreads(String boardId) async {
     final threads = await _dataSource.getBoardCatalog(boardId);
     final watchedThreads = _getWatchedThreads();
-    return threads.map((t) => t.copyWith(
-      isWatched: watchedThreads.contains('${boardId}_${t.id}')
-    )).toList();
+    return threads
+        .map(
+          (t) => t.copyWith(
+            isWatched: watchedThreads.contains('${boardId}_${t.id}'),
+          ),
+        )
+        .toList();
   }
 
   @override
-  Future<Thread> getThreadWithReplies(String boardId, String threadId) async {
+  Future<Thread?> getThreadById(String boardId, String threadId) async {
     final thread = await _dataSource.getThread(boardId, threadId);
+    if (thread == null) return null;
     final watchedThreads = _getWatchedThreads();
     return thread.copyWith(
-      isWatched: watchedThreads.contains('${boardId}_${threadId}')
+      isWatched: watchedThreads.contains('${boardId}_$threadId'),
     );
   }
 
-  @override
-  Future<List<Thread>> getAll() => throw UnimplementedError('Use getCatalog(boardId) instead');
-
-  @override
-  Future<Thread?> getById(String id) => throw UnimplementedError('Use getThreadWithReplies(boardId, threadId) instead');
-
-  @override
-  Future<void> create(Thread thread) => throw UnimplementedError('Use createReply instead');
-
-  @override
-  Future<void> update(Thread thread) => throw UnimplementedError('Thread updates not supported');
-
-  @override
-  Future<void> delete(String id) => throw UnimplementedError('Thread deletion not supported');
-
   // ThreadRepository specific methods
   @override
-  Future<List<Thread>> getArchive(String boardId) => _dataSource.getArchive(boardId);
+  Future<List<Thread>> getCatalog(String boardId) => getThreads(boardId);
+
+  @override
+  Future<Thread> getThreadWithReplies(String boardId, String threadId) async {
+    final thread = await getThreadById(boardId, threadId);
+    if (thread == null) {
+      throw Exception("Thread not found");
+    }
+    return thread;
+  }
+
+  @override
+  Future<List<Thread>> getArchive(String boardId) =>
+      _dataSource.getArchive(boardId);
 
   @override
   Future<void> refreshThread(String boardId, String threadId) async {

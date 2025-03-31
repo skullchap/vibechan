@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/models/board.dart';
@@ -10,20 +11,21 @@ BoardRepository boardRepository(Ref ref) {
   throw UnimplementedError('Provider must be overridden with a specific implementation');
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class BoardsNotifier extends _$BoardsNotifier {
   @override
   Future<List<Board>> build() async {
-    return ref.watch(boardRepositoryProvider).getAll();
+    // Use getBoards() (defined in BaseBoardRepository) instead of getAll()
+    return ref.watch(boardRepositoryProvider).getBoards();
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(boardRepositoryProvider).getAll());
+    state = await AsyncValue.guard(() => ref.read(boardRepositoryProvider).getBoards());
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class WorksafeBoardsNotifier extends _$WorksafeBoardsNotifier {
   @override
   Future<List<Board>> build() async {
@@ -31,8 +33,8 @@ class WorksafeBoardsNotifier extends _$WorksafeBoardsNotifier {
   }
 }
 
-@riverpod
-class NsfwBoardsNotifier extends _$NsfwBoardsNotifier {
+@Riverpod(keepAlive: true)
+class NSFWBoardsNotifier extends _$NSFWBoardsNotifier {
   @override
   Future<List<Board>> build() async {
     return ref.watch(boardRepositoryProvider).getNSFWBoards();

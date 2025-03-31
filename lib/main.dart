@@ -8,8 +8,19 @@ import 'core/di/injection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await configureDependencies();
-  runApp(const ProviderScope(child: VibeChanApp()));
+
+  // Get the container from GetIt (it has the overrides inside).
+  final container = await getIt.getAsync<ProviderContainer>();
+
+  // Provide it to the app:
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const VibeChanApp(),
+    ),
+  );
 }
+
 
 class VibeChanApp extends StatelessWidget {
   const VibeChanApp({super.key});
