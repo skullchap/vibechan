@@ -1,0 +1,55 @@
+**Prompt:**
+
+Act as a senior Flutter application architect and developer. Your task is to design the architecture and outline the core features for a modern, **agnostic reader application** built with Flutter. This application will initially provide first-tier support for **4chan**, but its core design *must* facilitate easy expansion to other platforms like Reddit, Hacker News, Lobsters, and other chan-style boards in the future.
+
+**Core Requirements & Constraints:**
+
+1.  **Platform:** Flutter
+2.  **UI Framework:** Material 3, aiming for a modern, clean aesthetic.
+3.  **Theming:** Utilize `flex_color_scheme` for robust light/dark theme support and easy customization.
+4.  **State Management:** `riverpod`
+5.  **Networking:** `dio` (configure for efficient caching, error handling, and request management).
+6.  **Routing:** `go_router` for declarative routing.
+7.  **Dependency Injection:** `get_it` combined with `injectable` for compile-time safety and boilerplate reduction.
+8.  **Local Storage:**
+    *   `sqflite`: For structured data caching (e.g., boards, threads, posts for offline access or faster loading).
+    *   `shared_preferences`: For user settings, preferences, and simple state persistence.
+9.  **UI Components & Layout:**
+    *   Implement **grid views** (e.g., using `flutter_staggered_grid_view` or similar) for displaying board catalogs or thread previews effectively.
+    *   Include a **"Carousel Mode"** for media consumption within threads. This should allow vertical swiping (similar to TikTok/Reels) through images, GIFs, and WebMs/videos present in a thread.
+10. **Architecture:**
+    *   **Agnostic & Extensible:** This is paramount. Design a layered architecture (e.g., Presentation -> Domain -> Data) with clear separation of concerns.
+    *   **Data Layer Abstraction:** Define abstract `DataSource`, `Repository` interfaces (e.g., `BoardRepository`, `ThreadRepository`, `PostRepository`, `MediaRepository`). The initial implementation will be concrete classes for the 4chan API, but the rest of the app should depend only on the abstractions.
+    *   **Modularity:** Structure the project potentially by feature or layer to keep it organized as it grows.
+11. **Initial Focus: 4chan Support:**
+    *   Leverage the 4chan API (e.g., `a.4cdn.org/board/catalog.json`, `a.4cdn.org/board/thread/thread_no.json`, etc.).
+    *   Support *all* core 4chan reading features:
+        *   Fetching and displaying the list of boards.
+        *   Displaying board content (catalog view, paginated thread lists).
+        *   Viewing threads, including OP and all replies.
+        *   Rendering post content: text, formatting (quotes \(>>12345\), spoilers), metadata (ID, name, tripcode, capcode, timestamp, flags if available).
+        *   Inline and fullscreen viewing of media (Images: JPG, PNG, GIF; Video: WebM). Handle media loading and display efficiently.
+        *   Parsing and potentially navigating cross-thread/board links.
+        *   Thread watching/auto-update mechanism (consider background refresh logic).
+        *   (Optional but consider): Basic filtering capabilities (e.g., hide threads by keyword).
+12. **Modern Dependencies:** Feel free to suggest other modern, well-maintained packages that would enhance the application (e.g., `cached_network_image` for images, a robust video player package for WebM, `freezed` for data models/state, `flutter_markdown` if needed for other sources later).
+
+**Deliverables:**
+
+Please provide the following:
+
+/////
+
+1.  **High-Level Architecture Overview:** Describe the chosen architecture (layers, modules) and how it ensures agnosticism.
+2.  **Core Data Models (Abstract):** Define the structure for key data models like `Board`, `Thread`, `Post`, `MediaItem`, `Author`, etc., independent of any specific source. Use Dart classes/interfaces, potentially with `freezed`.
+3.  **Data Layer Design:** Outline the key abstract `Repository` interfaces and briefly describe the role of the concrete `FourChanDataSource` and `FourChanRepository` implementations.
+4.  **State Management Strategy:** Explain how `riverpod` will be used to manage application state, fetch data, and handle dependencies, particularly concerning the abstracted repositories.
+5.  **UI Structure Outline:** Describe the main screens/widgets (e.g., `BoardListScreen`, `ThreadGridScreen`, `ThreadDetailScreen`, `MediaCarouselViewer`) and how `go_router` will manage navigation between them.
+6.  **Carousel Mode Implementation Sketch:** Briefly describe how the media carousel feature might be implemented (e.g., data preparation, widget structure, state management).
+7.  **Extensibility Plan:** Explain the concrete steps required to add a new data source (e.g., Reddit) later. What classes/interfaces need to be implemented? How would the UI adapt if needed?
+8.  **Key Dependencies Summary:** List the core recommended packages and their roles.
+9.  **Potential Challenges:** Identify any foreseeable technical challenges (e.g., API rate limits, media handling complexity, state synchronization, caching strategies).
+
+Focus on providing a solid architectural foundation and feature outline that addresses all the requirements, especially the agnostic nature and the specific Flutter stack requested.
+
+/////
