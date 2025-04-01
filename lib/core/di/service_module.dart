@@ -8,9 +8,9 @@ abstract class ServiceModule {
   Future<SharedPreferences> get prefs => SharedPreferences.getInstance();
 
   @singleton
-  Dio get dio => Dio()
-    ..interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-    ));
+  Dio get dio => Dio();
+  // ..interceptors.add(LogInterceptor(
+  //   requestBody: true,
+  //   responseBody: true,
+  // ));
 }
