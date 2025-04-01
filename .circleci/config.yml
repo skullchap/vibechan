@@ -29,21 +29,15 @@ jobs:
       - run:
           name: Install GitHub CLI
           command: |
-            apt-get update && apt-get install -y gnupg curl unzip
+            apt-get update && apt-get install -y curl unzip
             curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
             echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
             apt-get update && apt-get install -y gh
       - run:
-          name: Authenticate GitHub CLI
-          command: echo "$GH_TOKEN" | gh auth login --with-token
-      - run:
-          name: Create GitHub Release & Upload APK
+          name: Upload APK to GitHub Release
           command: |
             VERSION_TAG=$(git describe --tags)
-            gh release create "$VERSION_TAG" \
-              build/app/outputs/flutter-apk/app-release.apk \
-              --title "$VERSION_TAG" \
-              --notes "Release $VERSION_TAG"
+            gh release create "$VERSION_TAG" build/app/outputs/flutter-apk/app-release.apk --title "$VERSION_TAG" --notes "Release $VERSION_TAG"
 
 workflows:
   version: 2
