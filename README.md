@@ -14,6 +14,14 @@ This is not just a rewrite. This is a **vibecoded resurrection**. We're building
 
 ---
 
+## 📣 Join the Community
+
+Have questions, feedback, or want to follow development updates?
+
+👉 [Join our Telegram channel for discussions](https://t.me/g_technology)
+
+---
+
 ## 🌈 What's VibeChan?
 
 A collaborative weekend-ish project where the only goal is to create *something fun*, powered entirely by AI-generated code. You don’t have to understand what the code does. You don’t even have to write it.
