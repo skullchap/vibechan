@@ -1,28 +1,19 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
 set -e
 
-# Find the latest tag
-latest_tag=$(git tag --sort=-v:refname | grep -E '^v0\.0\.[0-9]+$' | head -n 1)
+# Read current version
+CURRENT_VERSION=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 | sed 's/^v//')
+IFS='.' read -r MAJOR MINOR PATCH <<< "${CURRENT_VERSION:-0.0.0}"
 
-if [ -z "$latest_tag" ]; then
-  echo "No tag found. Starting at v0.0.1"
-  new_tag="v0.0.1"
-else
-  echo "Latest tag: $latest_tag"
+# Increment PATCH
+PATCH=$((PATCH + 1))
+NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
 
-  # Extract patch number and increment it
-  patch=$(echo "$latest_tag" | cut -d '.' -f 3)
-  patch=$((patch + 1))
+# Commit version bump (optional)
+git commit --allow-empty -m "Release $NEW_VERSION"
 
-  new_tag="v0.0.$patch"
-fi
+# Tag and push
+git tag "$NEW_VERSION"
+git push origin "$NEW_VERSION"
 
-echo "Creating new tag: $new_tag"
-
-# Create and push the tag
-git tag "$new_tag"
-git push origin "$new_tag"
-
-echo "✅ Tagged and pushed: $new_tag"
-echo "🚀 This will trigger CircleCI to build and release."
+echo "Tagged and pushed $NEW_VERSION"
