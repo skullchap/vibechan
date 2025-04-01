@@ -1,0 +1,40 @@
+version: 2.1
+
+executors:
+  flutter-executor:
+    docker:
+      - image: ghcr.io/cirruslabs/flutter:stable
+    working_directory: ~/repo
+
+jobs:
+  build-android:
+    executor: flutter-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Accept Android licenses
+          command: yes | sdkmanager --licenses || true
+
+      - run:
+          name: Check Flutter environment
+          command: flutter doctor -v
+
+      - run:
+          name: Build Android release APK
+          command: flutter build apk --release
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/app/outputs/flutter-apk/app-release.apk
+
+workflows:
+  build-on-tag:
+    jobs:
+      - build-android:
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
