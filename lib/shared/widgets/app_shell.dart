@@ -162,18 +162,20 @@ class _AppShellState extends ConsumerState<AppShell> {
                     )
                     : const Center(child: Text('No tabs open')),
           ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 1.0,
+          SafeArea(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: 1.0,
+                  ),
                 ),
               ),
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: tabs.map(_buildTabButton).toList()),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: tabs.map(_buildTabButton).toList()),
+              ),
             ),
           ),
         ],
