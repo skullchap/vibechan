@@ -1,0 +1,4 @@
+enum CatalogViewMode {
+  grid,
+  mediaFeed,
+}

@@ -68,7 +68,13 @@ class _PostVideoState extends State<PostVideo> {
                 : Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(widget.media.thumbnailUrl, fit: BoxFit.cover),
+                    Container(
+                      color: ColorScheme.of(context).onSurface,
+                      child: Image.network(
+                        widget.media.thumbnailUrl,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                     const Center(
                       child: Icon(
                         Icons.play_circle_fill,

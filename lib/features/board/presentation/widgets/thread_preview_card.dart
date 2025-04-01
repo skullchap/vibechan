@@ -1,20 +1,27 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-
-import '../../../../core/domain/models/thread.dart';
-import '../../../../shared/widgets/html_text.dart';
+import 'package:vibechan/core/domain/models/media.dart';
+import 'package:vibechan/core/domain/models/thread.dart';
+import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
+import 'package:vibechan/shared/widgets/html_text.dart';
 
 class ThreadPreviewCard extends StatelessWidget {
   final Thread thread;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final bool fullWidth;
+  final bool squareAspect;
+  final bool useFullMedia;
 
   const ThreadPreviewCard({
     super.key,
     required this.thread,
     required this.onTap,
     this.onLongPress,
+    this.fullWidth = false,
+    this.squareAspect = false,
+    this.useFullMedia = false,
   });
 
   @override
@@ -30,25 +37,31 @@ class ThreadPreviewCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (media != null) ...[
-              AspectRatio(
-                aspectRatio: media.width / media.height,
-                child: CachedNetworkImage(
-                  imageUrl: media.thumbnailUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: Container(
-                      color: Colors.white,
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => const Center(
-                    child: Icon(Icons.error),
-                  ),
+            if (media != null)
+              Card(
+                margin: EdgeInsets.all(0),
+                child: AspectRatio(
+                  aspectRatio: useFullMedia ? 1 : media.width / media.height,
+                  child:
+                      media.type == MediaType.video && useFullMedia
+                          ? PostVideo(media: media)
+                          : CachedNetworkImage(
+                            imageUrl:
+                                useFullMedia ? media.url : media.thumbnailUrl,
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(color: Colors.white),
+                                ),
+                            errorWidget:
+                                (context, url, error) =>
+                                    const Center(child: Icon(Icons.error)),
+                          ),
                 ),
               ),
-            ],
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
