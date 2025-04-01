@@ -44,6 +44,7 @@ dependencies:
   url_launcher: ^6.2.5
   share_plus: ^10.1.4
   collection: ^1.18.0
+  uuid: ^4.3.3
 
   # Player
   media_kit: ^1.1.11 # Primary package.
