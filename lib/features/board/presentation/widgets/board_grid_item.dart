@@ -5,11 +5,13 @@ import '../../../../core/domain/models/board.dart';
 class BoardGridItem extends StatelessWidget {
   final Board board;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const BoardGridItem({
     super.key,
     required this.board,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -18,6 +20,7 @@ class BoardGridItem extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(

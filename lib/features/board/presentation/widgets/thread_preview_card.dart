@@ -8,11 +8,13 @@ import '../../../../shared/widgets/html_text.dart';
 class ThreadPreviewCard extends StatelessWidget {
   final Thread thread;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const ThreadPreviewCard({
     super.key,
     required this.thread,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -24,6 +26,7 @@ class ThreadPreviewCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
