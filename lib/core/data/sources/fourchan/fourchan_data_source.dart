@@ -8,7 +8,6 @@ import '../chan_data_source.dart';
 import 'fourchan_config.dart';
 import 'models/fourchan_board.dart';
 import 'models/fourchan_thread.dart';
-import 'models/fourchan_post.dart';
 
 @LazySingleton(as: ChanDataSource)
 @Named('4chan')

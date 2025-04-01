@@ -12,17 +12,15 @@ abstract class FourChanPost with _$FourChanPost {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory FourChanPost({
     // Core IDs
-    @Default(0) int no,            // post number
-    @Default(0) int resto,         // thread number if this is a reply; 0 if OP
-
+    @Default(0) int no, // post number
+    @Default(0) int resto, // thread number if this is a reply; 0 if OP
     // Thread settings
     @Default(0) int sticky,
     @Default(0) int closed,
 
     // Timestamps
-    String? now,                   // "MM/DD/YY(Day)HH:MM"
-    @Default(0) int time,          // Unix timestamp
-
+    String? now, // "MM/DD/YY(Day)HH:MM"
+    @Default(0) int time, // Unix timestamp
     // Poster Info
     @Default('Anonymous') String name,
     String? trip,
@@ -38,7 +36,7 @@ abstract class FourChanPost with _$FourChanPost {
     @Default('') String com,
 
     // Image / Attachment
-    @Default(0) int tim,           // 4chan's unique image timestamp
+    @Default(0) int tim, // 4chan's unique image timestamp
     String? filename,
     String? ext,
     @Default(0) int fsize,
@@ -70,30 +68,32 @@ abstract class FourChanPost with _$FourChanPost {
 
   /// Converts this DTO into your domain `Post` model.
   Post toPost(String boardId, String threadId) => Post(
-        id: no.toString(),
-        boardId: boardId,
-        threadId: threadId,
-        timestamp: DateTime.fromMillisecondsSinceEpoch(time * 1000),
-        name: name.isEmpty ? 'Anonymous' : name,
-        tripcode: trip,
-        subject: sub,
-        comment: com,
-        // If we have some notion of "referencedPosts," define it here
-        // e.g. referencedPosts: ...
-        media: (tim != 0 && ext != null && ext!.isNotEmpty)
+    id: no.toString(),
+    boardId: boardId,
+    threadId: threadId,
+    timestamp: DateTime.fromMillisecondsSinceEpoch(time * 1000),
+    name: name.isEmpty ? 'Anonymous' : name,
+    tripcode: trip,
+    subject: sub,
+    comment: com,
+    // If we have some notion of "referencedPosts," define it here
+    // e.g. referencedPosts: ...
+    media:
+        (tim != 0 && ext != null && ext!.isNotEmpty)
             ? Media(
-                filename: '$filename$ext',
-                url: 'https://i.4cdn.org/$boardId/$tim$ext',
-                thumbnailUrl: 'https://i.4cdn.org/$boardId/${tim}s.jpg',
-                type: ext == '.webm'
-                    ? MediaType.video
-                    : ext == '.gif'
-                        ? MediaType.gif
-                        : MediaType.image,
-                width: w,
-                height: h,
-                size: fsize,
-              )
+              filename: '$filename$ext',
+              url: 'https://i.4cdn.org/$boardId/$tim$ext',
+              thumbnailUrl: 'https://i.4cdn.org/$boardId/${tim}s.jpg',
+              type:
+                  (ext == '.webm' || ext == '.mp4')
+                      ? MediaType.video
+                      : ext == '.gif'
+                      ? MediaType.gif
+                      : MediaType.image,
+              width: w,
+              height: h,
+              size: fsize,
+            )
             : null,
-      );
+  );
 }

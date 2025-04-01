@@ -15,7 +15,7 @@ abstract class FourChanThread with _$FourChanThread {
   const factory FourChanThread({
     // Core IDs
     @Default(0) int no,
-    @Default(0) int resto,    // If this is a reply, the OP's post number; 0 if OP
+    @Default(0) int resto, // If this is a reply, the OP's post number; 0 if OP
     @Default(0) int sticky,
     @Default(0) int closed,
 
@@ -86,21 +86,23 @@ abstract class FourChanThread with _$FourChanThread {
       subject: sub,
       comment: com,
       isOp: true,
-      media: (tim != 0 && ext != null && ext!.isNotEmpty)
-          ? Media(
-              filename: '$filename$ext',
-              url: 'https://i.4cdn.org/$boardId/$tim$ext',
-              thumbnailUrl: 'https://i.4cdn.org/$boardId/${tim}s.jpg',
-              type: ext == '.webm'
-                  ? MediaType.video
-                  : ext == '.gif'
-                      ? MediaType.gif
-                      : MediaType.image,
-              width: w,
-              height: h,
-              size: fsize,
-            )
-          : null,
+      media:
+          (tim != 0 && ext != null && ext!.isNotEmpty)
+              ? Media(
+                filename: '$filename$ext',
+                url: 'https://i.4cdn.org/$boardId/$tim$ext',
+                thumbnailUrl: 'https://i.4cdn.org/$boardId/${tim}s.jpg',
+                type:
+                    (ext == '.webm' || ext == '.mp4')
+                        ? MediaType.video
+                        : ext == '.gif'
+                        ? MediaType.gif
+                        : MediaType.image,
+                width: w,
+                height: h,
+                size: fsize,
+              )
+              : null,
     );
 
     // If we're viewing the actual thread endpoint, "posts" is populated
@@ -111,7 +113,8 @@ abstract class FourChanThread with _$FourChanThread {
       id: no.toString(),
       boardId: boardId,
       originalPost: op,
-      replies: repliesList.map((p) => p.toPost(boardId, no.toString())).toList(),
+      replies:
+          repliesList.map((p) => p.toPost(boardId, no.toString())).toList(),
       isSticky: sticky == 1,
       isClosed: closed == 1,
       repliesCount: replies,
