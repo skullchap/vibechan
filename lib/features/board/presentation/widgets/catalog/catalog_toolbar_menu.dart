@@ -23,7 +23,7 @@ class CatalogToolbarMenu extends StatelessWidget {
               child: Text('Grid View'),
             ),
             const PopupMenuItem(
-              value: CatalogViewMode.mediaFeed,
+              value: CatalogViewMode.media,
               child: Text('Media Feed'),
             ),
           ],

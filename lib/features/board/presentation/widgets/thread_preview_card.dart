@@ -45,19 +45,22 @@ class ThreadPreviewCard extends StatelessWidget {
                   child:
                       media.type == MediaType.video && useFullMedia
                           ? PostVideo(media: media)
-                          : CachedNetworkImage(
-                            imageUrl:
-                                useFullMedia ? media.url : media.thumbnailUrl,
-                            fit: BoxFit.cover,
-                            placeholder:
-                                (context, url) => Shimmer.fromColors(
-                                  baseColor: Colors.grey[300]!,
-                                  highlightColor: Colors.grey[100]!,
-                                  child: Container(color: Colors.white),
-                                ),
-                            errorWidget:
-                                (context, url, error) =>
-                                    const Center(child: Icon(Icons.error)),
+                          : Container(
+                            color: ColorScheme.of(context).onSurface,
+                            child: CachedNetworkImage(
+                              imageUrl:
+                                  useFullMedia ? media.url : media.thumbnailUrl,
+                              fit: BoxFit.contain,
+                              placeholder:
+                                  (context, url) => Shimmer.fromColors(
+                                    baseColor: Colors.grey[300]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Container(color: Colors.white),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) =>
+                                      const Center(child: Icon(Icons.error)),
+                            ),
                           ),
                 ),
               ),

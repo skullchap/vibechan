@@ -75,7 +75,6 @@ class FourChanRepository implements BoardRepository, ThreadRepository {
   @override
   Future<Thread?> getThreadById(String boardId, String threadId) async {
     final thread = await _dataSource.getThread(boardId, threadId);
-    if (thread == null) return null;
     final watchedThreads = _getWatchedThreads();
     return thread.copyWith(
       isWatched: watchedThreads.contains('${boardId}_$threadId'),

@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../config/app_config.dart';
 import '../models/tab_item.dart';
 import '../providers/tab_manager_provider.dart';
-import '../../features/board/presentation/widgets/catalog/catalog_toolbar_menu.dart';
 import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart';
 import 'content_tab_view.dart';
 
-final catalogViewModeProvider = StateProvider<CatalogViewMode>((ref) {
-  return CatalogViewMode.grid;
-});
-
 class AppShell extends ConsumerStatefulWidget {
-  const AppShell({Key? key}) : super(key: key);
+  const AppShell({super.key});
 
   @override
   ConsumerState<AppShell> createState() => _AppShellState();
@@ -59,20 +53,31 @@ class _AppShellState extends ConsumerState<AppShell> {
       appBar: AppBar(
         title: Text(appBarTitle),
         actions: [
-          if (activeTab?.route.startsWith('/board/') == true &&
-              !activeTab!.route.contains('thread')) ...[
-            Consumer(
-              builder: (context, ref, _) {
-                final mode = ref.watch(catalogViewModeProvider);
-                return CatalogToolbarMenu(
-                  selected: mode,
-                  onSelected: (newMode) {
-                    ref.read(catalogViewModeProvider.notifier).state = newMode;
-                  },
-                );
-              },
-            ),
-          ],
+          Consumer(
+            builder: (context, ref, _) {
+              final mode = ref.watch(catalogViewModeProvider);
+              return PopupMenuButton<CatalogViewMode>(
+                tooltip: 'Layout mode',
+                initialValue: mode,
+                onSelected:
+                    (mode) =>
+                        ref.read(catalogViewModeProvider.notifier).set(mode),
+
+                icon: const Icon(Icons.view_compact),
+                itemBuilder:
+                    (context) => [
+                      const PopupMenuItem(
+                        value: CatalogViewMode.grid,
+                        child: Text('Grid View'),
+                      ),
+                      const PopupMenuItem(
+                        value: CatalogViewMode.media,
+                        child: Text('Media Feed'),
+                      ),
+                    ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'New Tab',

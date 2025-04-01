@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../config/router.dart';
 import '../../features/board/presentation/screens/board_list_screen.dart';
 import '../../features/board/presentation/screens/board_catalog_screen.dart';
 import '../../features/board/presentation/screens/favorites_screen.dart';
@@ -14,9 +13,9 @@ class ContentTabView extends ConsumerWidget {
   final TabItem tab;
   
   const ContentTabView({
-    Key? key,
+    super.key,
     required this.tab,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context, WidgetRef ref) {
