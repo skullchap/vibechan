@@ -18,6 +18,7 @@ import '../../features/hackernews/presentation/screens/hackernews_screen.dart'; 
 import '../../features/lobsters/presentation/screens/lobsters_screen.dart';
 // Import the HN provider and enum for the AppBar controls
 import '../../features/hackernews/presentation/providers/hackernews_stories_provider.dart';
+import '../../core/presentation/widgets/settings_dialog.dart'; // Import the settings dialog
 
 import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart';
 // Import detail screens
@@ -162,6 +163,16 @@ class _AppShellState extends ConsumerState<AppShell> {
             );
           },
         ),
+      IconButton(
+        icon: const Icon(Icons.settings),
+        tooltip: 'Settings',
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => const SettingsDialog(),
+          );
+        },
+      ),
     ];
 
     // Wrap Scaffold with WillPopScope

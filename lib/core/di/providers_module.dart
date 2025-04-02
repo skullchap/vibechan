@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/repositories/board_repository.dart';
 import '../domain/repositories/thread_repository.dart';
 import '../data/repositories/fourchan_repository.dart';
-import '../presentation/providers/board_providers.dart';
-import '../presentation/providers/thread_providers.dart';
+// Remove unused provider imports if they were only for the container override
+// import '../presentation/providers/board_providers.dart';
+// import '../presentation/providers/thread_providers.dart';
 
 @module
 abstract class ProvidersModule {
@@ -13,16 +14,16 @@ abstract class ProvidersModule {
   @Named('4chan')
   BoardRepository provideBoardRepository(
     @Named('4chan') FourChanRepository repository,
-  ) =>
-      repository;
+  ) => repository;
 
   @lazySingleton
   @Named('4chan')
   ThreadRepository provideThreadRepository(
     @Named('4chan') FourChanRepository repository,
-  ) =>
-      repository;
+  ) => repository;
 
+  // Remove the ProviderContainer registration
+  /*
   @singleton
   ProviderContainer provideContainer(
     @Named('4chan') BoardRepository boardRepository,
@@ -36,4 +37,5 @@ abstract class ProvidersModule {
     );
     return container;
   }
+  */
 }
