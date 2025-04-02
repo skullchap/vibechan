@@ -13,7 +13,7 @@ final currentLobstersSortTypeProvider = StateProvider<LobstersSortType>(
   (ref) => LobstersSortType.hottest,
 );
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<GenericListItem>> lobstersStories(
   LobstersStoriesRef ref,
   LobstersSortType sortType,

@@ -5,7 +5,7 @@ import 'package:vibechan/features/lobsters/domain/repositories/lobsters_reposito
 
 part 'lobsters_story_detail_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<LobstersStory> lobstersStoryDetail(
   LobstersStoryDetailRef ref,
   String storyId,

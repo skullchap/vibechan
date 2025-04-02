@@ -6,7 +6,7 @@ part of 'lobsters_stories_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$lobstersStoriesHash() => r'f1a57be8ee581fc8efd26371cb698a686114fd82';
+String _$lobstersStoriesHash() => r'343c8d7ac0d926f6d0b70301ca6287e310b17e91';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -66,8 +66,7 @@ class LobstersStoriesFamily extends Family<AsyncValue<List<GenericListItem>>> {
 }
 
 /// See also [lobstersStories].
-class LobstersStoriesProvider
-    extends AutoDisposeFutureProvider<List<GenericListItem>> {
+class LobstersStoriesProvider extends FutureProvider<List<GenericListItem>> {
   /// See also [lobstersStories].
   LobstersStoriesProvider(LobstersSortType sortType)
     : this._internal(
@@ -116,7 +115,7 @@ class LobstersStoriesProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<GenericListItem>> createElement() {
+  FutureProviderElement<List<GenericListItem>> createElement() {
     return _LobstersStoriesProviderElement(this);
   }
 
@@ -136,14 +135,13 @@ class LobstersStoriesProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin LobstersStoriesRef
-    on AutoDisposeFutureProviderRef<List<GenericListItem>> {
+mixin LobstersStoriesRef on FutureProviderRef<List<GenericListItem>> {
   /// The parameter `sortType` of this provider.
   LobstersSortType get sortType;
 }
 
 class _LobstersStoriesProviderElement
-    extends AutoDisposeFutureProviderElement<List<GenericListItem>>
+    extends FutureProviderElement<List<GenericListItem>>
     with LobstersStoriesRef {
   _LobstersStoriesProviderElement(super.provider);
 

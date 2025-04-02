@@ -27,7 +27,7 @@ final layoutServiceProvider = AutoDisposeProvider<LayoutService>.internal(
 // ignore: unused_element
 typedef LayoutServiceRef = AutoDisposeProviderRef<LayoutService>;
 String _$layoutStateNotifierHash() =>
-    r'a357c8ae3ef3d33b0555ff7d2eb9f7345b96a3fc';
+    r'a5e843c033bc412d0d872075da6d14731ef98d86';
 
 /// Riverpod provider for current layout state
 ///

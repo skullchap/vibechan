@@ -46,7 +46,7 @@ class ThreadPreviewCard extends StatelessWidget {
                       media.type == MediaType.video && useFullMedia
                           ? PostVideo(media: media)
                           : Container(
-                            color: ColorScheme.of(context).onSurface,
+                            color: ColorScheme.of(context).scrim,
                             child: CachedNetworkImage(
                               imageUrl:
                                   useFullMedia ? media.url : media.thumbnailUrl,

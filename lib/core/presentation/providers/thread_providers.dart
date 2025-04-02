@@ -8,10 +8,12 @@ part 'thread_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 ThreadRepository threadRepository(Ref ref) {
-  throw UnimplementedError('Provider must be overridden with a specific implementation');
+  throw UnimplementedError(
+    'Provider must be overridden with a specific implementation',
+  );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class CatalogNotifier extends _$CatalogNotifier {
   @override
   Future<List<Thread>> build(String boardId) async {
@@ -20,20 +22,28 @@ class CatalogNotifier extends _$CatalogNotifier {
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(threadRepositoryProvider).getCatalog(boardId));
+    state = await AsyncValue.guard(
+      () => ref.read(threadRepositoryProvider).getCatalog(boardId),
+    );
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ThreadNotifier extends _$ThreadNotifier {
   @override
   Future<Thread> build(String boardId, String threadId) async {
-    return ref.watch(threadRepositoryProvider).getThreadWithReplies(boardId, threadId);
+    return ref
+        .watch(threadRepositoryProvider)
+        .getThreadWithReplies(boardId, threadId);
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => ref.read(threadRepositoryProvider).getThreadWithReplies(boardId, threadId));
+    state = await AsyncValue.guard(
+      () => ref
+          .read(threadRepositoryProvider)
+          .getThreadWithReplies(boardId, threadId),
+    );
   }
 
   Future<void> toggleWatch() async {

@@ -5,7 +5,7 @@ import 'package:vibechan/features/hackernews/domain/repositories/hackernews_repo
 
 part 'hackernews_item_detail_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<HackerNewsItem> hackerNewsItemDetail(
   HackerNewsItemDetailRef ref,
   int itemId,

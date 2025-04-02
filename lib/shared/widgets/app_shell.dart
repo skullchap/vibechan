@@ -120,60 +120,276 @@ class _AppShellState extends ConsumerState<AppShell>
         Consumer(
           builder: (context, ref, _) {
             final mode = ref.watch(catalogViewModeProvider);
+            final theme = Theme.of(context);
+            final colorScheme = theme.colorScheme;
+
             return PopupMenuButton<CatalogViewMode>(
               tooltip: 'Layout mode',
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 3,
+              color: colorScheme.surfaceContainer,
               initialValue: mode,
               onSelected:
                   (mode) =>
                       ref.read(catalogViewModeProvider.notifier).set(mode),
-              icon: const Icon(Icons.view_compact_outlined),
-              itemBuilder:
-                  (context) => [
-                    const PopupMenuItem(
-                      value: CatalogViewMode.grid,
-                      child: ListTile(
-                        leading: Icon(Icons.grid_view),
-                        title: Text('Grid View'),
-                      ),
+              // Show current layout icon
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      mode == CatalogViewMode.grid
+                          ? Icons.grid_view
+                          : Icons.photo_library,
+                      color: colorScheme.onSurface,
+                      size: 22,
                     ),
-                    const PopupMenuItem(
-                      value: CatalogViewMode.media,
-                      child: ListTile(
-                        leading: Icon(Icons.photo_library),
-                        title: Text('Media Feed'),
-                      ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: colorScheme.onSurface,
+                      size: 24,
                     ),
                   ],
+                ),
+              ),
+              // Menu items
+              itemBuilder: (context) {
+                return [
+                  PopupMenuItem(
+                    value: CatalogViewMode.grid,
+                    padding: EdgeInsets.zero,
+                    height: 56,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              mode == CatalogViewMode.grid
+                                  ? colorScheme.primaryContainer
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.grid_view,
+                              size: 20,
+                              color:
+                                  mode == CatalogViewMode.grid
+                                      ? colorScheme.onPrimaryContainer
+                                      : colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                'Grid View',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight:
+                                      mode == CatalogViewMode.grid
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                  color:
+                                      mode == CatalogViewMode.grid
+                                          ? colorScheme.onPrimaryContainer
+                                          : colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            if (mode == CatalogViewMode.grid)
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 18,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: CatalogViewMode.media,
+                    padding: EdgeInsets.zero,
+                    height: 56,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              mode == CatalogViewMode.media
+                                  ? colorScheme.primaryContainer
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.photo_library,
+                              size: 20,
+                              color:
+                                  mode == CatalogViewMode.media
+                                      ? colorScheme.onPrimaryContainer
+                                      : colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                'Media Feed',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight:
+                                      mode == CatalogViewMode.media
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                  color:
+                                      mode == CatalogViewMode.media
+                                          ? colorScheme.onPrimaryContainer
+                                          : colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            if (mode == CatalogViewMode.media)
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 18,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ];
+              },
             );
           },
         ),
       // HN Sort Dropdown (conditionally shown)
       if (activeTab?.initialRouteName == 'hackernews')
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: DropdownButton<HackerNewsSortType>(
-            value: currentHnSortType,
-            underline: Container(),
-            icon: const Icon(Icons.sort),
-            items:
-                HackerNewsSortType.values
-                    .map(
-                      (sortType) => DropdownMenuItem(
-                        value: sortType,
-                        child: Text(
-                          sortType.name[0].toUpperCase() +
-                              sortType.name.substring(1),
-                        ),
+        Builder(
+          builder: (context) {
+            final theme = Theme.of(context);
+            final colorScheme = theme.colorScheme;
+
+            return PopupMenuButton<HackerNewsSortType>(
+              tooltip: 'Sort stories',
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 3,
+              color: colorScheme.surfaceContainer,
+              // Show current sort type
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.sort, color: colorScheme.onSurface, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      currentHnSortType.name[0].toUpperCase() +
+                          currentHnSortType.name.substring(1),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
                       ),
-                    )
-                    .toList(),
-            onChanged: (newSortType) {
-              if (newSortType != null) {
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: colorScheme.onSurface,
+                      size: 24,
+                    ),
+                  ],
+                ),
+              ),
+              // Menu items
+              itemBuilder:
+                  (context) =>
+                      HackerNewsSortType.values.map((sortType) {
+                        final isSelected = sortType == currentHnSortType;
+                        final sortName =
+                            sortType.name[0].toUpperCase() +
+                            sortType.name.substring(1);
+
+                        return PopupMenuItem<HackerNewsSortType>(
+                          value: sortType,
+                          padding: EdgeInsets.zero,
+                          height: 56,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? colorScheme.primaryContainer
+                                        : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      sortName,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight:
+                                                isSelected
+                                                    ? FontWeight.w600
+                                                    : FontWeight.normal,
+                                            color:
+                                                isSelected
+                                                    ? colorScheme
+                                                        .onPrimaryContainer
+                                                    : colorScheme.onSurface,
+                                          ),
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Icon(
+                                      Icons.check_circle_outline,
+                                      size: 18,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+              onSelected: (newSortType) {
                 ref.read(currentHackerNewsSortTypeProvider.notifier).state =
                     newSortType;
-              }
-            },
-          ),
+              },
+            );
+          },
         ),
       IconButton(
         icon: const Icon(Icons.settings),
@@ -271,98 +487,104 @@ class _AppShellState extends ConsumerState<AppShell>
         bottomNavigationBar:
             !useSideNavigation
                 ? SafeArea(
-                  child: Container(
-                    height: 50, // Adjust height as needed
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(
-                      color:
-                          Theme.of(
-                            context,
-                          ).colorScheme.surfaceVariant, // Or appropriate color
-                      border: Border(
-                        top: BorderSide(
-                          color: Theme.of(context).dividerColor,
-                          width: 0.5,
+                  child: Builder(
+                    builder: (context) {
+                      final colorScheme = Theme.of(context).colorScheme;
+
+                      return Container(
+                        height: 50, // Adjust height as needed
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color:
+                              colorScheme
+                                  .surfaceContainerLow, // Use Material 3 surface container
+                          border: Border(
+                            top: BorderSide(
+                              color: colorScheme.outlineVariant,
+                              width: 0.5,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    // Add Listener to intercept scroll wheel events -> Restore
-                    child: Listener(
-                      onPointerSignal: (pointerSignal) {
-                        if (pointerSignal is PointerScrollEvent) {
-                          final double scrollAmount =
-                              pointerSignal.scrollDelta.dy;
-                          final double sensitivity =
-                              30.0; // Adjust scroll sensitivity
+                        // Add Listener to intercept scroll wheel events -> Restore
+                        child: Listener(
+                          onPointerSignal: (pointerSignal) {
+                            if (pointerSignal is PointerScrollEvent) {
+                              final double scrollAmount =
+                                  pointerSignal.scrollDelta.dy;
+                              final double sensitivity =
+                                  30.0; // Adjust scroll sensitivity
 
-                          if (scrollAmount.abs() > 0) {
-                            // Check if there is vertical scroll
-                            // Corrected calculation:
-                            // Scroll Up (dy < 0) -> Move Right (increase offset)
-                            // Scroll Down (dy > 0) -> Move Left (decrease offset)
-                            // So, the offset change should be the *negative* of dy's sign.
-                            double newOffset =
-                                _tabScrollController.offset -
-                                (scrollAmount.sign * sensitivity);
+                              if (scrollAmount.abs() > 0) {
+                                // Check if there is vertical scroll
+                                // Corrected calculation:
+                                // Scroll Up (dy < 0) -> Move Right (increase offset)
+                                // Scroll Down (dy > 0) -> Move Left (decrease offset)
+                                // So, the offset change should be the *negative* of dy's sign.
+                                double newOffset =
+                                    _tabScrollController.offset -
+                                    (scrollAmount.sign * sensitivity);
 
-                            // Clamp the offset to prevent overscrolling
-                            newOffset = newOffset.clamp(
-                              _tabScrollController.position.minScrollExtent,
-                              _tabScrollController.position.maxScrollExtent,
-                            );
-                            _tabScrollController.animateTo(
-                              newOffset,
-                              duration: const Duration(
-                                milliseconds: 100,
-                              ), // Adjust animation speed
-                              curve: Curves.easeOut, // Adjust animation curve
-                            );
-                          }
-                        }
-                      },
-                      // Keep the ReorderableListView.builder as the child of the Listener
-                      child: ReorderableListView.builder(
-                        key: const Key('tab-reorderable-list'),
-                        scrollController: _tabScrollController,
-                        scrollDirection: Axis.horizontal,
-                        buildDefaultDragHandles: false,
-                        itemCount: tabs.length,
-                        itemBuilder: (context, index) {
-                          final tab = tabs[index];
-                          // MUST provide a unique key for each item
-                          return KeyedSubtree(
-                            key: ValueKey(tab.id),
-                            // Wrap the button with the drag listener
-                            child: ReorderableDragStartListener(
-                              index: index, // Pass the item's index
-                              child: _buildTabButton(context, tab),
-                            ),
-                          );
-                        },
-                        onReorder: (oldIndex, newIndex) {
-                          ref
-                              .read(tabManagerProvider.notifier)
-                              .reorderTab(oldIndex, newIndex);
-                        },
-                        proxyDecorator: (
-                          Widget child,
-                          int index,
-                          Animation<double> animation,
-                        ) {
-                          // Keep the existing proxy decorator for visual feedback
-                          return Material(
-                            elevation: 4.0,
-                            color: Colors.transparent,
-                            child: ScaleTransition(
-                              scale: animation.drive(
-                                Tween<double>(begin: 1.0, end: 1.05),
-                              ),
-                              child: child,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                                // Clamp the offset to prevent overscrolling
+                                newOffset = newOffset.clamp(
+                                  _tabScrollController.position.minScrollExtent,
+                                  _tabScrollController.position.maxScrollExtent,
+                                );
+                                _tabScrollController.animateTo(
+                                  newOffset,
+                                  duration: const Duration(
+                                    milliseconds: 100,
+                                  ), // Adjust animation speed
+                                  curve:
+                                      Curves.easeOut, // Adjust animation curve
+                                );
+                              }
+                            }
+                          },
+                          // Keep the ReorderableListView.builder as the child of the Listener
+                          child: ReorderableListView.builder(
+                            key: const Key('tab-reorderable-list'),
+                            scrollController: _tabScrollController,
+                            scrollDirection: Axis.horizontal,
+                            buildDefaultDragHandles: false,
+                            itemCount: tabs.length,
+                            itemBuilder: (context, index) {
+                              final tab = tabs[index];
+                              // MUST provide a unique key for each item
+                              return KeyedSubtree(
+                                key: ValueKey(tab.id),
+                                // Wrap the button with the drag listener
+                                child: ReorderableDragStartListener(
+                                  index: index, // Pass the item's index
+                                  child: _buildTabButton(context, tab),
+                                ),
+                              );
+                            },
+                            onReorder: (oldIndex, newIndex) {
+                              ref
+                                  .read(tabManagerProvider.notifier)
+                                  .reorderTab(oldIndex, newIndex);
+                            },
+                            proxyDecorator: (
+                              Widget child,
+                              int index,
+                              Animation<double> animation,
+                            ) {
+                              // Keep the existing proxy decorator for visual feedback
+                              return Material(
+                                elevation: 4.0,
+                                color: Colors.transparent,
+                                child: ScaleTransition(
+                                  scale: animation.drive(
+                                    Tween<double>(begin: 1.0, end: 1.05),
+                                  ),
+                                  child: child,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 )
                 : null,
@@ -545,42 +767,41 @@ class _AppShellState extends ConsumerState<AppShell>
     final bool isActive =
         ref.watch(tabManagerProvider.notifier).activeTab?.id == tab.id;
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
 
     return Material(
       color: Colors.transparent, // Use transparent for Material ripple effect
       child: InkWell(
         onTap: () => ref.read(tabManagerProvider.notifier).setActiveTab(tab.id),
+        borderRadius: BorderRadius.circular(8.0),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
           decoration: BoxDecoration(
-            color: isActive ? colorScheme.primaryContainer : null,
+            color:
+                isActive
+                    ? colorScheme.secondaryContainer
+                    : colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8.0),
-            // border: Border.all(
-            //   color: isActive ? colorScheme.primary : Colors.grey.shade400,
-            //   width: 1.0,
-            // ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ...[
-                Icon(
-                  tab.icon,
-                  size: 18,
-                  color:
-                      isActive
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-              ],
+              Icon(
+                tab.icon,
+                size: 18,
+                color:
+                    isActive
+                        ? colorScheme.onSecondaryContainer
+                        : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
               Text(
                 tab.title,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                style: textTheme.labelMedium?.copyWith(
                   color:
                       isActive
-                          ? colorScheme.onPrimaryContainer
+                          ? colorScheme.onSecondaryContainer
                           : colorScheme.onSurfaceVariant,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -598,8 +819,8 @@ class _AppShellState extends ConsumerState<AppShell>
                   size: 16,
                   color:
                       isActive
-                          ? colorScheme.onPrimaryContainer.withOpacity(0.7)
-                          : colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          ? colorScheme.onSecondaryContainer
+                          : colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -662,55 +883,119 @@ Widget _buildSourceSelector(
 
   final String currentCategory = _getCategoryFromTab(activeTab);
 
-  return DropdownButtonHideUnderline(
-    child: DropdownButton<String>(
-      value: currentCategory,
-      icon: Icon(
-        Icons.arrow_drop_down,
-        color: colorScheme.onPrimary,
-      ), // Adjust color as needed
-      style:
-          theme.appBarTheme.titleTextStyle ??
-          theme.textTheme.titleLarge?.copyWith(color: colorScheme.onPrimary),
-      dropdownColor:
-          colorScheme.surfaceContainerHighest, // Or another suitable color
-      items:
-          sources.map((source) {
-            return DropdownMenuItem<String>(
-              value: source['routeName'] as String,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    source['icon'] as IconData?,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant,
-                  ), // Style icon
-                  const SizedBox(width: 8),
-                  Text(
-                    source['title'] as String,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ), // Style text
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-      onChanged: (String? newRouteName) {
-        if (newRouteName != null) {
-          final selectedSource = sources.firstWhere(
-            (s) => s['routeName'] == newRouteName,
-          );
-          // Add a *new* tab for the selected source
-          tabNotifier.addTab(
-            title: selectedSource['title'] as String,
-            initialRouteName: selectedSource['routeName'] as String,
-            icon: selectedSource['icon'] ?? Icons.web,
-          );
-        }
-      },
+  // Find the current source
+  final currentSource = sources.firstWhere(
+    (s) => s['routeName'] == currentCategory,
+    orElse: () => sources.first,
+  );
+
+  // Build a Material 3 styled dropdown
+  return PopupMenuButton<String>(
+    tooltip: 'Select source',
+    position: PopupMenuPosition.under,
+    offset: const Offset(0, 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    elevation: 3,
+    color: colorScheme.surfaceContainer, // Better color token for menus
+    // Show the current selection as a child
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            currentSource['icon'] as IconData?,
+            color: colorScheme.onSurface,
+            size: 22,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            currentSource['title'] as String,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.arrow_drop_down, color: colorScheme.onSurface, size: 24),
+        ],
+      ),
     ),
+    // Menu items
+    itemBuilder:
+        (context) =>
+            sources.map((source) {
+              final isSelected = source['routeName'] == currentCategory;
+              return PopupMenuItem<String>(
+                value: source['routeName'] as String,
+                padding: EdgeInsets.zero, // Remove outer padding
+                height: 56, // Standard height for menu items
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? colorScheme.primaryContainer
+                              : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          source['icon'] as IconData?,
+                          size: 20,
+                          color:
+                              isSelected
+                                  ? colorScheme.onPrimaryContainer
+                                  : colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            source['title'] as String,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                              color:
+                                  isSelected
+                                      ? colorScheme.onPrimaryContainer
+                                      : colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 18,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+    onSelected: (String? newRouteName) {
+      if (newRouteName != null) {
+        final selectedSource = sources.firstWhere(
+          (s) => s['routeName'] == newRouteName,
+        );
+        // Add a *new* tab for the selected source
+        tabNotifier.addTab(
+          title: selectedSource['title'] as String,
+          initialRouteName: selectedSource['routeName'] as String,
+          icon: selectedSource['icon'] ?? Icons.web,
+        );
+      }
+    },
   );
 }
 
@@ -736,54 +1021,82 @@ Widget _buildSideSourceSelector(
     {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
   ];
 
-  return Row(
-    children: [
-      Icon(Icons.source, color: colorScheme.primary),
-      const SizedBox(width: 8),
-      Expanded(
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            isExpanded: true,
-            icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
-            style: theme.textTheme.titleMedium,
-            items:
-                sources.map((source) {
-                  return DropdownMenuItem<String>(
-                    value: source['routeName'] as String,
-                    child: Row(
-                      children: [
-                        Icon(source['icon'] as IconData?, size: 18),
-                        const SizedBox(width: 8),
-                        Text(source['title'] as String),
-                      ],
-                    ),
-                  );
-                }).toList(),
-            onChanged: (String? newRouteName) {
-              if (newRouteName != null) {
-                final selectedSource = sources.firstWhere(
-                  (s) => s['routeName'] == newRouteName,
-                );
-                // Add a new tab
-                tabNotifier.addTab(
-                  title: selectedSource['title'] as String,
-                  initialRouteName: selectedSource['routeName'] as String,
-                  icon: selectedSource['icon'] ?? Icons.web,
-                );
-              }
-            },
-            hint: const Text('Add new tab'),
+  return Card(
+    elevation: 1,
+    color: colorScheme.surfaceContainerLow,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.add_circle_outline,
+                  color: colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Add New Tab',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          Divider(color: colorScheme.outlineVariant, height: 16),
+          ...sources
+              .map(
+                (source) => Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      tabNotifier.addTab(
+                        title: source['title'] as String,
+                        initialRouteName: source['routeName'] as String,
+                        icon: source['icon'] ?? Icons.web,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 10.0,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            source['icon'] as IconData?,
+                            size: 20,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            source['title'] as String,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ],
       ),
-      IconButton(
-        icon: const Icon(Icons.add),
-        tooltip: 'Add new tab',
-        onPressed: () {
-          // Show dialog or dropdown to add a new tab
-          // This is a duplicate way to add tabs for accessibility
-        },
-      ),
-    ],
+    ),
   );
 }

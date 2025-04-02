@@ -6,7 +6,7 @@ part of 'hackernews_stories_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$hackerNewsStoriesHash() => r'187c6ef9115fba6c7cfab74d421ea63c6f7a2c05';
+String _$hackerNewsStoriesHash() => r'93d362969b496456cc530aa4661d662eea190975';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -67,8 +67,7 @@ class HackerNewsStoriesFamily
 }
 
 /// See also [hackerNewsStories].
-class HackerNewsStoriesProvider
-    extends AutoDisposeFutureProvider<List<GenericListItem>> {
+class HackerNewsStoriesProvider extends FutureProvider<List<GenericListItem>> {
   /// See also [hackerNewsStories].
   HackerNewsStoriesProvider(HackerNewsSortType sortType)
     : this._internal(
@@ -117,7 +116,7 @@ class HackerNewsStoriesProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<GenericListItem>> createElement() {
+  FutureProviderElement<List<GenericListItem>> createElement() {
     return _HackerNewsStoriesProviderElement(this);
   }
 
@@ -137,14 +136,13 @@ class HackerNewsStoriesProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin HackerNewsStoriesRef
-    on AutoDisposeFutureProviderRef<List<GenericListItem>> {
+mixin HackerNewsStoriesRef on FutureProviderRef<List<GenericListItem>> {
   /// The parameter `sortType` of this provider.
   HackerNewsSortType get sortType;
 }
 
 class _HackerNewsStoriesProviderElement
-    extends AutoDisposeFutureProviderElement<List<GenericListItem>>
+    extends FutureProviderElement<List<GenericListItem>>
     with HackerNewsStoriesRef {
   _HackerNewsStoriesProviderElement(super.provider);
 

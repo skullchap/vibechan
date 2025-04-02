@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'dart:async';
 
 @injectable // Register with GetIt
 class HackerNewsApiClient {
@@ -12,11 +13,21 @@ class HackerNewsApiClient {
   Future<List<int>> _getStoryIds(String pathSegment) async {
     try {
       final response = await _dio.get('$_baseUrl/$pathSegment.json');
-      if (response.statusCode == 200 && response.data is List) {
-        return List<int>.from(response.data);
+
+      if (response.statusCode == 200) {
+        if (response.data == null) {
+          return [];
+        }
+
+        if (response.data is List) {
+          final List<dynamic> data = response.data;
+          return data.whereType<int>().toList();
+        } else {
+          return [];
+        }
       } else {
         throw Exception(
-          'Failed to load $pathSegment IDs: ${response.statusCode}',
+          'Failed to load $pathSegment IDs: HTTP ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
@@ -39,13 +50,19 @@ class HackerNewsApiClient {
   Future<Map<String, dynamic>> getItemById(int id) async {
     try {
       final response = await _dio.get('$_baseUrl/item/$id.json');
-      if (response.statusCode == 200 && response.data is Map) {
-        return Map<String, dynamic>.from(response.data);
-      } else if (response.data == null) {
-        // HN API returns null for deleted or non-existent items
-        throw Exception('Item with ID $id not found or is null.');
+
+      if (response.statusCode == 200) {
+        if (response.data == null) {
+          throw Exception('Item with ID $id not found or is null.');
+        }
+
+        if (response.data is Map) {
+          return Map<String, dynamic>.from(response.data);
+        } else {
+          throw Exception('Unexpected data type for item $id');
+        }
       } else {
-        throw Exception('Failed to load item $id: ${response.statusCode}');
+        throw Exception('Failed to load item $id: HTTP ${response.statusCode}');
       }
     } on DioException catch (e) {
       throw Exception('Network error fetching item $id: ${e.message}');

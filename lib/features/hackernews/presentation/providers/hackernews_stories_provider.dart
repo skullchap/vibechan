@@ -14,7 +14,9 @@ final currentHackerNewsSortTypeProvider = StateProvider<HackerNewsSortType>(
   (ref) => HackerNewsSortType.top,
 );
 
-@riverpod
+@Riverpod(
+  keepAlive: true,
+) // Make this provider persistent to cache data across tab changes
 Future<List<GenericListItem>> hackerNewsStories(
   HackerNewsStoriesRef ref,
   HackerNewsSortType sortType,

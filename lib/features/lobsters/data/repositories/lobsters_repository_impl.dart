@@ -2,59 +2,132 @@ import 'package:injectable/injectable.dart';
 import 'package:vibechan/features/lobsters/data/datasources/lobsters_api_client.dart';
 import 'package:vibechan/features/lobsters/data/models/lobsters_story.dart';
 import 'package:vibechan/features/lobsters/domain/repositories/lobsters_repository.dart';
+import 'dart:async';
+
+// Define story types for caching
+enum LobstersStoryListType { hottest, newest }
 
 @LazySingleton(as: LobstersRepository)
 class LobstersRepositoryImpl implements LobstersRepository {
   final LobstersApiClient _apiClient;
+
+  // Cache storage
+  final Map<LobstersStoryListType, List<LobstersStory>> _storiesCache = {};
+  final Map<String, LobstersStory> _storyDetailCache = {};
+  final Map<String, DateTime> _cacheExpiry = {};
+
+  // Cache durations
+  static const Duration _storyListCacheDuration = Duration(minutes: 5);
+  static const Duration _storyDetailCacheDuration = Duration(minutes: 30);
 
   LobstersRepositoryImpl(this._apiClient);
 
   Future<List<LobstersStory>> _fetchStories(
     Future<List<dynamic>> Function() fetcher,
     int count,
+    LobstersStoryListType type,
   ) async {
     try {
+      // Check cache first
+      final cachedStories = _getCachedStories(type);
+      if (cachedStories != null) {
+        return cachedStories;
+      }
+
       final dynamicList = await fetcher();
       final stories = <LobstersStory>[];
       for (final item in dynamicList) {
         if (item is Map<String, dynamic>) {
           try {
-            stories.add(LobstersStory.fromJson(item));
+            final story = LobstersStory.fromJson(item);
+            stories.add(story);
+
+            // Also cache individual stories while we're at it
+            _cacheStoryDetail(story.shortId, story);
           } catch (e) {
-            print('Failed to parse Lobsters item: $e\nItem Data: $item');
+            // Skip errors silently
           }
-        } else {
-          print(
-            'Skipping unexpected item type in Lobsters feed: ${item.runtimeType}',
-          );
         }
         if (stories.length >= count) break;
       }
+
+      // Cache the stories
+      _cacheStories(type, stories);
+
       return stories;
     } catch (e) {
-      print('Error fetching Lobsters stories: $e');
-      rethrow;
+      // Return empty list to avoid spinner
+      return [];
     }
   }
 
   @override
   Future<List<LobstersStory>> getHottestStories({int count = 25}) {
-    return _fetchStories(_apiClient.getHottestStories, count);
+    return _fetchStories(
+      _apiClient.getHottestStories,
+      count,
+      LobstersStoryListType.hottest,
+    );
   }
 
   @override
   Future<List<LobstersStory>> getNewestStories({int count = 25}) {
-    return _fetchStories(_apiClient.getNewestStories, count);
+    return _fetchStories(
+      _apiClient.getNewestStories,
+      count,
+      LobstersStoryListType.newest,
+    );
   }
 
   @override
   Future<LobstersStory> getStory(String shortId) async {
     try {
+      // Check cache first
+      final cachedStory = _getCachedStoryDetail(shortId);
+      if (cachedStory != null) {
+        return cachedStory;
+      }
+
       final jsonData = await _apiClient.getStory(shortId);
-      return LobstersStory.fromJson(jsonData);
+      final story = LobstersStory.fromJson(jsonData);
+
+      // Cache the full story
+      _cacheStoryDetail(shortId, story);
+
+      return story;
     } catch (e) {
-      print('Error fetching Lobsters story $shortId in repository: $e');
       rethrow;
     }
+  }
+
+  // Cache management methods
+  void _cacheStories(LobstersStoryListType type, List<LobstersStory> stories) {
+    _storiesCache[type] = List.from(stories);
+    _cacheExpiry['stories_${type.name}'] = DateTime.now().add(
+      _storyListCacheDuration,
+    );
+  }
+
+  List<LobstersStory>? _getCachedStories(LobstersStoryListType type) {
+    final expiry = _cacheExpiry['stories_${type.name}'];
+    if (expiry != null && expiry.isAfter(DateTime.now())) {
+      return _storiesCache[type];
+    }
+    return null;
+  }
+
+  void _cacheStoryDetail(String shortId, LobstersStory story) {
+    _storyDetailCache[shortId] = story;
+    _cacheExpiry['story_$shortId'] = DateTime.now().add(
+      _storyDetailCacheDuration,
+    );
+  }
+
+  LobstersStory? _getCachedStoryDetail(String shortId) {
+    final expiry = _cacheExpiry['story_$shortId'];
+    if (expiry != null && expiry.isAfter(DateTime.now())) {
+      return _storyDetailCache[shortId];
+    }
+    return null;
   }
 }

@@ -7,7 +7,7 @@ part of 'hackernews_item_detail_provider.dart';
 // **************************************************************************
 
 String _$hackerNewsItemDetailHash() =>
-    r'a4549c3f3025fffc4089c586fb2c52f16f1e77e2';
+    r'17bfaebbb5907da27e4f80307df4a3db3fc64618';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -67,8 +67,7 @@ class HackerNewsItemDetailFamily extends Family<AsyncValue<HackerNewsItem>> {
 }
 
 /// See also [hackerNewsItemDetail].
-class HackerNewsItemDetailProvider
-    extends AutoDisposeFutureProvider<HackerNewsItem> {
+class HackerNewsItemDetailProvider extends FutureProvider<HackerNewsItem> {
   /// See also [hackerNewsItemDetail].
   HackerNewsItemDetailProvider(int itemId)
     : this._internal(
@@ -116,7 +115,7 @@ class HackerNewsItemDetailProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<HackerNewsItem> createElement() {
+  FutureProviderElement<HackerNewsItem> createElement() {
     return _HackerNewsItemDetailProviderElement(this);
   }
 
@@ -136,13 +135,13 @@ class HackerNewsItemDetailProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin HackerNewsItemDetailRef on AutoDisposeFutureProviderRef<HackerNewsItem> {
+mixin HackerNewsItemDetailRef on FutureProviderRef<HackerNewsItem> {
   /// The parameter `itemId` of this provider.
   int get itemId;
 }
 
 class _HackerNewsItemDetailProviderElement
-    extends AutoDisposeFutureProviderElement<HackerNewsItem>
+    extends FutureProviderElement<HackerNewsItem>
     with HackerNewsItemDetailRef {
   _HackerNewsItemDetailProviderElement(super.provider);
 

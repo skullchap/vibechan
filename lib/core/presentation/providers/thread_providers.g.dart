@@ -24,7 +24,7 @@ final threadRepositoryProvider = Provider<ThreadRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ThreadRepositoryRef = ProviderRef<ThreadRepository>;
-String _$catalogNotifierHash() => r'87d0a1ed4746a4b0b3575bd06ec46ae272701f5f';
+String _$catalogNotifierHash() => r'60b0164ec60def04a3b2dc9aead4b0e8a734f3f5';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -47,8 +47,7 @@ class _SystemHash {
   }
 }
 
-abstract class _$CatalogNotifier
-    extends BuildlessAutoDisposeAsyncNotifier<List<Thread>> {
+abstract class _$CatalogNotifier extends BuildlessAsyncNotifier<List<Thread>> {
   late final String boardId;
 
   FutureOr<List<Thread>> build(String boardId);
@@ -92,8 +91,7 @@ class CatalogNotifierFamily extends Family<AsyncValue<List<Thread>>> {
 
 /// See also [CatalogNotifier].
 class CatalogNotifierProvider
-    extends
-        AutoDisposeAsyncNotifierProviderImpl<CatalogNotifier, List<Thread>> {
+    extends AsyncNotifierProviderImpl<CatalogNotifier, List<Thread>> {
   /// See also [CatalogNotifier].
   CatalogNotifierProvider(String boardId)
     : this._internal(
@@ -144,8 +142,7 @@ class CatalogNotifierProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<CatalogNotifier, List<Thread>>
-  createElement() {
+  AsyncNotifierProviderElement<CatalogNotifier, List<Thread>> createElement() {
     return _CatalogNotifierProviderElement(this);
   }
 
@@ -165,14 +162,13 @@ class CatalogNotifierProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin CatalogNotifierRef on AutoDisposeAsyncNotifierProviderRef<List<Thread>> {
+mixin CatalogNotifierRef on AsyncNotifierProviderRef<List<Thread>> {
   /// The parameter `boardId` of this provider.
   String get boardId;
 }
 
 class _CatalogNotifierProviderElement
-    extends
-        AutoDisposeAsyncNotifierProviderElement<CatalogNotifier, List<Thread>>
+    extends AsyncNotifierProviderElement<CatalogNotifier, List<Thread>>
     with CatalogNotifierRef {
   _CatalogNotifierProviderElement(super.provider);
 
@@ -180,10 +176,9 @@ class _CatalogNotifierProviderElement
   String get boardId => (origin as CatalogNotifierProvider).boardId;
 }
 
-String _$threadNotifierHash() => r'3a954798b170f3dd79cfd487ebd4ac0d9ec987b7';
+String _$threadNotifierHash() => r'd1097841993c39336bf237020a72b71a066a57e1';
 
-abstract class _$ThreadNotifier
-    extends BuildlessAutoDisposeAsyncNotifier<Thread> {
+abstract class _$ThreadNotifier extends BuildlessAsyncNotifier<Thread> {
   late final String boardId;
   late final String threadId;
 
@@ -228,7 +223,7 @@ class ThreadNotifierFamily extends Family<AsyncValue<Thread>> {
 
 /// See also [ThreadNotifier].
 class ThreadNotifierProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<ThreadNotifier, Thread> {
+    extends AsyncNotifierProviderImpl<ThreadNotifier, Thread> {
   /// See also [ThreadNotifier].
   ThreadNotifierProvider(String boardId, String threadId)
     : this._internal(
@@ -289,8 +284,7 @@ class ThreadNotifierProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<ThreadNotifier, Thread>
-  createElement() {
+  AsyncNotifierProviderElement<ThreadNotifier, Thread> createElement() {
     return _ThreadNotifierProviderElement(this);
   }
 
@@ -313,7 +307,7 @@ class ThreadNotifierProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin ThreadNotifierRef on AutoDisposeAsyncNotifierProviderRef<Thread> {
+mixin ThreadNotifierRef on AsyncNotifierProviderRef<Thread> {
   /// The parameter `boardId` of this provider.
   String get boardId;
 
@@ -322,7 +316,7 @@ mixin ThreadNotifierRef on AutoDisposeAsyncNotifierProviderRef<Thread> {
 }
 
 class _ThreadNotifierProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<ThreadNotifier, Thread>
+    extends AsyncNotifierProviderElement<ThreadNotifier, Thread>
     with ThreadNotifierRef {
   _ThreadNotifierProviderElement(super.provider);
 

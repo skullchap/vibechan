@@ -19,7 +19,23 @@ class HackerNewsScreen extends ConsumerWidget {
     return storiesAsync.when(
       data: (stories) {
         if (stories.isEmpty) {
-          return const Center(child: Text('No stories found.'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('No stories found.'),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Refresh'),
+                  onPressed: () {
+                    // Invalidate the provider to trigger a refetch
+                    ref.invalidate(hackerNewsStoriesProvider(currentSortType));
+                  },
+                ),
+              ],
+            ),
+          );
         }
         // Add RefreshIndicator here for pull-to-refresh
         return RefreshIndicator(
@@ -31,7 +47,7 @@ class HackerNewsScreen extends ConsumerWidget {
           },
           child: ListView.builder(
             // Add a key based on sort type to force rebuild on sort change if needed
-            // key: ValueKey(currentSortType),
+            key: ValueKey(currentSortType),
             itemCount: stories.length,
             itemBuilder: (context, index) {
               final item = stories[index];
@@ -61,12 +77,71 @@ class HackerNewsScreen extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading:
+          () => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Loading stories...',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'This may take a moment',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
       error:
           (error, stack) => Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Error loading stories: $error'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading stories',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                    onPressed: () {
+                      // Invalidate the provider to trigger a refetch
+                      ref.invalidate(
+                        hackerNewsStoriesProvider(currentSortType),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      // Try a different sort type as a fallback
+                      final newSortType =
+                          currentSortType == HackerNewsSortType.top
+                              ? HackerNewsSortType.best
+                              : HackerNewsSortType.top;
+                      ref
+                          .read(currentHackerNewsSortTypeProvider.notifier)
+                          .state = newSortType;
+                    },
+                    child: const Text('Try different stories'),
+                  ),
+                ],
+              ),
             ),
           ),
     );
