@@ -12,6 +12,7 @@ import '../../features/board/presentation/screens/board_catalog_screen.dart';
 import '../../features/board/presentation/screens/favorites_screen.dart';
 import '../../features/board/presentation/screens/settings_screen.dart';
 import '../../features/thread/presentation/screens/thread_detail_screen.dart';
+import '../../features/hackernews/presentation/screens/hackernews_screen.dart'; // Import HN Screen
 
 import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart';
 
@@ -74,14 +75,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     List<Widget> appBarActions = [
       IconButton(
         icon: const Icon(Icons.add),
-        tooltip: 'New Boards Tab',
-        onPressed: () {
-          tabNotifier.addTab(
-            title: 'Boards',
-            initialRouteName: 'boards',
-            icon: Icons.dashboard,
-          );
-        },
+        tooltip: 'Add New Tab',
+        onPressed: () => _showAddTabDialog(context, tabNotifier),
       ),
       // Conditionally show view mode toggle if active tab is boards/catalog?
       if (activeTab?.initialRouteName == 'boards' ||
@@ -223,6 +218,56 @@ class _AppShellState extends ConsumerState<AppShell> {
     );
   }
 
+  // Function to show the 'Add Tab' dialog
+  void _showAddTabDialog(BuildContext context, TabManagerNotifier tabNotifier) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Add New Tab'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Use minimum space
+            children: [
+              ListTile(
+                leading: const Icon(Icons.dashboard), // 4chan icon
+                title: const Text('4chan Boards'),
+                onTap: () {
+                  tabNotifier.addTab(
+                    title: 'Boards',
+                    initialRouteName: 'boards',
+                    icon: Icons.dashboard,
+                  );
+                  Navigator.of(dialogContext).pop(); // Close dialog
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.newspaper), // Hacker News icon
+                title: const Text('Hacker News'),
+                onTap: () {
+                  tabNotifier.addTab(
+                    title: 'Hacker News',
+                    initialRouteName: 'hackernews', // Use the new route name
+                    icon: Icons.newspaper,
+                  );
+                  Navigator.of(dialogContext).pop(); // Close dialog
+                },
+              ),
+              // Add more ListTiles here for future sources (e.g., Reddit)
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Close dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Helper to build the content widget for a given tab
   Widget _buildTabContent(ContentTab tab) {
     // Use a unique key for each tab's content to preserve state
@@ -252,6 +297,8 @@ class _AppShellState extends ConsumerState<AppShell> {
           );
         }
         break; // Fallthrough to error if params are null
+      case 'hackernews': // Add case for Hacker News
+        return HackerNewsScreen(key: tabKey);
     }
     // Handle unknown route or missing parameters
     return Center(
