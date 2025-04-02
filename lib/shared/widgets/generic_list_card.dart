@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/core/domain/models/generic_list_item.dart';
-import 'package:vibechan/shared/widgets/html_text.dart'; // Assuming HTML content for now
+import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 
 // Placeholder for video widget if needed later
 // import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
@@ -54,10 +54,10 @@ class GenericListCard extends StatelessWidget {
                   ],
                   if (item.body != null && item.body!.isNotEmpty)
                     // Assuming HTML for now, might need logic based on item.source
-                    HtmlText(
-                      item.body!,
-                      maxLines: 4,
-                      style: textTheme.bodyMedium,
+                    SimpleHtmlRenderer(
+                      htmlString: item.body ?? '',
+                      baseStyle: textTheme.bodyMedium,
+                      // Note: SimpleHtmlRenderer does not have a direct maxLines equivalent.
                     ),
                   const SizedBox(height: 8),
                   _buildMetadataRow(context),

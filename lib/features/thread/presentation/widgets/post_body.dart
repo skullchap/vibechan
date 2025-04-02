@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/domain/models/post.dart';
-import '../../../../shared/widgets/html_text.dart';
+import '../../../../shared/widgets/simple_html_renderer.dart';
 
 class PostBody extends StatelessWidget {
   final Post post;
@@ -9,9 +9,13 @@ class PostBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final commentHtml = post.comment ?? '';
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: HtmlText(post.comment, style: Theme.of(context).textTheme.bodyMedium),
+      child: SimpleHtmlRenderer(
+        htmlString: commentHtml,
+        baseStyle: Theme.of(context).textTheme.bodyMedium,
+      ),
     );
   }
 }

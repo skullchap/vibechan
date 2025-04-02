@@ -41,9 +41,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   late final ScrollController _tabScrollController;
 
   // Remove functions related to GoRouter-based bottom nav
-  // int _calculateSelectedIndex(BuildContext context) { ... }
-  // void _onItemTapped(BuildContext context, int index) { ... }
-
+  // int _calculateSelectedIndex(BuildContext context) { ... }\n  // void _onItemTapped(BuildContext context, int index) { ... }\n
   @override
   void initState() {
     super.initState();
@@ -81,6 +79,15 @@ class _AppShellState extends ConsumerState<AppShell> {
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
 
     String appBarTitle = activeTab?.title ?? AppConfig.appName;
+
+    // Determine if back button should be shown
+    // Show if it's a detail view (HN item, Lobsters story, 4chan thread)
+    bool showBackButton =
+        activeTab != null &&
+        (activeTab.initialRouteName == 'hackernews_item' ||
+            activeTab.initialRouteName == 'lobsters_story' ||
+            activeTab.initialRouteName == 'thread');
+
     List<Widget> appBarActions = [
       IconButton(
         icon: const Icon(Icons.add),
@@ -151,7 +158,19 @@ class _AppShellState extends ConsumerState<AppShell> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(appBarTitle), actions: appBarActions),
+      appBar: AppBar(
+        title: Text(appBarTitle),
+        // Conditionally add the leading back button
+        leading:
+            showBackButton
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Back',
+                  onPressed: () => _handleBackButton(ref, activeTab),
+                )
+                : null, // No back button if not applicable
+        actions: appBarActions,
+      ),
       // Body displays the content for the active tab
       body:
           activeTab != null
@@ -249,69 +268,163 @@ class _AppShellState extends ConsumerState<AppShell> {
                 );
               },
             ),
-          ), // End of Listener
+          ),
         ),
       ),
     );
   }
 
-  // Function to show the 'Add Tab' dialog
+  // --- Helper function to build tab content ---
+  Widget _buildTabContent(ContentTab tab) {
+    // This logic determines which screen to show based on the active tab's state
+    switch (tab.initialRouteName) {
+      case 'boards':
+        return const BoardListScreen();
+      case 'catalog':
+        // Need boardId from pathParameters
+        final boardId = tab.pathParameters['boardId'];
+        return boardId != null
+            ? BoardCatalogScreen(boardId: boardId)
+            : const Center(child: Text('Error: Missing boardId'));
+      case 'thread':
+        // Need boardId and threadId from pathParameters
+        final boardId = tab.pathParameters['boardId'];
+        final threadId = tab.pathParameters['threadId'];
+        return (boardId != null && threadId != null)
+            ? ThreadDetailScreen(boardId: boardId, threadId: threadId)
+            : const Center(child: Text('Error: Missing board/thread ID'));
+      case 'favorites':
+        return const FavoritesScreen();
+      case 'settings':
+        return const SettingsScreen();
+      case 'hackernews':
+        return const HackerNewsScreen();
+      case 'hackernews_item':
+        final itemIdStr = tab.pathParameters['itemId'];
+        final itemId = int.tryParse(itemIdStr ?? '');
+        return itemId != null
+            ? HackerNewsItemScreen(itemId: itemId)
+            : const Center(child: Text('Error: Missing item ID'));
+      case 'lobsters':
+        return const LobstersScreen();
+      case 'lobsters_story':
+        final storyId = tab.pathParameters['storyId'];
+        return storyId != null
+            ? LobstersStoryScreen(storyId: storyId)
+            : const Center(child: Text('Error: Missing story ID'));
+      default:
+        // Fallback for unknown route or initial state
+        return Center(child: Text('Content for: ${tab.title}'));
+    }
+  }
+  // --- End Helper ---
+
+  // --- New Back Button Handler ---
+  void _handleBackButton(WidgetRef ref, ContentTab currentTab) {
+    final tabNotifier = ref.read(tabManagerProvider.notifier);
+
+    switch (currentTab.initialRouteName) {
+      case 'thread':
+        // Navigate back to the specific board catalog
+        final boardId = currentTab.pathParameters['boardId'];
+        if (boardId != null) {
+          tabNotifier.navigateToOrReplaceActiveTab(
+            title: '/$boardId/ Catalog', // Or a better title
+            initialRouteName: 'catalog',
+            pathParameters: {'boardId': boardId},
+            icon: Icons.view_list, // Or appropriate icon
+          );
+        } else {
+          print("Error: Missing boardId for thread back navigation.");
+          // Fallback: Navigate to general boards list
+          tabNotifier.navigateToOrReplaceActiveTab(
+            title: 'Boards',
+            initialRouteName: 'boards',
+            pathParameters: {},
+            icon: Icons.dashboard,
+          );
+        }
+        break;
+      case 'hackernews_item':
+        // Navigate back to the main Hacker News list
+        tabNotifier.navigateToOrReplaceActiveTab(
+          title: 'Hacker News',
+          initialRouteName: 'hackernews',
+          pathParameters: {},
+          icon: Icons.newspaper,
+        );
+        break;
+      case 'lobsters_story':
+        // Navigate back to the main Lobsters list
+        tabNotifier.navigateToOrReplaceActiveTab(
+          title: 'Lobsters',
+          initialRouteName: 'lobsters',
+          pathParameters: {},
+          icon: Icons.rss_feed,
+        );
+        break;
+      default:
+        // Should not happen if showBackButton logic is correct, but add a fallback
+        print("Warning: Back button pressed on unexpected screen type.");
+        // Attempt to navigate to a default/home tab if possible
+        if (ref.read(tabManagerProvider).isNotEmpty) {
+          tabNotifier.setActiveTab(ref.read(tabManagerProvider).first.id);
+        }
+    }
+  }
+  // --- End Back Button Handler ---
+
+  // --- Add Tab Dialog ---
   void _showAddTabDialog(BuildContext context, TabManagerNotifier tabNotifier) {
+    // Define available sources based on AppConfig or dynamically
+    final List<Map<String, dynamic>> sources = [
+      {'title': 'Boards', 'routeName': 'boards', 'icon': Icons.dashboard},
+      {
+        'title': 'Hacker News',
+        'routeName': 'hackernews',
+        'icon': Icons.newspaper,
+      },
+      {
+        'title': 'Lobsters',
+        'routeName': 'lobsters',
+        'icon': Icons.rss_feed,
+      }, // Add Lobsters
+      {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
+      {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
+    ];
+
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Add New Tab'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min, // Use minimum space
-            children: [
-              ListTile(
-                leading: const Icon(Icons.dashboard), // 4chan icon
-                title: const Text('4chan Boards'),
-                onTap: () {
-                  tabNotifier.addTab(
-                    title: 'Boards',
-                    initialRouteName: 'boards',
-                    icon: Icons.dashboard,
-                  );
-                  Navigator.of(dialogContext).pop(); // Close dialog
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.newspaper), // Hacker News icon
-                title: const Text('Hacker News'),
-                onTap: () {
-                  tabNotifier.addTab(
-                    title: 'Hacker News',
-                    initialRouteName: 'hackernews', // Use the new route name
-                    icon: Icons.newspaper,
-                  );
-                  Navigator.of(dialogContext).pop(); // Close dialog
-                },
-              ),
-              // Add Lobsters Option
-              ListTile(
-                leading: const Icon(
-                  Icons.rss_feed,
-                ), // Lobsters icon (placeholder)
-                title: const Text('Lobsters'),
-                onTap: () {
-                  tabNotifier.addTab(
-                    title: 'Lobsters',
-                    initialRouteName: 'lobsters', // New route name
-                    icon: Icons.rss_feed,
-                  );
-                  Navigator.of(dialogContext).pop(); // Close dialog
-                },
-              ),
-              // Add more ListTiles here for future sources (e.g., Reddit)
-            ],
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: sources.length,
+              itemBuilder: (BuildContext listContext, int index) {
+                final source = sources[index];
+                return ListTile(
+                  leading: Icon(source['icon'] as IconData?),
+                  title: Text(source['title'] as String),
+                  onTap: () {
+                    tabNotifier.addTab(
+                      title: source['title'] as String,
+                      initialRouteName: source['routeName'] as String,
+                      icon: source['icon'] ?? Icons.web,
+                    );
+                    Navigator.of(dialogContext).pop(); // Close the dialog
+                  },
+                );
+              },
+            ),
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Close dialog
+                Navigator.of(dialogContext).pop(); // Close the dialog
               },
             ),
           ],
@@ -319,144 +432,76 @@ class _AppShellState extends ConsumerState<AppShell> {
       },
     );
   }
+  // --- End Add Tab Dialog ---
 
-  // Helper to build the content widget for a given tab
-  Widget _buildTabContent(ContentTab tab) {
-    // Use a unique key for each tab's content to preserve state
-    final Key tabKey = ValueKey(tab.id);
-
-    switch (tab.initialRouteName) {
-      case 'boards':
-        return BoardListScreen(key: tabKey);
-      case 'favorites':
-        return FavoritesScreen(key: tabKey);
-      case 'settings':
-        return SettingsScreen(key: tabKey);
-      case 'catalog':
-        final boardId = tab.pathParameters['boardId'];
-        if (boardId != null) {
-          return BoardCatalogScreen(key: tabKey, boardId: boardId);
-        }
-        break; // Fallthrough to error if boardId is null
-      case 'thread':
-        final boardId = tab.pathParameters['boardId'];
-        final threadId = tab.pathParameters['threadId'];
-        if (boardId != null && threadId != null) {
-          return ThreadDetailScreen(
-            key: tabKey,
-            boardId: boardId,
-            threadId: threadId,
-          );
-        }
-        break; // Fallthrough to error if params are null
-      case 'hackernews': // Add case for Hacker News List
-        return HackerNewsScreen(key: tabKey);
-      case 'lobsters': // Add case for Lobsters List
-        return LobstersScreen(key: tabKey);
-      case 'hackernews_item': // New case for HN Item Detail
-        final itemId = tab.pathParameters['itemId'];
-        if (itemId != null) {
-          // Need to parse itemId back to int
-          final itemIdInt = int.tryParse(itemId);
-          if (itemIdInt != null) {
-            // Replace placeholder with actual screen
-            return HackerNewsItemScreen(key: tabKey, itemId: itemIdInt);
-          }
-        }
-        break; // Fallthrough to error if itemId is null or invalid
-      case 'lobsters_story': // New case for Lobsters Story Detail
-        final storyId = tab.pathParameters['storyId'];
-        if (storyId != null) {
-          // Replace placeholder with actual screen
-          return LobstersStoryScreen(key: tabKey, storyId: storyId);
-        }
-        break; // Fallthrough to error if storyId is null
-    }
-    // Handle unknown route or missing parameters
-    return Center(
-      key: tabKey,
-      child: Text(
-        'Error: Cannot display content for tab "${tab.title}" (Route: ${tab.initialRouteName})',
-      ),
-    );
-  }
-
-  // Helper to build a single tab button for the bottom bar
+  // --- Build Tab Button ---
   Widget _buildTabButton(BuildContext context, ContentTab tab) {
-    final tabNotifier = ref.read(tabManagerProvider.notifier);
-    final theme = Theme.of(context);
-    final bool isActive = tab.isActive;
+    final bool isActive =
+        ref.watch(tabManagerProvider.notifier).activeTab?.id == tab.id;
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
-    return InkWell(
-      onTap: () => tabNotifier.setActiveTab(tab.id),
-      child: Container(
-        height: 40, // Consistent height
-        constraints: const BoxConstraints(
-          minWidth: 100,
-          maxWidth: 180,
-        ), // Control width
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color:
-              isActive
-                  ? theme.colorScheme.primaryContainer
-                  : Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min, // Don't expand Row unnecessarily
-          children: [
-            Icon(
-              tab.icon,
-              size: 16,
-              color:
-                  isActive
-                      ? theme.colorScheme.onPrimaryContainer
-                      : theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              // Allow text to take available space and ellipsis
-              child: Text(
-                tab.title,
-                style: TextStyle(
-                  fontSize: 12,
+    return Material(
+      color: Colors.transparent, // Use transparent for Material ripple effect
+      child: InkWell(
+        onTap: () => ref.read(tabManagerProvider.notifier).setActiveTab(tab.id),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: isActive ? colorScheme.primaryContainer : null,
+            borderRadius: BorderRadius.circular(8.0),
+            // border: Border.all(
+            //   color: isActive ? colorScheme.primary : Colors.grey.shade400,
+            //   width: 1.0,
+            // ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...[
+                Icon(
+                  tab.icon,
+                  size: 18,
                   color:
                       isActive
-                          ? theme.colorScheme.onPrimaryContainer
-                          : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                tab.title,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color:
+                      isActive
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 ),
                 overflow: TextOverflow.ellipsis,
-                maxLines: 1,
               ),
-            ),
-            // Close Button - Temporarily remove Tooltip
-            // Tooltip(
-            //   message: 'Close Tab',
-            //   child:
-            InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => tabNotifier.removeTab(tab.id),
-              child: Padding(
-                padding: const EdgeInsets.all(2.0),
+              const SizedBox(width: 6),
+              // Close button - consider making it smaller/more subtle
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap:
+                    () =>
+                        ref.read(tabManagerProvider.notifier).removeTab(tab.id),
                 child: Icon(
                   Icons.close,
-                  size: 14,
+                  size: 16,
                   color:
                       isActive
-                          ? theme.colorScheme.onPrimaryContainer.withOpacity(
-                            0.7,
-                          )
-                          : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          ? colorScheme.onPrimaryContainer.withOpacity(0.7)
+                          : colorScheme.onSurfaceVariant.withOpacity(0.7),
                 ),
               ),
-            ),
-            // ), // End of Tooltip
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
+  // --- End Build Tab Button ---
 }

@@ -18,11 +18,15 @@ class _ListContext {
 class SimpleHtmlRenderer extends StatelessWidget {
   final String htmlString;
   final TextStyle? baseStyle;
+  final int? maxLines;
+  final TextOverflow overflow;
 
   const SimpleHtmlRenderer({
     super.key,
     required this.htmlString,
     this.baseStyle,
+    this.maxLines,
+    this.overflow = TextOverflow.ellipsis,
   });
 
   @override
@@ -30,10 +34,10 @@ class SimpleHtmlRenderer extends StatelessWidget {
     final defaultStyle = baseStyle ?? DefaultTextStyle.of(context).style;
     final spans = _parseHtml(htmlString, defaultStyle);
 
-    // Original code:
-    return SelectableText.rich(
+    return Text.rich(
       TextSpan(children: spans),
-      // Adjust text selection controls if needed
+      maxLines: maxLines,
+      overflow: overflow,
     );
   }
 
@@ -203,9 +207,6 @@ class SimpleHtmlRenderer extends StatelessWidget {
     }
 
     // Trim leading/trailing whitespace/newlines more carefully
-    spans.removeWhere(
-      (s) => s is TextSpan && s.text != null && s.text!.trim().isEmpty,
-    );
     if (spans.isNotEmpty && spans.first is TextSpan) {
       final firstSpan = spans.first as TextSpan;
       spans[0] = TextSpan(

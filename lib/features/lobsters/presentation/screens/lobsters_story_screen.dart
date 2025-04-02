@@ -25,38 +25,18 @@ class LobstersStoryScreen extends ConsumerWidget {
       theme.colorScheme.error, // Add more if needed
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lobsters Story'),
-        elevation: 1.0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back to List',
-          onPressed: () {
-            final tabNotifier = ref.read(tabManagerProvider.notifier);
-            // Get the currently active tab directly (should exist)
-            final ContentTab? activeTab = tabNotifier.activeTab;
+    // Remove Scaffold and AppBar
+    // return Scaffold(
+    //   appBar: AppBar(...),
+    //   backgroundColor: ...,
+    //   body: ...
+    // );
 
-            if (activeTab != null &&
-                activeTab.initialRouteName == 'lobsters_story') {
-              // We are indeed on a lobsters detail tab, navigate back
-              tabNotifier.navigateToOrReplaceActiveTab(
-                title: 'Lobsters',
-                initialRouteName: 'lobsters', // Go back to Lobsters list route
-                pathParameters: {},
-                icon: Icons.rss_feed, // Reset icon
-              );
-            } else {
-              // This case should ideally not be reached if the button is only shown on this screen.
-              print(
-                "Error: Could not find active Lobsters story tab to navigate back from.",
-              );
-            }
-          },
-        ),
-      ),
-      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-      body: storyDetailAsync.when(
+    // Return the body content directly
+    return Container(
+      // Use a Container for background color
+      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+      child: storyDetailAsync.when(
         data: (story) {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),

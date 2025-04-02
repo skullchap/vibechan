@@ -20,7 +20,7 @@ class ThreadDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final thread = ref.watch(threadNotifierProvider(boardId, threadId));
 
-    // Return content with a back button to navigate to the board
+    // Return RefreshIndicator directly, remove Scaffold/AppBar
     return RefreshIndicator(
       onRefresh:
           () =>
@@ -30,12 +30,8 @@ class ThreadDetailScreen extends ConsumerWidget {
       child: thread.when(
         data:
             (threadData) => ListView.builder(
-              padding: const EdgeInsets.only(
-                top: 60,
-                left: 8,
-                right: 8,
-                bottom: 8,
-              ), // Add padding for the back button
+              // Ensure top padding is removed, keep others
+              padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
               itemCount: threadData.replies.length + 1, // +1 for OP
               itemBuilder: (context, index) {
                 final post =
@@ -57,9 +53,8 @@ class ThreadDetailScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error:
             (error, stackTrace) => Padding(
-              padding: const EdgeInsets.only(
-                top: 60,
-              ), // Add padding for the back button
+              // Use padding suitable for direct body content
+              padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

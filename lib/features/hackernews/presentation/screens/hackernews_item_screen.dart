@@ -42,7 +42,6 @@ class HackerNewsItemScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final itemDetailAsync = ref.watch(hackerNewsItemDetailProvider(itemId));
     final theme = Theme.of(context);
-
     final List<Color> marginColors = [
       theme.colorScheme.primary,
       theme.colorScheme.secondary,
@@ -50,56 +49,13 @@ class HackerNewsItemScreen extends ConsumerWidget {
       theme.colorScheme.error,
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hacker News Item'),
-        elevation: 1.0,
-        // Add Back Button Action
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back to List', // Add tooltip
-          onPressed: () {
-            final tabNotifier = ref.read(tabManagerProvider.notifier);
-            // Correctly get the currently active tab
-            final ContentTab? activeTab = tabNotifier.activeTab;
-
-            // Check if the active tab is indeed the HN item view
-            if (activeTab != null &&
-                activeTab.initialRouteName == 'hackernews_item') {
-              // Replace the current tab's content to go back
-              tabNotifier.navigateToOrReplaceActiveTab(
-                title:
-                    'Hacker News', // Or get title from a stored state if needed
-                initialRouteName: 'hackernews', // Go back to the list route
-                pathParameters: {}, // Clear params from detail view
-                icon: Icons.newspaper, // Reset icon
-              );
-            } else {
-              // Fallback or error handling if the active tab logic fails
-              print(
-                "Error: Could not find active Hacker News item tab to navigate back from.",
-              );
-            }
-          },
-        ),
-      ),
-      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-      body: itemDetailAsync.when(
+    return Container(
+      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+      child: itemDetailAsync.when(
         data: (item) {
-          // --- Remove depth pre-calculation logic ---
-          /*
-          final Map<int, HackerNewsItem> commentsById = { ... };
-          final Map<int, int> commentDepthMap = {};
-          void populateDepthMap(List<int>? kids, int depth) { ... }
-          populateDepthMap(item.kids, 0);
-          */
-
-          // --- Flatten the nested comments ---
           final flattenedComments = _flattenCommentsWithDepth(item);
-
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
-            // Item count is header + flattened comments
             itemCount: 1 + flattenedComments.length,
             separatorBuilder: (context, index) => const SizedBox(height: 6),
             itemBuilder: (context, index) {
@@ -117,18 +73,11 @@ class HackerNewsItemScreen extends ConsumerWidget {
               } else {
                 // Comment Card from flattened list
                 final entry = flattenedComments[index - 1];
-                final depth = entry.key; // Depth from MapEntry key
-                final comment = entry.value; // Comment from MapEntry value
-
-                // Skip rendering if comment is somehow null (shouldn't happen with filter)
-                // if (comment == null) return const SizedBox.shrink();
-
+                final depth = entry.key;
+                final comment = entry.value;
                 final colorIndex = depth % marginColors.length;
                 final marginColor = marginColors[colorIndex];
                 final double indentation = depth * 10.0;
-
-                // Only render card if comment text exists or it's marked deleted/dead
-                // (This prevents rendering empty cards for comments filtered out earlier)
                 if (comment.text != null || comment.deleted || comment.dead) {
                   return Padding(
                     padding: EdgeInsets.only(left: indentation),
@@ -143,7 +92,6 @@ class HackerNewsItemScreen extends ConsumerWidget {
                     ),
                   );
                 } else {
-                  // Should generally not be reached due to filter in _flattenCommentsWithDepth
                   return const SizedBox.shrink();
                 }
               }
@@ -161,13 +109,6 @@ class HackerNewsItemScreen extends ConsumerWidget {
       ),
     );
   }
-
-  // Remove the old _getDepthFromMap function
-  /*
-  int _getDepthFromMap(HackerNewsItem comment, Map<int, int> depthMap) {
-    return depthMap[comment.id] ?? 0;
-  }
-  */
 
   Widget _buildItemHeader(
     BuildContext context,

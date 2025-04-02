@@ -4,7 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/core/domain/models/media.dart';
 import 'package:vibechan/core/domain/models/thread.dart';
 import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
-import 'package:vibechan/shared/widgets/html_text.dart';
+import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 
 class ThreadPreviewCard extends StatelessWidget {
   final Thread thread;
@@ -79,10 +79,9 @@ class ThreadPreviewCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                   ],
-                  HtmlText(
-                    originalPost.comment,
-                    maxLines: 4,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  SimpleHtmlRenderer(
+                    htmlString: originalPost.comment ?? '',
+                    baseStyle: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
                   Row(
