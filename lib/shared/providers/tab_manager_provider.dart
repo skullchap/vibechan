@@ -74,6 +74,45 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
     state = newTabs;
   }
 
+  /// Updates the currently active tab to show new content.
+  /// If no tab is active or available, it adds a new one instead.
+  void navigateToOrReplaceActiveTab({
+    required String title,
+    required String initialRouteName,
+    Map<String, String> pathParameters = const {},
+    IconData icon = Icons.web,
+  }) {
+    final activeIndex = state.indexWhere((tab) => tab.isActive);
+
+    if (activeIndex != -1) {
+      // Active tab found, update it
+      final activeTabId = state[activeIndex].id;
+      state =
+          state.map((tab) {
+            if (tab.id == activeTabId) {
+              return tab.copyWith(
+                title: title,
+                initialRouteName: initialRouteName,
+                pathParameters: pathParameters,
+                icon: icon,
+                // Ensure it remains active (though it should be already)
+                isActive: true,
+              );
+            }
+            // Ensure other tabs are inactive (in case state was inconsistent)
+            return tab.copyWith(isActive: false);
+          }).toList();
+    } else {
+      // No active tab (or no tabs at all?), fall back to adding a new one
+      addTab(
+        title: title,
+        initialRouteName: initialRouteName,
+        pathParameters: pathParameters,
+        icon: icon,
+      );
+    }
+  }
+
   /// Updates the properties of an existing tab (e.g., title or icon).
   /// Does NOT handle route changes within a tab - that's for the tab content view.
   void updateTabDetails(String id, {String? newTitle, IconData? newIcon}) {

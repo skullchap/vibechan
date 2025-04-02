@@ -69,7 +69,7 @@ class BoardCatalogScreen extends ConsumerWidget {
             ? thread.originalPost.subject!
             : 'Thread #${thread.id}';
 
-    tabNotifier.addTab(
+    tabNotifier.navigateToOrReplaceActiveTab(
       title: threadTitle,
       initialRouteName: 'thread',
       pathParameters: {'boardId': boardId, 'threadId': thread.id.toString()},

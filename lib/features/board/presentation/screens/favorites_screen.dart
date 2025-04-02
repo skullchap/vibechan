@@ -68,9 +68,9 @@ class FavoritesScreen extends ConsumerWidget {
                   ],
                 ),
                 onTap: () {
-                  // Open favorite board catalog in a new tab
+                  // Open favorite board catalog by replacing the active tab
                   final tabNotifier = ref.read(tabManagerProvider.notifier);
-                  tabNotifier.addTab(
+                  tabNotifier.navigateToOrReplaceActiveTab(
                     title: favorite['title']!,
                     initialRouteName: 'catalog',
                     pathParameters: {'boardId': favorite['boardId']!},

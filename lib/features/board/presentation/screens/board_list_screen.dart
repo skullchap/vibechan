@@ -42,13 +42,14 @@ class BoardListScreen extends ConsumerWidget {
   }
 
   void _openBoard(BuildContext context, WidgetRef ref, dynamic board) {
-    // Always use TabManager to open a new tab for the board catalog
+    // Use navigateToOrReplaceActiveTab to update the current tab
     final tabNotifier = ref.read(tabManagerProvider.notifier);
-    tabNotifier.addTab(
-      title: '/${board.id}/ - ${board.title}',
+    // Use navigateToOrReplaceActiveTab instead of addTab
+    tabNotifier.navigateToOrReplaceActiveTab(
+      title: '/${board.id}/ - ${board.title}', // Use board info for title
       initialRouteName: 'catalog',
       pathParameters: {'boardId': board.id},
-      icon: Icons.view_list,
+      icon: Icons.view_list, // Example icon for catalog
     );
   }
 }
