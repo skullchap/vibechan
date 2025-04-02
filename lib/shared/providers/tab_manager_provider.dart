@@ -2,80 +2,111 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../models/tab_item.dart';
+import '../models/content_tab.dart';
 
-/// Tab manager provider that handles the state of tabs
-class TabManagerNotifier extends StateNotifier<List<TabItem>> {
-  TabManagerNotifier() : super([]);
-  
+/// Manages the list of open content tabs.
+class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
+  TabManagerNotifier() : super([]) {
+    // Initialize with a default tab if desired, e.g., Boards list
+    // addTab(title: 'Boards', initialRouteName: 'boards');
+  }
+
   final _uuid = const Uuid();
-  
+
+  /// Adds a new tab, making it active.
   void addTab({
     required String title,
-    required String route,
+    required String initialRouteName,
     Map<String, String> pathParameters = const {},
     IconData icon = Icons.web,
-    bool setActive = true,
   }) {
-    final newTab = TabItem(
+    final newTab = ContentTab(
       id: _uuid.v4(),
       title: title,
-      route: route,
+      initialRouteName: initialRouteName,
       pathParameters: pathParameters,
       icon: icon,
-      isActive: false,
+      isActive: true, // Make the new tab active
     );
-    
-    if (setActive) {
-      final updatedTabs = state.map((tab) => tab.copyWith(isActive: false)).toList();
-      updatedTabs.add(newTab.copyWith(isActive: true));
-      state = updatedTabs;
-    } else {
-      state = [...state, newTab];
-    }
-  }
-  
-  void setActiveTab(String id) {
-    state = state.map((tab) => tab.copyWith(isActive: tab.id == id)).toList();
-  }
-  
-  void removeTab(String id) {
-    final index = state.indexWhere((tab) => tab.id == id);
-    if (index == -1) return;
-    
-    final newTabs = [...state];
-    newTabs.removeAt(index);
-    
-    // If we removed the active tab, set the last tab as active
-    if (state[index].isActive && newTabs.isNotEmpty) {
-      final newActiveIndex = index == newTabs.length ? index - 1 : index;
-      newTabs[newActiveIndex] = newTabs[newActiveIndex].copyWith(isActive: true);
-    }
-    
-    state = newTabs;
-  }
-  
-  void updateTabRoute(String id, String route, Map<String, String> pathParameters, {String? newTitle, IconData? newIcon}) {
-    final index = state.indexWhere((tab) => tab.id == id);
-    if (index == -1) return;
-    
-    final updatedTabs = [...state];
-    updatedTabs[index] = state[index].copyWith(
-      route: route,
-      pathParameters: pathParameters,
-      title: newTitle ?? state[index].title,
-      icon: newIcon ?? state[index].icon,
-    );
-    
+
+    // Deactivate current active tab
+    final updatedTabs =
+        state.map((tab) => tab.copyWith(isActive: false)).toList();
+
+    updatedTabs.add(newTab);
     state = updatedTabs;
   }
-  
-  TabItem? get activeTab => state.isEmpty ? null : state.firstWhere(
-    (tab) => tab.isActive, 
-    orElse: () => state.first.copyWith(isActive: true)
-  );
+
+  /// Sets the tab with the given [id] as active.
+  void setActiveTab(String id) {
+    // Check if the tab is already active
+    final currentActive = state.firstWhere(
+      (tab) => tab.isActive,
+      orElse: () => state.first,
+    );
+    if (currentActive.id == id) return; // Already active, do nothing
+
+    state =
+        state.map((tab) {
+          return tab.copyWith(isActive: tab.id == id);
+        }).toList();
+  }
+
+  /// Removes the tab with the given [id].
+  /// If the removed tab was active, activates the previous tab.
+  void removeTab(String id) {
+    final index = state.indexWhere((tab) => tab.id == id);
+    if (index == -1) return; // Tab not found
+
+    final wasActive = state[index].isActive;
+    final newTabs = [...state];
+    newTabs.removeAt(index);
+
+    // If we removed the active tab and there are still tabs left,
+    // activate the one before it, or the new first one.
+    if (wasActive && newTabs.isNotEmpty) {
+      final newActiveIndex = (index > 0) ? index - 1 : 0;
+      newTabs[newActiveIndex] = newTabs[newActiveIndex].copyWith(
+        isActive: true,
+      );
+    }
+
+    state = newTabs;
+  }
+
+  /// Updates the properties of an existing tab (e.g., title or icon).
+  /// Does NOT handle route changes within a tab - that's for the tab content view.
+  void updateTabDetails(String id, {String? newTitle, IconData? newIcon}) {
+    state =
+        state.map((tab) {
+          if (tab.id == id) {
+            return tab.copyWith(
+              title: newTitle ?? tab.title,
+              icon: newIcon ?? tab.icon,
+            );
+          }
+          return tab;
+        }).toList();
+  }
+
+  /// Gets the currently active tab, if any.
+  ContentTab? get activeTab {
+    try {
+      return state.firstWhere((tab) => tab.isActive);
+    } catch (e) {
+      // If no tab is explicitly active (e.g., after removing the last one was active),
+      // try returning the first one. This might need refinement based on desired behavior.
+      if (state.isNotEmpty) {
+        // To avoid infinite loops if state update fails, return first without modifying state here
+        return state.first;
+      }
+      return null; // No tabs left
+    }
+  }
 }
 
-final tabManagerProvider = StateNotifierProvider<TabManagerNotifier, List<TabItem>>((ref) {
-  return TabManagerNotifier();
-});
+/// Provider definition for the TabManagerNotifier.
+final tabManagerProvider =
+    StateNotifierProvider<TabManagerNotifier, List<ContentTab>>((ref) {
+      return TabManagerNotifier();
+    });

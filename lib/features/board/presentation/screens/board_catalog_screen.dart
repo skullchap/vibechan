@@ -50,8 +50,6 @@ class BoardCatalogScreen extends ConsumerWidget {
                             thread: threads[index],
                             onTap:
                                 () => _openThread(context, ref, threads[index]),
-                            onLongPress:
-                                () => _openThreadInNewTab(ref, threads[index]),
                           ),
                     )
                     : CatalogMediaFeed(
@@ -65,46 +63,17 @@ class BoardCatalogScreen extends ConsumerWidget {
   }
 
   void _openThread(BuildContext context, WidgetRef ref, Thread thread) {
-    final scaffold = Scaffold.maybeOf(context);
-    final isInsideAppShell = scaffold?.hasDrawer ?? false;
-
-    if (isInsideAppShell) {
-      final tabManager = ref.read(tabManagerProvider.notifier);
-      final tabs = ref.read(tabManagerProvider);
-      final activeTab = tabs.firstWhere(
-        (tab) => tab.isActive,
-        orElse: () => tabs.first,
-      );
-
-      final threadTitle =
-          thread.originalPost.subject?.isNotEmpty == true
-              ? thread.originalPost.subject!
-              : 'Thread #${thread.id}';
-
-      tabManager.updateTabRoute(
-        activeTab.id,
-        '/board/$boardId/thread/${thread.id}',
-        {'boardId': boardId, 'threadId': thread.id.toString()},
-        newTitle: threadTitle,
-        newIcon: Icons.forum,
-      );
-    } else {
-      context.go('/board/$boardId/thread/${thread.id}');
-    }
-  }
-
-  void _openThreadInNewTab(WidgetRef ref, Thread thread) {
-    final tabManager = ref.read(tabManagerProvider.notifier);
-
-    final title =
+    final tabNotifier = ref.read(tabManagerProvider.notifier);
+    final threadTitle =
         thread.originalPost.subject?.isNotEmpty == true
             ? thread.originalPost.subject!
             : 'Thread #${thread.id}';
 
-    tabManager.addTab(
-      title: title,
-      route: '/board/$boardId/thread/${thread.id}',
+    tabNotifier.addTab(
+      title: threadTitle,
+      initialRouteName: 'thread',
       pathParameters: {'boardId': boardId, 'threadId': thread.id.toString()},
+      icon: Icons.comment,
     );
   }
 }

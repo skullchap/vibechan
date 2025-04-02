@@ -1,0 +1,122 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Vibechan guidelines
+
+*   Organize the `lib` folder using a feature-first approach for better scalability.
+*   Keep `main.dart` minimal, focusing on initialization and running the app.
+*   Place the root widget (`MaterialApp`), routing, and themes in a dedicated `app.dart` or similar file.
+*   Group code related to a specific feature (e.g., auth, products) into its own directory.
+*   Within feature directories, separate code by layer (presentation, data, domain).
+*   Create a `core` directory for truly shared, feature-independent code (utils, network base, generic widgets).
+*   Use barrel files (`feature_name.dart`) to simplify imports by exporting a feature's or layer's public API.
+*   Follow `snake_case` for file and directory names.
+*   Follow `UpperCamelCase` for classes, enums, typedefs, and extensions.
+*   Follow `lowerCamelCase` for methods, functions, and variables.
+*   Use `lowerCamelCase` or `kConstantName` for constants.
+*   Prefix private members with an underscore (`_`).
+*   Choose one primary state management solution and apply it consistently.
+*   Strictly separate UI (widgets) from business logic and state.
+*   Minimize the use of `setState` for complex or application-wide state.
+*   Keep dependencies in `pubspec.yaml` updated.
+*   Remove unused dependencies from `pubspec.yaml`.
+*   Organize assets into logical subdirectories (e.g., `images`, `fonts`, `icons`).
+*   Declare asset *folders* in `pubspec.yaml` rather than individual files where practical.
+*   Consider using code generation for type-safe asset references.
+*   Structure the `test` folder to mirror the `lib` folder structure.
+*   Write unit tests for logic (Blocs, Cubits, Repositories, functions).
+*   Write widget tests for individual widgets.
+*   Write integration tests for user flows and features.
+*   Name test files ending with `_test.dart`.
+*   Consistently format code using `dart format .` or `flutter format .`.
+*   Enable and configure linting rules in `analysis_options.yaml` (e.g., using `flutter_lints`).
+*   Address all analyzer warnings and linter rules.
+*   Keep functions and classes focused on a single responsibility.
+*   Avoid deep widget nesting by extracting reusable widgets.
+*   Use `const` constructors wherever possible for performance optimization.
+*   Write clear, readable code and add comments only to explain the 'why', not the 'what'.
+*   Fully utilize Dart's null safety features and avoid unnecessary `!` operators.
+*   Do not hardcode API keys, secrets, or environment-specific URLs.
+*   Use `.env` files or Dart defines (`--dart-define`) for environment configuration.
+*   Add sensitive configuration files (like `.env`) to `.gitignore`.
+*   Maintain a comprehensive `README.md` with setup, architecture, and run instructions.
+*   Use DartDoc comments (`///`) for public APIs, especially in core/shared code.
+
+**General Dependency Management:**
+
+*   Run `flutter pub get` after modifying `pubspec.yaml`.
+*   Run `flutter pub upgrade --major-versions` periodically to check for updates, testing thoroughly afterward.
+*   Run `flutter pub outdated` to review available updates without applying them immediately.
+*   Ensure generated files (`.g.dart`, `.freezed.dart`) are added to `.gitignore` if not checked into version control (common practice).
+*   Run `flutter pub run build_runner build --delete-conflicting-outputs` when code generation is needed (for `freezed`, `riverpod_annotation`, `injectable`, `json_serializable`).
+
+**UI and Theming (`flex_color_scheme`, `flutter_staggered_grid_view`, `cached_network_image`, `flutter_markdown`, `shimmer`):**
+
+*   Define themes using `FlexColorScheme` in a central place (e.g., `core/theme/app_theme.dart`).
+*   Apply the generated `ThemeData` from `FlexColorScheme` to your `MaterialApp`.
+*   Use `flutter_staggered_grid_view` for complex, non-uniform grid layouts.
+*   Use `CachedNetworkImage` for network images to handle caching, loading, and error states efficiently.
+*   Provide consistent placeholder and error widgets for `CachedNetworkImage`.
+*   Use `FlutterMarkdown` to render Markdown text; isolate its usage within specific widgets.
+*   Use `Shimmer` widgets as placeholders while data is loading; replace them once data is available.
+
+**State Management and DI (`flutter_riverpod`, `riverpod_annotation`, `get_it`, `injectable`):**
+
+*   Define Riverpod providers using `riverpod_annotation` (`@riverpod`) for conciseness and type safety.
+*   Organize providers logically, often within the `state` directory of the relevant feature.
+*   Use `ref.watch` in build methods to react to state changes and `ref.read` in callbacks for one-time reads.
+*   Utilize `.autoDispose` for providers whose state should be discarded when no longer listened to.
+*   Configure `get_it` and `injectable` in a dedicated setup file (e.g., `core/di/injection.dart`).
+*   Annotate injectable classes (`@injectable`, `@singleton`, `@lazySingleton`) correctly based on required lifecycle.
+*   Call the `configureDependencies()` function (generated by `injectable`) early in `main.dart`.
+*   Retrieve dependencies using `GetIt.instance<Type>()` or preferably constructor injection.
+*   Use Riverpod primarily for managing UI state and `get_it`/`injectable` for services, repositories, data sources.
+
+**Routing (`go_router`):**
+
+*   Define your `GoRouter` configuration centrally (e.g., `core/navigation/app_router.dart`).
+*   Use named routes (`GoRoute(name: 'routeName', path: '/path', ...)`).
+*   Navigate using `context.goNamed('routeName')` or `context.pushNamed('routeName')`.
+*   Handle route parameters within the route definitions and access them in your screen widgets.
+*   Implement route guards/redirects within the `GoRouter` configuration for logic like authentication checks.
+
+**Data Layer (`dio`, `pretty_dio_logger`, `freezed_annotation`, `json_annotation`, `sqflite`, `shared_preferences`, `path_provider`, `connectivity_plus`):**
+
+*   Configure a singleton `Dio` instance, potentially registering it with `get_it`.
+*   Add necessary interceptors to `Dio` (e.g., for logging, adding auth tokens, handling errors).
+*   Use `PrettyDioLogger` interceptor only in development builds for readable network logs.
+*   Define data models (DTOs) using `freezed` and `json_serializable` for immutability and JSON conversion.
+*   Place generated `.freezed.dart` and `.g.dart` files alongside their source model files.
+*   Abstract `sqflite` database operations behind a repository or data source interface.
+*   Use `path_provider` to get the database storage location reliably.
+*   Manage database initialization, migrations, and closing carefully, often within a singleton helper class.
+*   Abstract `shared_preferences` usage behind a dedicated service or repository; avoid direct calls from UI.
+*   Use `connectivity_plus` to check network status before making network calls or to inform the user.
+*   Listen to the `connectivity_plus` stream for real-time network status changes if needed.
+
+**Utils (`logger`, `url_launcher`, `share_plus`, `collection`, `uuid`):**
+
+*   Configure a `Logger` instance centrally, potentially registered with `get_it`.
+*   Use appropriate log levels (`debug`, `info`, `error`, etc.).
+*   Avoid logging sensitive data.
+*   Always check `canLaunchUrl` before calling `launchUrl` with `url_launcher`.
+*   Use `share_plus` to trigger the native sharing UI.
+*   Leverage `collection` package methods (e.g., `firstWhereOrNull`) for cleaner list/map operations.
+*   Use `uuid` to generate unique IDs where necessary (e.g., temporary local IDs).
+
+**Player (`media_kit`, `media_kit_video`, `media_kit_libs_video`):**
+
+*   **Choose EITHER `media_kit` OR `video_player`/`chewie` for video playback consistency.**
+*   If using `media_kit`, initialize it once globally in `main.dart` (`MediaKit.ensureInitialized();`).
+*   Create and dispose `Player` controllers correctly within your widget's state lifecycle.
+*   Use the `Video` widget from `media_kit_video` to display the video output.
+*   Ensure native libraries (`media_kit_libs_video`) are correctly included.
+
+**Permissions (`permission_handler`):**
+
+*   Request permissions only when the feature requiring them is accessed.
+*   Check the permission status (`Permission.location.status`) *before* requesting (`Permission.location.request()`).
+*   Explain *why* the permission is needed to the user *before* triggering the native request dialog.
+*   Handle denied and permanently denied permission states gracefully (e.g., show alternative UI or guide user to settings).
