@@ -18,8 +18,29 @@ abstract class LobstersStory with _$LobstersStory {
     required String commentsUrl,
     required List<String> tags,
     required String submitterUser,
+    List<LobstersComment>? comments,
   }) = _LobstersStory;
 
   factory LobstersStory.fromJson(Map<String, dynamic> json) =>
       _$LobstersStoryFromJson(json);
+}
+
+@freezed
+abstract class LobstersComment with _$LobstersComment {
+  @JsonSerializable(fieldRename: FieldRename.snake)
+  const factory LobstersComment({
+    required String shortId,
+    required String commentingUser,
+    required DateTime createdAt,
+    @JsonKey(name: 'last_edited_at') required DateTime lastEditedAt,
+    required bool isDeleted,
+    required bool isModerated,
+    required int score,
+    required int depth,
+    String? comment,
+    List<LobstersComment>? comments,
+  }) = _LobstersComment;
+
+  factory LobstersComment.fromJson(Map<String, dynamic> json) =>
+      _$LobstersCommentFromJson(json);
 }

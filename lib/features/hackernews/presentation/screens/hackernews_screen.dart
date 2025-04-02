@@ -4,6 +4,7 @@ import 'package:vibechan/features/hackernews/presentation/providers/hackernews_s
 import 'package:vibechan/shared/widgets/generic_list_card.dart';
 import 'package:vibechan/shared/providers/tab_manager_provider.dart'; // For potentially opening links
 import 'package:url_launcher/url_launcher.dart'; // To launch URLs
+import '../../data/models/hacker_news_item.dart'; // Import the item model
 
 class HackerNewsScreen extends ConsumerWidget {
   const HackerNewsScreen({super.key});
@@ -42,19 +43,17 @@ class HackerNewsScreen extends ConsumerWidget {
                 child: GenericListCard(
                   item: item,
                   onTap: () {
-                    final urlString = item.metadata['url'] as String?;
-                    if (urlString != null) {
-                      final uri = Uri.tryParse(urlString);
-                      if (uri != null) {
-                        canLaunchUrl(uri).then((can) {
-                          if (can)
-                            launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                        });
-                      }
-                    }
+                    // Get the tab manager
+                    final tabNotifier = ref.read(tabManagerProvider.notifier);
+                    // Navigate, replacing the current tab's content
+                    tabNotifier.navigateToOrReplaceActiveTab(
+                      title: item.title ?? 'HN Item', // Use item title
+                      initialRouteName: 'hackernews_item', // New route name
+                      pathParameters: {
+                        'itemId': item.id.toString(),
+                      }, // Pass item ID
+                      icon: Icons.article, // Suggest an icon
+                    );
                   },
                 ),
               );

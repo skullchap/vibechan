@@ -23,6 +23,7 @@ abstract class HackerNewsItem with _$HackerNewsItem {
     parts, // A list of related pollopts, descending ordered by score.
     int?
     descendants, // In the case of stories or polls, the total comment count.
+    List<HackerNewsItem>? comments,
   }) = _HackerNewsItem;
 
   factory HackerNewsItem.fromJson(Map<String, dynamic> json) =>

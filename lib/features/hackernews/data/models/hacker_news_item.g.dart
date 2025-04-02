@@ -29,6 +29,10 @@ _HackerNewsItem _$HackerNewsItemFromJson(Map<String, dynamic> json) =>
               ?.map((e) => (e as num).toInt())
               .toList(),
       descendants: (json['descendants'] as num?)?.toInt(),
+      comments:
+          (json['comments'] as List<dynamic>?)
+              ?.map((e) => HackerNewsItem.fromJson(e as Map<String, dynamic>))
+              .toList(),
     );
 
 Map<String, dynamic> _$HackerNewsItemToJson(_HackerNewsItem instance) =>
@@ -48,4 +52,5 @@ Map<String, dynamic> _$HackerNewsItemToJson(_HackerNewsItem instance) =>
       'title': instance.title,
       'parts': instance.parts,
       'descendants': instance.descendants,
+      'comments': instance.comments,
     };

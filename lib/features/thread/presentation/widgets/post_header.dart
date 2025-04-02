@@ -4,39 +4,72 @@ import '../../../../core/domain/models/post.dart';
 
 class PostHeader extends StatelessWidget {
   final Post post;
+  final bool isOriginalPost;
 
-  const PostHeader({super.key, required this.post});
+  const PostHeader({
+    super.key,
+    required this.post,
+    this.isOriginalPost = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Row(
         children: [
           if (post.subject != null)
             Expanded(
               child: Text(
                 post.subject!,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          Text(post.name ?? 'Anonymous', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-          if (post.tripcode != null) ...[
-            const SizedBox(width: 4),
-            Text(post.tripcode!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.green)),
-          ],
-          const Spacer(),
-          Text('#${post.id}', style: Theme.of(context).textTheme.bodySmall),
-          PopupMenuButton<String>(
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'copy', child: Text('Copy Text')),
-              const PopupMenuItem(value: 'share', child: Text('Share')),
+          if (!isOriginalPost) ...[
+            const Spacer(),
+            if (post.subject != null) const SizedBox(width: 16),
+            Text(
+              post.name ?? 'Anonymous',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (post.tripcode != null) ...[
+              const SizedBox(width: 4),
+              Text(
+                post.tripcode!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.green.shade700,
+                ),
+              ),
             ],
-            onSelected: (value) {
-              if (value == 'share') Share.share(post.comment);
-              // TODO: implement copy
-            },
-          ),
+            const SizedBox(width: 8),
+            Text('#${post.id}', style: theme.textTheme.bodySmall),
+          ],
+          if (isOriginalPost) ...[
+            const Spacer(),
+            PopupMenuButton<String>(
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.more_vert, size: 18),
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'share_thread',
+                      child: Text('Share Thread'),
+                    ),
+                  ],
+              onSelected: (value) {
+                if (value == 'share_thread') {
+                  // TODO: Implement share thread logic (need thread URL)
+                }
+              },
+            ),
+          ],
         ],
       ),
     );

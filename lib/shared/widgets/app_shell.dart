@@ -19,6 +19,9 @@ import '../../features/lobsters/presentation/screens/lobsters_screen.dart';
 import '../../features/hackernews/presentation/providers/hackernews_stories_provider.dart';
 
 import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart';
+// Import detail screens
+import '../../features/hackernews/presentation/screens/hackernews_item_screen.dart'; // Import HN detail
+import '../../features/lobsters/presentation/screens/lobsters_story_screen.dart'; // Import Lobsters detail
 
 // Revert to ConsumerStatefulWidget
 class AppShell extends ConsumerStatefulWidget {
@@ -346,11 +349,28 @@ class _AppShellState extends ConsumerState<AppShell> {
           );
         }
         break; // Fallthrough to error if params are null
-      case 'hackernews': // Add case for Hacker News
+      case 'hackernews': // Add case for Hacker News List
         return HackerNewsScreen(key: tabKey);
-      // Add case for Lobsters
-      case 'lobsters':
+      case 'lobsters': // Add case for Lobsters List
         return LobstersScreen(key: tabKey);
+      case 'hackernews_item': // New case for HN Item Detail
+        final itemId = tab.pathParameters['itemId'];
+        if (itemId != null) {
+          // Need to parse itemId back to int
+          final itemIdInt = int.tryParse(itemId);
+          if (itemIdInt != null) {
+            // Replace placeholder with actual screen
+            return HackerNewsItemScreen(key: tabKey, itemId: itemIdInt);
+          }
+        }
+        break; // Fallthrough to error if itemId is null or invalid
+      case 'lobsters_story': // New case for Lobsters Story Detail
+        final storyId = tab.pathParameters['storyId'];
+        if (storyId != null) {
+          // Replace placeholder with actual screen
+          return LobstersStoryScreen(key: tabKey, storyId: storyId);
+        }
+        break; // Fallthrough to error if storyId is null
     }
     // Handle unknown route or missing parameters
     return Center(

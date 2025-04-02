@@ -22,7 +22,7 @@ class PostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PostHeader(post: post),
+          PostHeader(post: post, isOriginalPost: isOriginalPost),
           PostMedia(post: post),
           PostBody(post: post),
         ],

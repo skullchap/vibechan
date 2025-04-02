@@ -27,7 +27,8 @@ mixin _$HackerNewsItem {
  int? get score;// The story's score, or the votes for a pollopt.
  String? get title;// The title of the story, poll or job.
  List<int>? get parts;// A list of related pollopts, descending ordered by score.
- int? get descendants;
+ int? get descendants;// In the case of stories or polls, the total comment count.
+ List<HackerNewsItem>? get comments;
 /// Create a copy of HackerNewsItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -40,16 +41,16 @@ $HackerNewsItemCopyWith<HackerNewsItem> get copyWith => _$HackerNewsItemCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HackerNewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.deleted, deleted) || other.deleted == deleted)&&(identical(other.type, type) || other.type == type)&&(identical(other.by, by) || other.by == by)&&(identical(other.time, time) || other.time == time)&&(identical(other.text, text) || other.text == text)&&(identical(other.dead, dead) || other.dead == dead)&&(identical(other.parent, parent) || other.parent == parent)&&(identical(other.poll, poll) || other.poll == poll)&&const DeepCollectionEquality().equals(other.kids, kids)&&(identical(other.url, url) || other.url == url)&&(identical(other.score, score) || other.score == score)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.parts, parts)&&(identical(other.descendants, descendants) || other.descendants == descendants));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HackerNewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.deleted, deleted) || other.deleted == deleted)&&(identical(other.type, type) || other.type == type)&&(identical(other.by, by) || other.by == by)&&(identical(other.time, time) || other.time == time)&&(identical(other.text, text) || other.text == text)&&(identical(other.dead, dead) || other.dead == dead)&&(identical(other.parent, parent) || other.parent == parent)&&(identical(other.poll, poll) || other.poll == poll)&&const DeepCollectionEquality().equals(other.kids, kids)&&(identical(other.url, url) || other.url == url)&&(identical(other.score, score) || other.score == score)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.parts, parts)&&(identical(other.descendants, descendants) || other.descendants == descendants)&&const DeepCollectionEquality().equals(other.comments, comments));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,deleted,type,by,time,text,dead,parent,poll,const DeepCollectionEquality().hash(kids),url,score,title,const DeepCollectionEquality().hash(parts),descendants);
+int get hashCode => Object.hash(runtimeType,id,deleted,type,by,time,text,dead,parent,poll,const DeepCollectionEquality().hash(kids),url,score,title,const DeepCollectionEquality().hash(parts),descendants,const DeepCollectionEquality().hash(comments));
 
 @override
 String toString() {
-  return 'HackerNewsItem(id: $id, deleted: $deleted, type: $type, by: $by, time: $time, text: $text, dead: $dead, parent: $parent, poll: $poll, kids: $kids, url: $url, score: $score, title: $title, parts: $parts, descendants: $descendants)';
+  return 'HackerNewsItem(id: $id, deleted: $deleted, type: $type, by: $by, time: $time, text: $text, dead: $dead, parent: $parent, poll: $poll, kids: $kids, url: $url, score: $score, title: $title, parts: $parts, descendants: $descendants, comments: $comments)';
 }
 
 
@@ -60,7 +61,7 @@ abstract mixin class $HackerNewsItemCopyWith<$Res>  {
   factory $HackerNewsItemCopyWith(HackerNewsItem value, $Res Function(HackerNewsItem) _then) = _$HackerNewsItemCopyWithImpl;
 @useResult
 $Res call({
- int id, bool deleted, String? type, String? by, int? time, String? text, bool dead, int? parent, int? poll, List<int>? kids, String? url, int? score, String? title, List<int>? parts, int? descendants
+ int id, bool deleted, String? type, String? by, int? time, String? text, bool dead, int? parent, int? poll, List<int>? kids, String? url, int? score, String? title, List<int>? parts, int? descendants, List<HackerNewsItem>? comments
 });
 
 
@@ -77,7 +78,7 @@ class _$HackerNewsItemCopyWithImpl<$Res>
 
 /// Create a copy of HackerNewsItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? deleted = null,Object? type = freezed,Object? by = freezed,Object? time = freezed,Object? text = freezed,Object? dead = null,Object? parent = freezed,Object? poll = freezed,Object? kids = freezed,Object? url = freezed,Object? score = freezed,Object? title = freezed,Object? parts = freezed,Object? descendants = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? deleted = null,Object? type = freezed,Object? by = freezed,Object? time = freezed,Object? text = freezed,Object? dead = null,Object? parent = freezed,Object? poll = freezed,Object? kids = freezed,Object? url = freezed,Object? score = freezed,Object? title = freezed,Object? parts = freezed,Object? descendants = freezed,Object? comments = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
@@ -94,7 +95,8 @@ as String?,score: freezed == score ? _self.score : score // ignore: cast_nullabl
 as int?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,parts: freezed == parts ? _self.parts : parts // ignore: cast_nullable_to_non_nullable
 as List<int>?,descendants: freezed == descendants ? _self.descendants : descendants // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,comments: freezed == comments ? _self.comments : comments // ignore: cast_nullable_to_non_nullable
+as List<HackerNewsItem>?,
   ));
 }
 
@@ -105,7 +107,7 @@ as int?,
 @JsonSerializable()
 
 class _HackerNewsItem implements HackerNewsItem {
-  const _HackerNewsItem({required this.id, this.deleted = false, this.type, this.by, this.time, this.text, this.dead = false, this.parent, this.poll, final  List<int>? kids, this.url, this.score, this.title, final  List<int>? parts, this.descendants}): _kids = kids,_parts = parts;
+  const _HackerNewsItem({required this.id, this.deleted = false, this.type, this.by, this.time, this.text, this.dead = false, this.parent, this.poll, final  List<int>? kids, this.url, this.score, this.title, final  List<int>? parts, this.descendants, final  List<HackerNewsItem>? comments}): _kids = kids,_parts = parts,_comments = comments;
   factory _HackerNewsItem.fromJson(Map<String, dynamic> json) => _$HackerNewsItemFromJson(json);
 
 @override final  int id;
@@ -152,6 +154,17 @@ class _HackerNewsItem implements HackerNewsItem {
 
 // A list of related pollopts, descending ordered by score.
 @override final  int? descendants;
+// In the case of stories or polls, the total comment count.
+ final  List<HackerNewsItem>? _comments;
+// In the case of stories or polls, the total comment count.
+@override List<HackerNewsItem>? get comments {
+  final value = _comments;
+  if (value == null) return null;
+  if (_comments is EqualUnmodifiableListView) return _comments;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 
 /// Create a copy of HackerNewsItem
 /// with the given fields replaced by the non-null parameter values.
@@ -166,16 +179,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HackerNewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.deleted, deleted) || other.deleted == deleted)&&(identical(other.type, type) || other.type == type)&&(identical(other.by, by) || other.by == by)&&(identical(other.time, time) || other.time == time)&&(identical(other.text, text) || other.text == text)&&(identical(other.dead, dead) || other.dead == dead)&&(identical(other.parent, parent) || other.parent == parent)&&(identical(other.poll, poll) || other.poll == poll)&&const DeepCollectionEquality().equals(other._kids, _kids)&&(identical(other.url, url) || other.url == url)&&(identical(other.score, score) || other.score == score)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._parts, _parts)&&(identical(other.descendants, descendants) || other.descendants == descendants));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HackerNewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.deleted, deleted) || other.deleted == deleted)&&(identical(other.type, type) || other.type == type)&&(identical(other.by, by) || other.by == by)&&(identical(other.time, time) || other.time == time)&&(identical(other.text, text) || other.text == text)&&(identical(other.dead, dead) || other.dead == dead)&&(identical(other.parent, parent) || other.parent == parent)&&(identical(other.poll, poll) || other.poll == poll)&&const DeepCollectionEquality().equals(other._kids, _kids)&&(identical(other.url, url) || other.url == url)&&(identical(other.score, score) || other.score == score)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._parts, _parts)&&(identical(other.descendants, descendants) || other.descendants == descendants)&&const DeepCollectionEquality().equals(other._comments, _comments));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,deleted,type,by,time,text,dead,parent,poll,const DeepCollectionEquality().hash(_kids),url,score,title,const DeepCollectionEquality().hash(_parts),descendants);
+int get hashCode => Object.hash(runtimeType,id,deleted,type,by,time,text,dead,parent,poll,const DeepCollectionEquality().hash(_kids),url,score,title,const DeepCollectionEquality().hash(_parts),descendants,const DeepCollectionEquality().hash(_comments));
 
 @override
 String toString() {
-  return 'HackerNewsItem(id: $id, deleted: $deleted, type: $type, by: $by, time: $time, text: $text, dead: $dead, parent: $parent, poll: $poll, kids: $kids, url: $url, score: $score, title: $title, parts: $parts, descendants: $descendants)';
+  return 'HackerNewsItem(id: $id, deleted: $deleted, type: $type, by: $by, time: $time, text: $text, dead: $dead, parent: $parent, poll: $poll, kids: $kids, url: $url, score: $score, title: $title, parts: $parts, descendants: $descendants, comments: $comments)';
 }
 
 
@@ -186,7 +199,7 @@ abstract mixin class _$HackerNewsItemCopyWith<$Res> implements $HackerNewsItemCo
   factory _$HackerNewsItemCopyWith(_HackerNewsItem value, $Res Function(_HackerNewsItem) _then) = __$HackerNewsItemCopyWithImpl;
 @override @useResult
 $Res call({
- int id, bool deleted, String? type, String? by, int? time, String? text, bool dead, int? parent, int? poll, List<int>? kids, String? url, int? score, String? title, List<int>? parts, int? descendants
+ int id, bool deleted, String? type, String? by, int? time, String? text, bool dead, int? parent, int? poll, List<int>? kids, String? url, int? score, String? title, List<int>? parts, int? descendants, List<HackerNewsItem>? comments
 });
 
 
@@ -203,7 +216,7 @@ class __$HackerNewsItemCopyWithImpl<$Res>
 
 /// Create a copy of HackerNewsItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? deleted = null,Object? type = freezed,Object? by = freezed,Object? time = freezed,Object? text = freezed,Object? dead = null,Object? parent = freezed,Object? poll = freezed,Object? kids = freezed,Object? url = freezed,Object? score = freezed,Object? title = freezed,Object? parts = freezed,Object? descendants = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? deleted = null,Object? type = freezed,Object? by = freezed,Object? time = freezed,Object? text = freezed,Object? dead = null,Object? parent = freezed,Object? poll = freezed,Object? kids = freezed,Object? url = freezed,Object? score = freezed,Object? title = freezed,Object? parts = freezed,Object? descendants = freezed,Object? comments = freezed,}) {
   return _then(_HackerNewsItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
@@ -220,7 +233,8 @@ as String?,score: freezed == score ? _self.score : score // ignore: cast_nullabl
 as int?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,parts: freezed == parts ? _self._parts : parts // ignore: cast_nullable_to_non_nullable
 as List<int>?,descendants: freezed == descendants ? _self.descendants : descendants // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,comments: freezed == comments ? _self._comments : comments // ignore: cast_nullable_to_non_nullable
+as List<HackerNewsItem>?,
   ));
 }
 

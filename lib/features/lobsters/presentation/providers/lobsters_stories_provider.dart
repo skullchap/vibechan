@@ -51,6 +51,7 @@ GenericListItem _mapLobstersStoryToGeneric(LobstersStory story) {
       'url': story.url,
       'comments_url': story.commentsUrl,
       'submitter': story.submitterUser,
+      'short_id': story.shortId,
     },
     originalData: story,
   );

@@ -46,4 +46,15 @@ class LobstersRepositoryImpl implements LobstersRepository {
   Future<List<LobstersStory>> getNewestStories({int count = 25}) {
     return _fetchStories(_apiClient.getNewestStories, count);
   }
+
+  @override
+  Future<LobstersStory> getStory(String shortId) async {
+    try {
+      final jsonData = await _apiClient.getStory(shortId);
+      return LobstersStory.fromJson(jsonData);
+    } catch (e) {
+      print('Error fetching Lobsters story $shortId in repository: $e');
+      rethrow;
+    }
+  }
 }

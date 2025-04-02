@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibechan/features/lobsters/presentation/providers/lobsters_stories_provider.dart';
 import 'package:vibechan/shared/widgets/generic_list_card.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:vibechan/shared/providers/tab_manager_provider.dart';
+import 'package:vibechan/core/domain/models/generic_list_item.dart';
 
 class LobstersScreen extends ConsumerWidget {
   const LobstersScreen({super.key});
@@ -26,6 +27,7 @@ class LobstersScreen extends ConsumerWidget {
             itemCount: stories.length,
             itemBuilder: (context, index) {
               final item = stories[index];
+
               return Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8.0,
@@ -34,17 +36,25 @@ class LobstersScreen extends ConsumerWidget {
                 child: GenericListCard(
                   item: item,
                   onTap: () {
-                    final urlString = item.metadata['url'] as String?;
-                    if (urlString != null) {
-                      final uri = Uri.tryParse(urlString);
-                      if (uri != null) {
-                        canLaunchUrl(uri).then((can) {
-                          if (can)
-                            launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                        });
+                    if (index < stories.length) {
+                      final tappedItem = stories[index];
+                      final tabNotifier = ref.read(tabManagerProvider.notifier);
+
+                      final title = tappedItem.title ?? 'Lobsters Story';
+                      final storyId =
+                          tappedItem.metadata['short_id'] as String?;
+
+                      if (storyId != null) {
+                        tabNotifier.navigateToOrReplaceActiveTab(
+                          title: title,
+                          initialRouteName: 'lobsters_story',
+                          pathParameters: {'storyId': storyId},
+                          icon: Icons.article,
+                        );
+                      } else {
+                        print(
+                          'Error: Lobsters short_id not found in metadata for item ${tappedItem.id}',
+                        );
                       }
                     }
                   },
@@ -59,7 +69,7 @@ class LobstersScreen extends ConsumerWidget {
           (error, stack) => Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Error loading Lobsters stories: $error'),
+              child: Text('Error loading Lobsters stories: $error\n$stack'),
             ),
           ),
     );
