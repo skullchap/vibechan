@@ -64,10 +64,7 @@ class _PostVideoState extends State<PostVideo> {
         aspectRatio: aspectRatio,
         child:
             _isPlaying
-                ? IgnorePointer(
-                  ignoring: true,
-                  child: Video(controller: _controller),
-                )
+                ? Video(controller: _controller)
                 : Stack(
                   fit: StackFit.expand,
                   children: [
