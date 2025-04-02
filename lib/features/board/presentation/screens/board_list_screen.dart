@@ -44,8 +44,8 @@ class BoardListScreen extends ConsumerWidget {
   void _openBoard(BuildContext context, WidgetRef ref, dynamic board) {
     // Use navigateToOrReplaceActiveTab to update the current tab
     final tabNotifier = ref.read(tabManagerProvider.notifier);
-    // Use navigateToOrReplaceActiveTab instead of addTab
-    tabNotifier.navigateToOrReplaceActiveTab(
+    // Change to addTab to open the board in a *new* tab
+    tabNotifier.addTab(
       title: '/${board.id}/ - ${board.title}', // Use board info for title
       initialRouteName: 'catalog',
       pathParameters: {'boardId': board.id},

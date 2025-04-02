@@ -79,7 +79,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     // Read the HN sort type provider for the AppBar action
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
 
-    String appBarTitle = activeTab?.title ?? AppConfig.appName;
+    // String appBarTitle = activeTab?.title ?? AppConfig.appName; // No longer needed
 
     // Determine if back button should be shown
     // Show if it's a detail view (HN item, Lobsters story, 4chan thread)
@@ -90,11 +90,17 @@ class _AppShellState extends ConsumerState<AppShell> {
             activeTab.initialRouteName == 'thread');
 
     List<Widget> appBarActions = [
-      IconButton(
-        icon: const Icon(Icons.add),
-        tooltip: 'Add New Tab',
-        onPressed: () => _showAddTabDialog(context, tabNotifier),
-      ),
+      // REMOVE IconButton for adding tab
+      // IconButton(
+      //   icon: const Icon(Icons.add),
+      //   tooltip: 'Add New Tab',
+      //   onPressed: () {
+      //     showDialog(
+      //       context: context,
+      //       builder: (dialogContext) => AddTabDialog(tabNotifier: tabNotifier),
+      //     );
+      //   },
+      // ),
       // HN Sort Dropdown (conditionally shown)
       if (activeTab?.initialRouteName == 'hackernews')
         Padding(
@@ -185,7 +191,8 @@ class _AppShellState extends ConsumerState<AppShell> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(appBarTitle),
+          // Use the source selector dropdown as the title
+          title: _buildSourceSelector(context, ref, activeTab, tabNotifier),
           // Conditionally add the leading back button
           leading:
               showBackButton
@@ -407,66 +414,6 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
   // --- End Back Button Handler ---
 
-  // --- Add Tab Dialog ---
-  void _showAddTabDialog(BuildContext context, TabManagerNotifier tabNotifier) {
-    // Define available sources based on AppConfig or dynamically
-    final List<Map<String, dynamic>> sources = [
-      {'title': 'Boards', 'routeName': 'boards', 'icon': Icons.dashboard},
-      {
-        'title': 'Hacker News',
-        'routeName': 'hackernews',
-        'icon': Icons.newspaper,
-      },
-      {
-        'title': 'Lobsters',
-        'routeName': 'lobsters',
-        'icon': Icons.rss_feed,
-      }, // Add Lobsters
-      {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
-      {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
-    ];
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Add New Tab'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: sources.length,
-              itemBuilder: (BuildContext listContext, int index) {
-                final source = sources[index];
-                return ListTile(
-                  leading: Icon(source['icon'] as IconData?),
-                  title: Text(source['title'] as String),
-                  onTap: () {
-                    tabNotifier.addTab(
-                      title: source['title'] as String,
-                      initialRouteName: source['routeName'] as String,
-                      icon: source['icon'] ?? Icons.web,
-                    );
-                    Navigator.of(dialogContext).pop(); // Close the dialog
-                  },
-                );
-              },
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop(); // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-  // --- End Add Tab Dialog ---
-
   // --- Build Tab Button ---
   Widget _buildTabButton(BuildContext context, ContentTab tab) {
     final bool isActive =
@@ -537,4 +484,106 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 
   // --- End Build Tab Button ---
+}
+
+// ADD HELPER FUNCTIONS AT THE END OF THE CLASS or outside
+
+// Helper function to determine the general category of a tab
+String _getCategoryFromTab(ContentTab? tab) {
+  if (tab == null) return 'boards'; // Default if no tab active
+  switch (tab.initialRouteName) {
+    case 'boards':
+    case 'catalog':
+    case 'thread':
+      return 'boards';
+    case 'hackernews':
+    case 'hackernews_item':
+      return 'hackernews';
+    case 'lobsters':
+    case 'lobsters_story':
+      return 'lobsters';
+    case 'favorites':
+      return 'favorites';
+    case 'settings':
+      return 'settings';
+    default:
+      return 'boards'; // Fallback category
+  }
+}
+
+// Widget builder for the source selector dropdown
+Widget _buildSourceSelector(
+  BuildContext context,
+  WidgetRef ref,
+  ContentTab? activeTab,
+  TabManagerNotifier tabNotifier,
+) {
+  final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
+
+  // Define available sources (can be refactored later)
+  final List<Map<String, dynamic>> sources = [
+    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard},
+    {
+      'title': 'Hacker News',
+      'routeName': 'hackernews',
+      'icon': Icons.newspaper,
+    },
+    {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
+    {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
+    {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
+  ];
+
+  final String currentCategory = _getCategoryFromTab(activeTab);
+
+  return DropdownButtonHideUnderline(
+    child: DropdownButton<String>(
+      value: currentCategory,
+      icon: Icon(
+        Icons.arrow_drop_down,
+        color: colorScheme.onPrimary,
+      ), // Adjust color as needed
+      style:
+          theme.appBarTheme.titleTextStyle ??
+          theme.textTheme.titleLarge?.copyWith(color: colorScheme.onPrimary),
+      dropdownColor:
+          colorScheme.surfaceContainerHighest, // Or another suitable color
+      items:
+          sources.map((source) {
+            return DropdownMenuItem<String>(
+              value: source['routeName'] as String,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    source['icon'] as IconData?,
+                    size: 20,
+                    color: colorScheme.onSurfaceVariant,
+                  ), // Style icon
+                  const SizedBox(width: 8),
+                  Text(
+                    source['title'] as String,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ), // Style text
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+      onChanged: (String? newRouteName) {
+        if (newRouteName != null) {
+          final selectedSource = sources.firstWhere(
+            (s) => s['routeName'] == newRouteName,
+          );
+          // Add a *new* tab for the selected source
+          tabNotifier.addTab(
+            title: selectedSource['title'] as String,
+            initialRouteName: selectedSource['routeName'] as String,
+            icon: selectedSource['icon'] ?? Icons.web,
+          );
+        }
+      },
+    ),
+  );
 }
