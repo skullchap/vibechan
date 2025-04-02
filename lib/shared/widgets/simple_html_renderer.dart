@@ -20,6 +20,8 @@ class SimpleHtmlRenderer extends StatelessWidget {
   final TextStyle? baseStyle;
   final int? maxLines;
   final TextOverflow overflow;
+  final String? highlightTerms;
+  final Color? highlightColor;
 
   const SimpleHtmlRenderer({
     super.key,
@@ -27,6 +29,8 @@ class SimpleHtmlRenderer extends StatelessWidget {
     this.baseStyle,
     this.maxLines,
     this.overflow = TextOverflow.ellipsis,
+    this.highlightTerms,
+    this.highlightColor,
   });
 
   @override
@@ -56,7 +60,18 @@ class SimpleHtmlRenderer extends StatelessWidget {
       if (node is dom.Text) {
         // Add non-empty text nodes
         if (node.text.trim().isNotEmpty) {
-          currentSpans.add(TextSpan(text: node.text, style: currentStyle));
+          if (highlightTerms != null && highlightTerms!.isNotEmpty) {
+            // Highlight terms in the text
+            final highlightedSpans = _getHighlightedSpans(
+              node.text,
+              currentStyle,
+              highlightTerms!,
+              highlightColor ?? Colors.yellow.withOpacity(0.3),
+            );
+            currentSpans.addAll(highlightedSpans);
+          } else {
+            currentSpans.add(TextSpan(text: node.text, style: currentStyle));
+          }
         }
       } else if (node is dom.Element) {
         TextStyle newStyle = currentStyle;
@@ -232,5 +247,60 @@ class SimpleHtmlRenderer extends StatelessWidget {
     // if this widget were stateful. For a StatelessWidget, this is less critical.
 
     return spans;
+  }
+
+  // Helper method to highlight search terms in text
+  List<InlineSpan> _getHighlightedSpans(
+    String text,
+    TextStyle style,
+    String searchTerms,
+    Color highlightColor,
+  ) {
+    if (searchTerms.isEmpty) return [TextSpan(text: text, style: style)];
+
+    final List<InlineSpan> result = [];
+    final RegExp regExp = RegExp(
+      searchTerms
+          .split(' ')
+          .where((term) => term.isNotEmpty)
+          .map((term) {
+            return RegExp.escape(term);
+          })
+          .join('|'),
+      caseSensitive: false,
+    );
+
+    int lastMatchEnd = 0;
+    for (final match in regExp.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastMatchEnd) {
+        result.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
+      }
+
+      // Add the highlighted match
+      result.add(
+        TextSpan(
+          text: text.substring(match.start, match.end),
+          style: style.copyWith(
+            backgroundColor: highlightColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    // Add remaining text after the last match
+    if (lastMatchEnd < text.length) {
+      result.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+    }
+
+    return result;
   }
 }

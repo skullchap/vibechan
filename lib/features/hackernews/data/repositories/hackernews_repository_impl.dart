@@ -165,11 +165,27 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
       // Initial parse without nested comments
       final item = HackerNewsItem.fromJson(itemJson);
 
-      // Cache the item
+      // Cache the item without comments
       _cacheItem(id, item);
 
-      // If the item has kids, fetch only first level comments to avoid deep recursion
-      if (item.kids != null && item.kids!.isNotEmpty) {
+      // Return the item without loading comments - they'll be loaded on demand
+      return item;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // New method to load comments for a specific item
+  @override
+  Future<HackerNewsItem> getItemWithComments(int id) async {
+    try {
+      // First get the basic item
+      final item = await getItem(id);
+
+      // If the item has kids and doesn't already have comments loaded
+      if (item.kids != null &&
+          item.kids!.isNotEmpty &&
+          (item.comments == null || item.comments!.isEmpty)) {
         // Limit the number of comments to fetch to avoid excessive API calls
         final commentIds = item.kids!.take(20).toList();
 
@@ -194,14 +210,16 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
         final validComments =
             fetchedComments.whereType<HackerNewsItem>().toList();
 
-        // Cache the item with comments
+        // Create a new item with comments
         final itemWithComments = item.copyWith(comments: validComments);
+
+        // Cache the item with comments
         _cacheItem(id, itemWithComments);
 
         // Return the item with its direct children
         return itemWithComments;
       } else {
-        // No kids, return the item as is
+        // Return the item as-is (might already have comments loaded)
         return item;
       }
     } catch (e) {

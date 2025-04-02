@@ -155,6 +155,18 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
       return null; // No tabs left
     }
   }
+
+  /// Updates the title of the currently active tab.
+  void updateActiveTabTitle(String newTitle) {
+    final activeIndex = state.indexWhere((tab) => tab.isActive);
+    if (activeIndex != -1) {
+      final updatedTabs = List<ContentTab>.from(state);
+      updatedTabs[activeIndex] = updatedTabs[activeIndex].copyWith(
+        title: newTitle,
+      );
+      state = updatedTabs;
+    }
+  }
 }
 
 /// Provider definition for the TabManagerNotifier.

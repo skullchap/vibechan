@@ -6,13 +6,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/presentation/providers/board_providers.dart';
 import '../../../../core/presentation/providers/thread_providers.dart';
 import '../../../../shared/providers/tab_manager_provider.dart';
+import '../../../../shared/providers/search_provider.dart';
+import '../../../../core/domain/models/board.dart';
 import '../../../../core/domain/models/thread.dart';
+import '../../../../core/services/layout_service.dart';
 import '../widgets/catalog/catalog_view_mode.dart';
 import '../widgets/catalog/catalog_media_feed.dart';
 import '../widgets/thread_preview_card.dart';
-import '../../../../core/utils/responsive_layout.dart';
-import '../../../../core/presentation/widgets/responsive_widgets.dart';
-import '../../../../core/services/layout_service.dart';
 
 class BoardCatalogScreen extends ConsumerWidget {
   final String boardId;
@@ -21,90 +21,180 @@ class BoardCatalogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final board = ref.watch(
-      boardsNotifierProvider.select(
-        (value) => value.whenData(
-          (boards) => boards.firstWhere((b) => b.id == boardId),
-        ),
-      ),
-    );
-
-    final threads = ref.watch(catalogNotifierProvider(boardId));
-    final viewMode = ref.watch(catalogViewModeProvider);
-
+    final boards = ref.watch(boardsNotifierProvider);
+    final catalogState = ref.watch(catalogNotifierProvider(boardId));
     final layoutState = ref.watch(layoutStateNotifierProvider);
-    final currentLayout = layoutState.currentLayout;
+    final viewMode = ref.watch(catalogViewModeProvider);
     final layoutService = ref.read(layoutServiceProvider);
 
-    final columnCount = layoutService.getColumnCountForLayout(currentLayout);
-    final padding = layoutService.getPaddingForLayout(currentLayout);
+    final isSearchActive = ref.watch(isSearchActiveProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
+
+    // Filter threads based on search query
+    final threads = catalogState.maybeWhen(
+      data: (threads) {
+        if (isSearchActive && searchQuery.isNotEmpty) {
+          return _filterThreadsBySearch(threads, searchQuery);
+        }
+        return threads;
+      },
+      orElse: () => <Thread>[],
+    );
+
+    // Get board name for display purposes and tab title updates
+    final boardName = boards.maybeWhen(
+      data: (boards) {
+        final currentBoard = boards.firstWhere(
+          (board) => board.id == boardId,
+          orElse:
+              () => Board(
+                id: boardId,
+                title: boardId,
+                description: 'Loading board...',
+              ),
+        );
+
+        // Update tab title if needed
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final tabNotifier = ref.read(tabManagerProvider.notifier);
+          if (tabNotifier.activeTab?.initialRouteName == 'catalog') {
+            tabNotifier.updateActiveTabTitle(
+              '/${boardId}/ ${currentBoard.title}',
+            );
+          }
+        });
+
+        return currentBoard.title;
+      },
+      orElse: () => boardId,
+    );
+
+    final currentLayout = layoutState.currentLayout;
 
     return RefreshIndicator(
-      onRefresh:
-          () => ref.read(catalogNotifierProvider(boardId).notifier).refresh(),
-      child: threads.when(
-        data:
-            (threads) => AnimatedLayoutBuilder(
-              child:
-                  viewMode == CatalogViewMode.grid
-                      ? MasonryGridView.builder(
-                        padding: padding,
-                        gridDelegate:
-                            SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: columnCount,
-                            ),
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                        itemCount: threads.length,
-                        itemBuilder:
-                            (context, index) => _buildThreadCard(
-                              context,
-                              threads[index],
-                              index,
-                              () => _openThread(context, ref, threads[index]),
-                            ),
-                      )
-                      : CatalogMediaFeed(
-                        threads: threads,
-                        onTap: (thread) => _openThread(context, ref, thread),
-                        padding: padding,
-                        layoutType: currentLayout,
-                      ),
-            ),
+      onRefresh: () => _refreshCatalog(ref),
+      child: catalogState.when(
+        data: (originalThreads) {
+          if (isSearchActive && searchQuery.isNotEmpty && threads.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.search_off, size: 64),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No threads match "${searchQuery}"',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return viewMode == CatalogViewMode.grid
+              ? _buildGridView(
+                context,
+                threads,
+                currentLayout,
+                ref,
+                layoutService,
+              )
+              : _buildMediaFeed(
+                context,
+                threads,
+                currentLayout,
+                searchQuery,
+                ref,
+              );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error:
+            (error, stackTrace) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48),
+                  const SizedBox(height: 16),
+                  Text('Error loading threads: $error'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => _refreshCatalog(ref),
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              ),
+            ),
       ),
     );
   }
 
-  Widget _buildThreadCard(
-    BuildContext context,
-    Thread thread,
-    int index,
-    VoidCallback onTap,
-  ) {
-    final delay = Duration(milliseconds: 30 * (index % 10));
+  List<Thread> _filterThreadsBySearch(List<Thread> threads, String query) {
+    if (query.isEmpty) return threads;
 
-    return FutureBuilder(
-      future: Future.delayed(delay),
-      builder: (context, snapshot) {
-        return AnimatedOpacity(
-          opacity: snapshot.connectionState == ConnectionState.done ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: AnimatedScale(
-            scale:
-                snapshot.connectionState == ConnectionState.done ? 1.0 : 0.95,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutBack,
-            child: ThreadPreviewCard(thread: thread, onTap: onTap),
+    final searchTerms = query.toLowerCase();
+    return threads.where((thread) {
+      final post = thread.originalPost;
+      final subject = post.subject?.toLowerCase() ?? '';
+      final comment = post.comment?.toLowerCase() ?? '';
+      final name = post.name?.toLowerCase() ?? '';
+
+      return subject.contains(searchTerms) ||
+          comment.contains(searchTerms) ||
+          name.contains(searchTerms);
+    }).toList();
+  }
+
+  Widget _buildGridView(
+    BuildContext context,
+    List<Thread> threads,
+    AppLayout layoutType,
+    WidgetRef ref,
+    LayoutService layoutService,
+  ) {
+    return MasonryGridView.builder(
+      padding: layoutService.getPaddingForLayout(layoutType),
+      gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: layoutService.getColumnCountForLayout(layoutType),
+      ),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      itemCount: threads.length,
+      itemBuilder: (context, index) {
+        final thread = threads[index];
+
+        // Only use animation on initial load, not for search filtering
+        // Use a static key for each thread so it doesn't rebuild on search
+        final itemKey = ValueKey('thread-${thread.id}');
+
+        return KeyedSubtree(
+          key: itemKey,
+          child: ThreadPreviewItem(
+            thread: thread,
+            index: index,
+            onTap: () => _navigateToThread(context, ref, thread),
+            searchQuery: ref.watch(searchQueryProvider),
           ),
         );
       },
     );
   }
 
-  void _openThread(BuildContext context, WidgetRef ref, Thread thread) {
+  Widget _buildMediaFeed(
+    BuildContext context,
+    List<Thread> threads,
+    AppLayout layoutType,
+    String searchQuery,
+    WidgetRef ref,
+  ) {
+    return CatalogMediaFeed(
+      threads: threads,
+      onTap: (thread) => _navigateToThread(context, ref, thread),
+      layoutType: layoutType,
+      searchQuery: searchQuery,
+    );
+  }
+
+  void _navigateToThread(BuildContext context, WidgetRef ref, Thread thread) {
     final tabNotifier = ref.read(tabManagerProvider.notifier);
     final threadTitle =
         thread.originalPost.subject?.isNotEmpty == true
@@ -116,6 +206,66 @@ class BoardCatalogScreen extends ConsumerWidget {
       initialRouteName: 'thread',
       pathParameters: {'boardId': boardId, 'threadId': thread.id.toString()},
       icon: Icons.comment,
+    );
+  }
+
+  Future<void> _refreshCatalog(WidgetRef ref) {
+    return ref.read(catalogNotifierProvider(boardId).notifier).refresh();
+  }
+}
+
+/// Widget to display a thread preview card with animations
+/// Separated to prevent animations from restarting on search
+class ThreadPreviewItem extends StatefulWidget {
+  final Thread thread;
+  final int index;
+  final VoidCallback onTap;
+  final String? searchQuery;
+
+  const ThreadPreviewItem({
+    super.key,
+    required this.thread,
+    required this.index,
+    required this.onTap,
+    this.searchQuery,
+  });
+
+  @override
+  State<ThreadPreviewItem> createState() => _ThreadPreviewItemState();
+}
+
+class _ThreadPreviewItemState extends State<ThreadPreviewItem> {
+  bool _isVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Stagger animation based on index
+    Future.delayed(Duration(milliseconds: 30 * (widget.index % 10)), () {
+      if (mounted) {
+        setState(() {
+          _isVisible = true;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _isVisible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: AnimatedScale(
+        scale: _isVisible ? 1.0 : 0.95,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutBack,
+        child: ThreadPreviewCard(
+          thread: widget.thread,
+          onTap: widget.onTap,
+          searchQuery: widget.searchQuery,
+        ),
+      ),
     );
   }
 }

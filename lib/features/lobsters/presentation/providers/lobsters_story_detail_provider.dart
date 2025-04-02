@@ -5,12 +5,20 @@ import 'package:vibechan/features/lobsters/domain/repositories/lobsters_reposito
 
 part 'lobsters_story_detail_provider.g.dart';
 
-@Riverpod(keepAlive: true)
+@Riverpod()
 Future<LobstersStory> lobstersStoryDetail(
   LobstersStoryDetailRef ref,
   String storyId,
 ) async {
   final repository = getIt<LobstersRepository>();
+
+  // Force cache invalidation to ensure fresh data
+  ref.keepAlive();
+
+  ref.onDispose(() {
+    // Clean up resources if needed
+  });
+
   // Fetch the story details using the repository
   final story = await repository.getStory(storyId);
   return story;

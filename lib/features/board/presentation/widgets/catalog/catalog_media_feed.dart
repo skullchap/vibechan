@@ -8,6 +8,7 @@ class CatalogMediaFeed extends StatelessWidget {
   final void Function(Thread thread) onTap;
   final EdgeInsetsGeometry? padding;
   final AppLayout? layoutType;
+  final String? searchQuery;
 
   const CatalogMediaFeed({
     super.key,
@@ -15,6 +16,7 @@ class CatalogMediaFeed extends StatelessWidget {
     required this.onTap,
     this.padding,
     this.layoutType,
+    this.searchQuery,
   });
 
   @override
@@ -41,6 +43,7 @@ class CatalogMediaFeed extends StatelessWidget {
           fullWidth: true,
           squareAspect: true,
           useFullMedia: true,
+          searchQuery: searchQuery,
         );
 
         // Add animations for non-mobile layouts

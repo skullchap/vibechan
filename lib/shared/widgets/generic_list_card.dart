@@ -12,6 +12,8 @@ class GenericListCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool useFullMedia; // Controls whether to show thumbnail or full media
+  final String? searchQuery; // Search term for highlighting
+  final Color? highlightColor; // Color for search term highlighting
 
   const GenericListCard({
     super.key,
@@ -19,6 +21,8 @@ class GenericListCard extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.useFullMedia = false,
+    this.searchQuery,
+    this.highlightColor,
   });
 
   @override
@@ -44,20 +48,37 @@ class GenericListCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (item.title != null && item.title!.isNotEmpty) ...[
-                    Text(
-                      item.title!,
-                      style: textTheme.titleMedium,
-                      maxLines: 2, // Allow a bit more space for titles
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    // If search is active, use RichText with highlighting
+                    if (searchQuery != null && searchQuery!.isNotEmpty)
+                      Text.rich(
+                        _buildHighlightedTextSpan(
+                          item.title!,
+                          textTheme.titleMedium,
+                          searchQuery!,
+                          highlightColor ??
+                              colorScheme.primaryContainer.withOpacity(0.5),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    else
+                      Text(
+                        item.title!,
+                        style: textTheme.titleMedium,
+                        maxLines: 2, // Allow a bit more space for titles
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     const SizedBox(height: 6),
                   ],
                   if (item.body != null && item.body!.isNotEmpty)
-                    // Assuming HTML for now, might need logic based on item.source
+                    // Use SimpleHtmlRenderer with highlight terms
                     SimpleHtmlRenderer(
                       htmlString: item.body ?? '',
                       baseStyle: textTheme.bodyMedium,
-                      // Note: SimpleHtmlRenderer does not have a direct maxLines equivalent.
+                      highlightTerms: searchQuery,
+                      highlightColor: highlightColor,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   const SizedBox(height: 8),
                   _buildMetadataRow(context),
@@ -68,6 +89,61 @@ class GenericListCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Helper method to highlight text (for non-HTML content)
+  TextSpan _buildHighlightedTextSpan(
+    String text,
+    TextStyle? style,
+    String searchTerms,
+    Color highlightColor,
+  ) {
+    if (searchTerms.isEmpty) return TextSpan(text: text, style: style);
+
+    final List<InlineSpan> spans = [];
+    final RegExp regExp = RegExp(
+      searchTerms
+          .split(' ')
+          .where((term) => term.isNotEmpty)
+          .map((term) {
+            return RegExp.escape(term);
+          })
+          .join('|'),
+      caseSensitive: false,
+    );
+
+    int lastMatchEnd = 0;
+    for (final match in regExp.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
+      }
+
+      // Add the highlighted match
+      spans.add(
+        TextSpan(
+          text: text.substring(match.start, match.end),
+          style: style?.copyWith(
+            backgroundColor: highlightColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    // Add remaining text after the last match
+    if (lastMatchEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+    }
+
+    return TextSpan(children: spans);
   }
 
   Widget _buildMediaSection(BuildContext context, String imageUrl) {

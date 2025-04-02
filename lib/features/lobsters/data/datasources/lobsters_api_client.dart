@@ -42,19 +42,33 @@ class LobstersApiClient {
   Future<Map<String, dynamic>> getStory(String shortId) async {
     final url = '$_baseUrl/s/$shortId.json';
     try {
-      final response = await _dio.get(url);
+      final response = await _dio.get(
+        url,
+        options: Options(
+          validateStatus: (status) => status != null && status < 500,
+          receiveTimeout: const Duration(seconds: 15),
+          sendTimeout: const Duration(seconds: 15),
+        ),
+      );
+
       if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
         return response.data as Map<String, dynamic>;
       } else {
+        // Log more details about the response for debugging
+        print(
+          'Lobsters API error: ${response.statusCode}, data: ${response.data.runtimeType}',
+        );
         throw Exception(
           'Failed to load Lobsters story from $url: ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
+      print('Dio error for Lobsters story: $url - ${e.message} - ${e.type}');
       throw Exception(
         'Network error fetching Lobsters story from $url: ${e.message}',
       );
     } catch (e) {
+      print('Unexpected error for Lobsters story: $url - $e');
       throw Exception('Unexpected error fetching Lobsters story from $url: $e');
     }
   }

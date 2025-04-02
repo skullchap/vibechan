@@ -9,6 +9,7 @@ import '../widgets/board_grid_item.dart';
 import '../../../../core/utils/responsive_layout.dart';
 import '../../../../core/presentation/widgets/responsive_widgets.dart';
 import '../../../../core/services/layout_service.dart';
+import '../../../../shared/providers/search_provider.dart'; // Import search provider
 
 class BoardListScreen extends ConsumerWidget {
   const BoardListScreen({super.key});
@@ -22,6 +23,10 @@ class BoardListScreen extends ConsumerWidget {
     final layoutState = ref.watch(layoutStateNotifierProvider);
     final currentLayout = layoutState.currentLayout;
     final layoutService = ref.read(layoutServiceProvider);
+
+    // Get search state
+    final isSearchActive = ref.watch(searchVisibleProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
 
     // Determine grid column count based on layout
     final columnCount = layoutService.getColumnCountForLayout(currentLayout);
@@ -78,12 +83,16 @@ class BoardListScreen extends ConsumerWidget {
                   boards: worksafeBoards,
                   onBoardTap: (board) => _openBoard(context, ref, board),
                   columnCount: columnCount,
+                  searchActive: isSearchActive,
+                  searchQuery: searchQuery,
                 ),
                 // NSFW boards with responsive grid
                 _ResponsiveBoardGridView(
                   boards: nsfwBoards,
                   onBoardTap: (board) => _openBoard(context, ref, board),
                   columnCount: columnCount,
+                  searchActive: isSearchActive,
+                  searchQuery: searchQuery,
                 ),
               ],
             ),
@@ -110,35 +119,93 @@ class _ResponsiveBoardGridView extends StatelessWidget {
   final AsyncValue<List<dynamic>> boards;
   final Function(dynamic) onBoardTap;
   final int columnCount;
+  final bool searchActive;
+  final String searchQuery;
 
   const _ResponsiveBoardGridView({
     required this.boards,
     required this.onBoardTap,
     required this.columnCount,
+    this.searchActive = false,
+    this.searchQuery = '',
   });
 
   @override
   Widget build(BuildContext context) {
     return boards.when(
-      data:
-          (boardList) => AnimatedLayoutBuilder(
-            child: GridView.builder(
-              padding: ResponsiveLayout.getPadding(context),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columnCount,
-                childAspectRatio: 3 / 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: boardList.length,
-              itemBuilder:
-                  (context, index) =>
-                      _buildBoardItem(context, boardList[index]),
+      data: (boardList) {
+        // Filter boards based on search query if search is active
+        final filteredBoards =
+            searchActive && searchQuery.isNotEmpty
+                ? _filterBoards(boardList, searchQuery)
+                : boardList;
+
+        if (searchActive && searchQuery.isNotEmpty && filteredBoards.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.search_off, size: 64),
+                const SizedBox(height: 16),
+                Text(
+                  'No boards match "${searchQuery}"',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
             ),
+          );
+        }
+
+        return AnimatedLayoutBuilder(
+          child: GridView.builder(
+            padding: ResponsiveLayout.getPadding(context),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnCount,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: filteredBoards.length,
+            itemBuilder:
+                (context, index) =>
+                    _buildBoardItem(context, filteredBoards[index]),
           ),
+        );
+      },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('Error: $error')),
     );
+  }
+
+  // Filter boards based on search query
+  List<dynamic> _filterBoards(List<dynamic> boards, String query) {
+    final lowercaseQuery = query.toLowerCase().trim();
+    return boards.where((board) {
+      // Get the board ID and remove any slashes that might be in it
+      final rawId = board.id.toString().toLowerCase();
+      // Strip any slashes from the ID for pure comparison
+      final cleanId = rawId.replaceAll('/', '');
+
+      final title = board.title.toString().toLowerCase();
+      final description = board.description.toString().toLowerCase();
+
+      // Check for matches on the clean ID without slashes
+      final bool matchesShortName =
+          cleanId ==
+              lowercaseQuery || // Direct match (e.g., "gif" matches board with ID "/gif/")
+          cleanId.startsWith(lowercaseQuery) || // Prefix match
+          cleanId.contains(lowercaseQuery); // Substring match
+
+      // Also check if the raw ID with slashes matches
+      final bool matchesRawId = rawId.contains(lowercaseQuery);
+
+      // Check if title or description matches
+      final bool matchesLongName =
+          title.contains(lowercaseQuery) ||
+          description.contains(lowercaseQuery);
+
+      return matchesShortName || matchesRawId || matchesLongName;
+    }).toList();
   }
 
   Widget _buildBoardItem(BuildContext context, dynamic board) {
@@ -177,6 +244,8 @@ class _ResponsiveBoardGridView extends StatelessWidget {
                   ),
             );
           },
+          // Highlight search term if active
+          highlightQuery: searchActive ? searchQuery : null,
         ),
       ),
     );

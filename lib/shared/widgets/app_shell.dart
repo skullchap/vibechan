@@ -29,6 +29,7 @@ import '../../features/lobsters/presentation/screens/lobsters_story_screen.dart'
 import '../../core/utils/responsive_layout.dart';
 import '../../core/presentation/widgets/responsive_widgets.dart';
 import '../../core/services/layout_service.dart';
+import 'package:vibechan/shared/providers/search_provider.dart';
 
 // Revert to ConsumerStatefulWidget
 class AppShell extends ConsumerStatefulWidget {
@@ -105,6 +106,14 @@ class _AppShellState extends ConsumerState<AppShell>
     // Read the HN sort type provider for the AppBar action
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
 
+    // Get screen dimensions for responsive UI
+    final screenSize = MediaQuery.of(context).size;
+    final layoutType = layoutService.getLayoutForContext(context);
+
+    // Listen to search state changes
+    final isSearchVisible = ref.watch(searchVisibleProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
+
     // Determine if back button should be shown
     // Show if it's a detail view (HN item, Lobsters story, 4chan thread)
     bool showBackButton =
@@ -113,10 +122,75 @@ class _AppShellState extends ConsumerState<AppShell>
             activeTab.initialRouteName == 'lobsters_story' ||
             activeTab.initialRouteName == 'thread');
 
-    List<Widget> appBarActions = [
-      // Conditionally show view mode toggle if active tab is boards/catalog?
-      if (activeTab?.initialRouteName == 'boards' ||
-          activeTab?.initialRouteName == 'catalog')
+    // Handle search UI logic in AppBar
+    Widget appBarTitle;
+    if (isSearchVisible) {
+      // Show search field when search is visible
+      appBarTitle = Container(
+        height: 40,
+        margin: const EdgeInsets.only(right: 8),
+        child: TextField(
+          autofocus: true,
+          controller: TextEditingController(text: searchQuery)
+            ..selection = TextSelection.fromPosition(
+              TextPosition(offset: searchQuery.length),
+            ),
+          decoration: InputDecoration(
+            hintText: 'Search content...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(28),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.surfaceVariant.withOpacity(0.5),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 8,
+              horizontal: 16,
+            ),
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon:
+                searchQuery.isNotEmpty
+                    ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        ref.read(searchQueryProvider.notifier).state = '';
+                      },
+                    )
+                    : null,
+          ),
+          onChanged: (value) {
+            ref.read(searchQueryProvider.notifier).state = value;
+          },
+        ),
+      );
+    } else {
+      // Use the source selector in the title position
+      appBarTitle = _buildSourceSelector(context, ref, activeTab, tabNotifier);
+    }
+
+    // Create app bar actions
+    final List<Widget> appBarActions = [
+      // Search button (shown on all screens)
+      IconButton(
+        icon: Icon(isSearchVisible ? Icons.close : Icons.search, size: 24),
+        tooltip: isSearchVisible ? 'Close search' : 'Search content',
+        onPressed: () {
+          // Toggle search visibility
+          ref.read(searchVisibleProvider.notifier).state = !isSearchVisible;
+
+          // Clear search when closing
+          if (isSearchVisible) {
+            ref.read(searchQueryProvider.notifier).state = '';
+          }
+        },
+      ),
+
+      // Layout mode toggle (conditional - only shown when search is not visible)
+      if (!isSearchVisible &&
+          (activeTab?.initialRouteName == 'catalog' ||
+              activeTab?.initialRouteName == 'boards'))
         Consumer(
           builder: (context, ref, _) {
             final mode = ref.watch(catalogViewModeProvider);
@@ -436,21 +510,17 @@ class _AppShellState extends ConsumerState<AppShell>
       },
       child: ResponsiveScaffold(
         appBar: AppBar(
-          // Use the source selector dropdown as the title
-          title: _buildSourceSelector(context, ref, activeTab, tabNotifier),
-          // Conditionally add the leading back button
+          title: appBarTitle,
+          automaticallyImplyLeading:
+              false, // Don't automatically add back button
           leading:
               showBackButton
                   ? IconButton(
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Back',
-                    onPressed:
-                        () => _handleBackButton(
-                          ref,
-                          activeTab!,
-                        ), // Pass activeTab directly
+                    onPressed: () => _handleBackButton(ref, activeTab!),
                   )
-                  : null, // No back button if not applicable
+                  : null,
           actions: appBarActions,
         ),
         // Conditionally use side drawer for larger screens
@@ -460,25 +530,64 @@ class _AppShellState extends ConsumerState<AppShell>
                 : null,
         // Adapt body based on layout
         body: AnimatedLayoutBuilder(
-          child: Row(
+          child: Column(
             children: [
-              // Side navigation for larger screens (visible directly, not in drawer)
-              if (useSideNavigation && false) // Disabled to use drawer instead
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: sideNavWidth,
-                  child: _buildSideNavigation(tabs, activeTab, tabNotifier),
+              // Secondary app bar for content title (without any margins)
+              if (activeTab != null && !isSearchVisible)
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: 0.5,
+                      ),
+                    ),
+                    color: Theme.of(context).colorScheme.surface,
+                  ),
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 10.0,
+                  ),
+                  child: Text(
+                    activeTab.title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               // Main content
               Expanded(
-                child:
-                    activeTab != null
-                        ? _buildTabContent(
+                child: Row(
+                  children: [
+                    // Side navigation for larger screens (visible directly, not in drawer)
+                    if (useSideNavigation &&
+                        false) // Disabled to use drawer instead
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: sideNavWidth,
+                        child: _buildSideNavigation(
+                          tabs,
                           activeTab,
-                        ) // Use helper to build content
-                        : const Center(
-                          child: Text('No tabs open. Press + to add one.'),
+                          tabNotifier,
                         ),
+                      ),
+                    // Main content area
+                    Expanded(
+                      child:
+                          activeTab != null
+                              ? _buildTabContent(
+                                activeTab,
+                              ) // Use helper to build content
+                              : const Center(
+                                child: Text(
+                                  'No tabs open. Press + to add one.',
+                                ),
+                              ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -649,6 +758,8 @@ class _AppShellState extends ConsumerState<AppShell>
 
     // This logic determines which screen to show based on the active tab's state
     Widget content;
+    bool addPadding = true; // Default is to add padding
+
     switch (tab.initialRouteName) {
       case 'boards':
         content = const BoardListScreen();
@@ -660,6 +771,7 @@ class _AppShellState extends ConsumerState<AppShell>
             boardId != null
                 ? BoardCatalogScreen(boardId: boardId)
                 : const Center(child: Text('Error: Missing boardId'));
+        addPadding = false; // BoardCatalogScreen handles its own padding
         break;
       case 'thread':
         // Need boardId and threadId from pathParameters
@@ -669,6 +781,7 @@ class _AppShellState extends ConsumerState<AppShell>
             (boardId != null && threadId != null)
                 ? ThreadDetailScreen(boardId: boardId, threadId: threadId)
                 : const Center(child: Text('Error: Missing board/thread ID'));
+        addPadding = false; // ThreadDetailScreen has its own padding
         break;
       case 'favorites':
         content = const FavoritesScreen();
@@ -686,6 +799,7 @@ class _AppShellState extends ConsumerState<AppShell>
             itemId != null
                 ? HackerNewsItemScreen(itemId: itemId)
                 : const Center(child: Text('Error: Missing item ID'));
+        addPadding = false; // HackerNewsItemScreen has its own padding
         break;
       case 'lobsters':
         content = const LobstersScreen();
@@ -696,6 +810,7 @@ class _AppShellState extends ConsumerState<AppShell>
             storyId != null
                 ? LobstersStoryScreen(storyId: storyId)
                 : const Center(child: Text('Error: Missing story ID'));
+        addPadding = false; // LobstersStoryScreen has its own padding
         break;
       default:
         // Fallback for unknown route or initial state
@@ -703,7 +818,7 @@ class _AppShellState extends ConsumerState<AppShell>
     }
 
     // Wrap content with padding based on layout
-    return Padding(padding: padding, child: content);
+    return addPadding ? Padding(padding: padding, child: content) : content;
   }
   // --- End Helper ---
 
@@ -831,6 +946,64 @@ class _AppShellState extends ConsumerState<AppShell>
   }
 
   // --- End Build Tab Button ---
+
+  // Build search bar for app bar
+  Widget _buildSearchBar(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return TextField(
+      autofocus: true,
+      decoration: InputDecoration(
+        hintText: 'Search...',
+        hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.7)),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+      ),
+      style: TextStyle(color: colorScheme.onSurface),
+      onChanged: (value) {
+        ref.read(searchQueryProvider.notifier).state = value;
+      },
+    );
+  }
+
+  // Show more options sheet
+  void _showMoreOptionsSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.settings),
+                title: Text('Settings'),
+                onTap: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (context) => const SettingsDialog(),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.info_outline),
+                title: Text('About'),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Show about dialog or navigate to about screen
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ADD HELPER FUNCTIONS AT THE END OF THE CLASS or outside
@@ -896,7 +1069,7 @@ Widget _buildSourceSelector(
     offset: const Offset(0, 8),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     elevation: 3,
-    color: colorScheme.surfaceContainer, // Better color token for menus
+    color: colorScheme.surfaceContainer,
     // Show the current selection as a child
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -911,9 +1084,9 @@ Widget _buildSourceSelector(
           const SizedBox(width: 8),
           Text(
             currentSource['title'] as String,
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(width: 4),

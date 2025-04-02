@@ -7,7 +7,7 @@ part of 'hackernews_item_detail_provider.dart';
 // **************************************************************************
 
 String _$hackerNewsItemDetailHash() =>
-    r'17bfaebbb5907da27e4f80307df4a3db3fc64618';
+    r'9e81856b20b644544e02f4f41bf75267154af38c';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -67,7 +67,8 @@ class HackerNewsItemDetailFamily extends Family<AsyncValue<HackerNewsItem>> {
 }
 
 /// See also [hackerNewsItemDetail].
-class HackerNewsItemDetailProvider extends FutureProvider<HackerNewsItem> {
+class HackerNewsItemDetailProvider
+    extends AutoDisposeFutureProvider<HackerNewsItem> {
   /// See also [hackerNewsItemDetail].
   HackerNewsItemDetailProvider(int itemId)
     : this._internal(
@@ -115,7 +116,7 @@ class HackerNewsItemDetailProvider extends FutureProvider<HackerNewsItem> {
   }
 
   @override
-  FutureProviderElement<HackerNewsItem> createElement() {
+  AutoDisposeFutureProviderElement<HackerNewsItem> createElement() {
     return _HackerNewsItemDetailProviderElement(this);
   }
 
@@ -135,13 +136,13 @@ class HackerNewsItemDetailProvider extends FutureProvider<HackerNewsItem> {
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin HackerNewsItemDetailRef on FutureProviderRef<HackerNewsItem> {
+mixin HackerNewsItemDetailRef on AutoDisposeFutureProviderRef<HackerNewsItem> {
   /// The parameter `itemId` of this provider.
   int get itemId;
 }
 
 class _HackerNewsItemDetailProviderElement
-    extends FutureProviderElement<HackerNewsItem>
+    extends AutoDisposeFutureProviderElement<HackerNewsItem>
     with HackerNewsItemDetailRef {
   _HackerNewsItemDetailProviderElement(super.provider);
 
@@ -149,5 +150,23 @@ class _HackerNewsItemDetailProviderElement
   int get itemId => (origin as HackerNewsItemDetailProvider).itemId;
 }
 
+String _$hackerNewsItemRefresherHash() =>
+    r'fada5989947052b9fac6c48db728cfccb70eca74';
+
+/// See also [HackerNewsItemRefresher].
+@ProviderFor(HackerNewsItemRefresher)
+final hackerNewsItemRefresherProvider =
+    AutoDisposeNotifierProvider<HackerNewsItemRefresher, bool>.internal(
+      HackerNewsItemRefresher.new,
+      name: r'hackerNewsItemRefresherProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$hackerNewsItemRefresherHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$HackerNewsItemRefresher = AutoDisposeNotifier<bool>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

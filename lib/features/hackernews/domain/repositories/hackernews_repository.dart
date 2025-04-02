@@ -11,8 +11,11 @@ abstract class HackerNewsRepository {
   /// Fetches a list of best story items.
   Future<List<HackerNewsItem>> getBestStories({int count = 30});
 
-  /// Fetches details for a single item by its ID.
+  /// Fetches basic details for a single item by its ID, without comments.
   Future<HackerNewsItem> getItem(int id);
+
+  /// Fetches details for a single item by its ID, including comments.
+  Future<HackerNewsItem> getItemWithComments(int id);
 
   // Add other methods as needed, e.g., getAskStories, etc.
 }

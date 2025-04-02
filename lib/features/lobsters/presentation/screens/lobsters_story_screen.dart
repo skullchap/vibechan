@@ -7,6 +7,8 @@ import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 import 'package:vibechan/core/utils/time_utils.dart';
 import 'package:vibechan/shared/providers/tab_manager_provider.dart';
 import 'package:vibechan/shared/models/content_tab.dart';
+import 'package:vibechan/shared/providers/search_provider.dart';
+import 'package:vibechan/features/lobsters/presentation/providers/lobsters_story_refresher_provider.dart';
 
 class LobstersStoryScreen extends ConsumerWidget {
   final String storyId;
@@ -16,6 +18,7 @@ class LobstersStoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final storyDetailAsync = ref.watch(lobstersStoryDetailProvider(storyId));
+    final refreshing = ref.watch(lobstersStoryRefresherProvider);
     final theme = Theme.of(context);
     // Define margin colors based on theme
     final List<Color> marginColors = [
@@ -25,70 +28,151 @@ class LobstersStoryScreen extends ConsumerWidget {
       theme.colorScheme.error, // Add more if needed
     ];
 
-    // Remove Scaffold and AppBar
-    // return Scaffold(
-    //   appBar: AppBar(...),
-    //   backgroundColor: ...,
-    //   body: ...
-    // );
+    // Get search state
+    final isSearchActive = ref.watch(searchVisibleProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
 
     // Return the body content directly
     return Container(
       // Use a Container for background color
       color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-      child: storyDetailAsync.when(
-        data: (story) {
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
-            itemCount: 1 + (story.comments?.length ?? 0),
-            separatorBuilder: (context, index) => const SizedBox(height: 6),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                // Story Header Card
-                return Card(
-                  elevation: 1,
-                  clipBehavior: Clip.antiAlias,
-                  margin: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+          storyDetailAsync.when(
+            data: (story) {
+              return RefreshIndicator(
+                onRefresh: () async {
+                  // Use the refresher provider to properly invalidate cache
+                  await ref
+                      .read(lobstersStoryRefresherProvider.notifier)
+                      .refresh(storyId);
+                },
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 6.0,
                   ),
-                  child: _buildStoryHeader(context, story, theme),
-                );
-              } else {
-                // Comment Card
-                final comment = story.comments![index - 1];
-                final colorIndex = comment.depth % marginColors.length;
-                final marginColor = marginColors[colorIndex];
-                // Slightly increase indentation per level
-                final double indentation = comment.depth * 10.0;
+                  itemCount: 1 + (story.comments?.length ?? 0),
+                  separatorBuilder:
+                      (context, index) => const SizedBox(height: 6),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Story Header Card
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Add refresh button at the top
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Refresh'),
+                                onPressed:
+                                    refreshing
+                                        ? null
+                                        : () async {
+                                          await ref
+                                              .read(
+                                                lobstersStoryRefresherProvider
+                                                    .notifier,
+                                              )
+                                              .refresh(storyId);
+                                        },
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                          Card(
+                            elevation: 1,
+                            clipBehavior: Clip.antiAlias,
+                            margin: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _buildStoryHeader(
+                              context,
+                              story,
+                              theme,
+                              isSearchActive ? searchQuery : null,
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      // Comment Card
+                      final comment = story.comments![index - 1];
+                      final colorIndex = comment.depth % marginColors.length;
+                      final marginColor = marginColors[colorIndex];
+                      // Slightly increase indentation per level
+                      final double indentation = comment.depth * 10.0;
 
-                // Use a Stack for potential future line drawing, but keep simple for now
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: indentation,
-                  ), // Apply indentation outside the card
-                  child: Card(
-                    elevation: 1,
-                    clipBehavior: Clip.antiAlias,
-                    margin: EdgeInsets.zero, // Margin is handled by Padding now
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: _buildCommentItem(comment, theme, marginColor),
-                  ),
-                );
-              }
+                      // Use a Stack for potential future line drawing, but keep simple for now
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: indentation,
+                        ), // Apply indentation outside the card
+                        child: Card(
+                          elevation: 1,
+                          clipBehavior: Clip.antiAlias,
+                          margin:
+                              EdgeInsets
+                                  .zero, // Margin is handled by Padding now
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: _buildCommentItem(
+                            comment,
+                            theme,
+                            marginColor,
+                            isSearchActive ? searchQuery : null,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              );
             },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error:
-            (error, stack) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Error loading story: $error\n$stack'),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error:
+                (error, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Error loading story: $error'),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Try Again'),
+                          onPressed: () {
+                            ref.invalidate(
+                              lobstersStoryDetailProvider(storyId),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          ),
+          // Overlay loading indicator during refresh
+          if (refreshing)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.3),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
+        ],
       ),
     );
   }
@@ -97,6 +181,7 @@ class LobstersStoryScreen extends ConsumerWidget {
     BuildContext context,
     LobstersStory story,
     ThemeData theme,
+    String? searchQuery,
   ) {
     return Padding(
       padding: const EdgeInsets.all(16.0), // Slightly more padding
@@ -149,11 +234,15 @@ class LobstersStoryScreen extends ConsumerWidget {
           // Separator before description
           if (story.description != null && story.description!.isNotEmpty)
             const Divider(height: 24, thickness: 0.5),
-          // Display description if it exists
+          // Display description if it exists with search highlighting
           if (story.description != null && story.description!.isNotEmpty)
             SimpleHtmlRenderer(
               htmlString: story.description!,
               baseStyle: theme.textTheme.bodyLarge,
+              highlightTerms: searchQuery,
+              highlightColor: theme.colorScheme.primaryContainer.withOpacity(
+                0.5,
+              ),
             ),
           // Display tags if they exist
           if (story.tags.isNotEmpty)
@@ -198,6 +287,7 @@ class LobstersStoryScreen extends ConsumerWidget {
     LobstersComment comment,
     ThemeData theme,
     Color marginColor,
+    String? searchQuery,
   ) {
     return IntrinsicHeight(
       // Ensures Row children stretch vertically if needed
@@ -249,18 +339,21 @@ class LobstersStoryScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 2),
                         Text('${comment.score}'),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Icon(Icons.access_time_rounded, size: 14),
                         const SizedBox(width: 2),
                         Text(formatTimeAgoSimple(comment.createdAt)),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  // Use the renderer for comment body
+                  const SizedBox(height: 8), // Spacing between header and body
+                  // Display comment text with search highlighting
                   SimpleHtmlRenderer(
                     htmlString: comment.comment ?? '',
                     baseStyle: theme.textTheme.bodyMedium,
+                    highlightTerms: searchQuery,
+                    highlightColor: theme.colorScheme.primaryContainer
+                        .withOpacity(0.5),
                   ),
                 ],
               ),

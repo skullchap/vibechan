@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibechan/features/hackernews/data/models/hacker_news_item.dart';
-import 'package:vibechan/features/hackernews/presentation/providers/hackernews_item_detail_provider.dart';
-import 'package:vibechan/shared/providers/tab_manager_provider.dart';
+import 'package:vibechan/features/hackernews/presentation/providers/hackernews_item_detail_provider.dart'
+    hide HackerNewsItemRefresher, hackerNewsItemRefresherProvider;
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 import 'package:vibechan/core/utils/time_utils.dart';
-import 'package:vibechan/shared/models/content_tab.dart';
+import 'package:vibechan/shared/providers/search_provider.dart';
+import 'package:vibechan/features/hackernews/presentation/providers/hackernews_item_refresher_provider.dart';
 
 class HackerNewsItemScreen extends ConsumerWidget {
   final int itemId;
@@ -41,6 +42,7 @@ class HackerNewsItemScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemDetailAsync = ref.watch(hackerNewsItemDetailProvider(itemId));
+    final refreshing = ref.watch(hackerNewsItemRefresherProvider);
     final theme = Theme.of(context);
     final List<Color> marginColors = [
       theme.colorScheme.primary,
@@ -49,63 +51,152 @@ class HackerNewsItemScreen extends ConsumerWidget {
       theme.colorScheme.error,
     ];
 
+    // Get search state
+    final isSearchActive = ref.watch(searchVisibleProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
+
     return Container(
       color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-      child: itemDetailAsync.when(
-        data: (item) {
-          final flattenedComments = _flattenCommentsWithDepth(item);
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
-            itemCount: 1 + flattenedComments.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 6),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                // Story/Item Header Card
-                return Card(
-                  elevation: 1,
-                  clipBehavior: Clip.antiAlias,
-                  margin: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+          itemDetailAsync.when(
+            data: (item) {
+              // Force proper tree view by ensuring comments processing happens correctly
+              final flattenedComments = _flattenCommentsWithDepth(item);
+              return RefreshIndicator(
+                onRefresh: () async {
+                  // Use the refresher provider to properly invalidate cache
+                  await ref
+                      .read(hackerNewsItemRefresherProvider.notifier)
+                      .refresh(itemId);
+                },
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 6.0,
                   ),
-                  child: _buildItemHeader(context, item, theme),
-                );
-              } else {
-                // Comment Card from flattened list
-                final entry = flattenedComments[index - 1];
-                final depth = entry.key;
-                final comment = entry.value;
-                final colorIndex = depth % marginColors.length;
-                final marginColor = marginColors[colorIndex];
-                final double indentation = depth * 10.0;
-                if (comment.text != null || comment.deleted || comment.dead) {
-                  return Padding(
-                    padding: EdgeInsets.only(left: indentation),
-                    child: Card(
-                      elevation: 1,
-                      clipBehavior: Clip.antiAlias,
-                      margin: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: _buildCommentItem(comment, theme, marginColor),
-                    ),
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              }
+                  itemCount: 1 + flattenedComments.length,
+                  separatorBuilder:
+                      (context, index) => const SizedBox(height: 6),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Story/Item Header Card
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Add refresh button at the top
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Refresh'),
+                                onPressed:
+                                    refreshing
+                                        ? null
+                                        : () async {
+                                          await ref
+                                              .read(
+                                                hackerNewsItemRefresherProvider
+                                                    .notifier,
+                                              )
+                                              .refresh(itemId);
+                                        },
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                          Card(
+                            elevation: 1,
+                            clipBehavior: Clip.antiAlias,
+                            margin: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _buildItemHeader(
+                              context,
+                              item,
+                              theme,
+                              isSearchActive ? searchQuery : null,
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      // Comment Card from flattened list
+                      final entry = flattenedComments[index - 1];
+                      final depth = entry.key;
+                      final comment = entry.value;
+                      final colorIndex = depth % marginColors.length;
+                      final marginColor = marginColors[colorIndex];
+                      final double indentation = depth * 10.0;
+                      if (comment.text != null ||
+                          comment.deleted ||
+                          comment.dead) {
+                        return Padding(
+                          padding: EdgeInsets.only(left: indentation),
+                          child: Card(
+                            elevation: 1,
+                            clipBehavior: Clip.antiAlias,
+                            margin: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _buildCommentItem(
+                              comment,
+                              theme,
+                              marginColor,
+                              isSearchActive ? searchQuery : null,
+                            ),
+                          ),
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    }
+                  },
+                ),
+              );
             },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error:
-            (error, stack) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Error loading item: $error\n$stack'),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error:
+                (error, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Error loading item: $error'),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Try Again'),
+                          onPressed: () {
+                            ref.invalidate(
+                              hackerNewsItemDetailProvider(itemId),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          ),
+          // Overlay loading indicator during refresh
+          if (refreshing)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.3),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
+        ],
       ),
     );
   }
@@ -114,6 +205,7 @@ class HackerNewsItemScreen extends ConsumerWidget {
     BuildContext context,
     HackerNewsItem item,
     ThemeData theme,
+    String? searchQuery,
   ) {
     // Similar to Lobsters header, adapted for HN fields
     return Padding(
@@ -183,11 +275,15 @@ class HackerNewsItemScreen extends ConsumerWidget {
           // Separator before text/body (equivalent to Lobsters description)
           if (item.text != null && item.text!.isNotEmpty)
             const Divider(height: 24, thickness: 0.5),
-          // Display item text if it exists (using HTML renderer)
+          // Display item text if it exists (using HTML renderer with search highlighting)
           if (item.text != null && item.text!.isNotEmpty)
             SimpleHtmlRenderer(
               htmlString: item.text!,
               baseStyle: theme.textTheme.bodyLarge,
+              highlightTerms: searchQuery,
+              highlightColor: theme.colorScheme.primaryContainer.withOpacity(
+                0.5,
+              ),
             ),
         ],
       ),
@@ -199,6 +295,7 @@ class HackerNewsItemScreen extends ConsumerWidget {
     HackerNewsItem comment,
     ThemeData theme,
     Color marginColor,
+    String? searchQuery,
   ) {
     // Very similar to Lobsters _buildCommentItem, uses HackerNewsItem
     return IntrinsicHeight(
@@ -252,26 +349,29 @@ class HackerNewsItemScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  if (comment.text != null && !comment.deleted && !comment.dead)
+                  const SizedBox(height: 6),
+                  if (comment.text != null && comment.text!.isNotEmpty)
                     SimpleHtmlRenderer(
                       htmlString: comment.text!,
                       baseStyle: theme.textTheme.bodyMedium,
-                    )
-                  else if (comment.deleted)
+                      highlightTerms: searchQuery,
+                      highlightColor: theme.colorScheme.primaryContainer
+                          .withOpacity(0.5),
+                    ),
+                  if (comment.deleted)
                     Text(
                       '[deleted]',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontStyle: FontStyle.italic,
-                        color: Colors.grey,
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
                       ),
-                    )
-                  else if (comment.dead)
+                    ),
+                  if (comment.dead)
                     Text(
-                      '[dead]',
+                      '[content removed]',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontStyle: FontStyle.italic,
-                        color: Colors.grey,
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
                       ),
                     ),
                 ],

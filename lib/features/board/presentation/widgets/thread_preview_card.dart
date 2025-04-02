@@ -5,6 +5,7 @@ import 'package:vibechan/core/domain/models/media.dart';
 import 'package:vibechan/core/domain/models/thread.dart';
 import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
+import 'package:vibechan/shared/providers/search_provider.dart';
 
 class ThreadPreviewCard extends StatelessWidget {
   final Thread thread;
@@ -13,6 +14,7 @@ class ThreadPreviewCard extends StatelessWidget {
   final bool fullWidth;
   final bool squareAspect;
   final bool useFullMedia;
+  final String? searchQuery;
 
   const ThreadPreviewCard({
     super.key,
@@ -22,12 +24,15 @@ class ThreadPreviewCard extends StatelessWidget {
     this.fullWidth = false,
     this.squareAspect = false,
     this.useFullMedia = false,
+    this.searchQuery,
   });
 
   @override
   Widget build(BuildContext context) {
     final originalPost = thread.originalPost;
     final media = originalPost.media;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -39,14 +44,14 @@ class ThreadPreviewCard extends StatelessWidget {
           children: [
             if (media != null)
               Card(
-                margin: EdgeInsets.all(0),
+                margin: EdgeInsets.zero,
                 child: AspectRatio(
                   aspectRatio: useFullMedia ? 1 : media.width / media.height,
                   child:
                       media.type == MediaType.video && useFullMedia
                           ? PostVideo(media: media)
                           : Container(
-                            color: ColorScheme.of(context).scrim,
+                            color: colorScheme.scrim,
                             child: CachedNetworkImage(
                               imageUrl:
                                   useFullMedia ? media.url : media.thumbnailUrl,
@@ -71,18 +76,55 @@ class ThreadPreviewCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (originalPost.subject != null) ...[
-                    Text(
-                      originalPost.subject!,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    if (searchQuery != null && searchQuery!.isNotEmpty)
+                      RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          children: _getHighlightedSpans(
+                            originalPost.subject!,
+                            textTheme.titleMedium!.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
+                            ),
+                            searchQuery!,
+                            colorScheme.tertiaryContainer,
+                          ),
+                        ),
+                      )
+                    else
+                      Text(
+                        originalPost.subject!,
+                        style: textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     const SizedBox(height: 4),
                   ],
-                  SimpleHtmlRenderer(
-                    htmlString: originalPost.comment ?? '',
-                    baseStyle: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  if (searchQuery != null &&
+                      searchQuery!.isNotEmpty &&
+                      originalPost.comment != null)
+                    SimpleHtmlRenderer(
+                      htmlString: originalPost.comment ?? '',
+                      baseStyle: textTheme.bodyMedium!.copyWith(
+                        height: 1.4,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 12,
+                      highlightTerms: searchQuery,
+                      highlightColor: colorScheme.tertiaryContainer,
+                    )
+                  else
+                    SimpleHtmlRenderer(
+                      htmlString: originalPost.comment ?? '',
+                      baseStyle: textTheme.bodyMedium!.copyWith(
+                        height: 1.4,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -110,5 +152,59 @@ class ThreadPreviewCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<InlineSpan> _getHighlightedSpans(
+    String text,
+    TextStyle style,
+    String searchTerms,
+    Color highlightColor,
+  ) {
+    if (searchTerms.isEmpty) return [TextSpan(text: text, style: style)];
+
+    final List<InlineSpan> result = [];
+    final RegExp regExp = RegExp(
+      searchTerms
+          .split(' ')
+          .where((term) => term.isNotEmpty)
+          .map((term) {
+            return RegExp.escape(term);
+          })
+          .join('|'),
+      caseSensitive: false,
+    );
+
+    int lastMatchEnd = 0;
+    for (final match in regExp.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastMatchEnd) {
+        result.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
+      }
+
+      // Add the highlighted match
+      result.add(
+        TextSpan(
+          text: text.substring(match.start, match.end),
+          style: style.copyWith(
+            backgroundColor: highlightColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    // Add remaining text after the last match
+    if (lastMatchEnd < text.length) {
+      result.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+    }
+
+    return result;
   }
 }
