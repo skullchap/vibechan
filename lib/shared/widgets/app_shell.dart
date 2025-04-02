@@ -13,6 +13,8 @@ import '../../features/board/presentation/screens/favorites_screen.dart';
 import '../../features/board/presentation/screens/settings_screen.dart';
 import '../../features/thread/presentation/screens/thread_detail_screen.dart';
 import '../../features/hackernews/presentation/screens/hackernews_screen.dart'; // Import HN Screen
+// Import the Lobsters screen
+import '../../features/lobsters/presentation/screens/lobsters_screen.dart';
 // Import the HN provider and enum for the AppBar controls
 import '../../features/hackernews/presentation/providers/hackernews_stories_provider.dart';
 
@@ -284,6 +286,21 @@ class _AppShellState extends ConsumerState<AppShell> {
                   Navigator.of(dialogContext).pop(); // Close dialog
                 },
               ),
+              // Add Lobsters Option
+              ListTile(
+                leading: const Icon(
+                  Icons.rss_feed,
+                ), // Lobsters icon (placeholder)
+                title: const Text('Lobsters'),
+                onTap: () {
+                  tabNotifier.addTab(
+                    title: 'Lobsters',
+                    initialRouteName: 'lobsters', // New route name
+                    icon: Icons.rss_feed,
+                  );
+                  Navigator.of(dialogContext).pop(); // Close dialog
+                },
+              ),
               // Add more ListTiles here for future sources (e.g., Reddit)
             ],
           ),
@@ -331,6 +348,9 @@ class _AppShellState extends ConsumerState<AppShell> {
         break; // Fallthrough to error if params are null
       case 'hackernews': // Add case for Hacker News
         return HackerNewsScreen(key: tabKey);
+      // Add case for Lobsters
+      case 'lobsters':
+        return LobstersScreen(key: tabKey);
     }
     // Handle unknown route or missing parameters
     return Center(

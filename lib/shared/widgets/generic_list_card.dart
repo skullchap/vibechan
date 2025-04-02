@@ -110,6 +110,9 @@ class GenericListCard extends StatelessWidget {
       case ItemSource.hackernews:
         metadataWidgets = _buildHackerNewsMetadata(context);
         break;
+      case ItemSource.lobsters:
+        metadataWidgets = _buildLobstersMetadata(context);
+        break;
       case ItemSource.reddit:
         // Add Reddit specific metadata handling here
         break;
@@ -175,6 +178,27 @@ class GenericListCard extends StatelessWidget {
       widgets.add(_metadataItem(context, Icons.person, author));
     }
     // Add more HN specific data like 'type' (story, job, etc.) if needed
+    return widgets;
+  }
+
+  List<Widget> _buildLobstersMetadata(BuildContext context) {
+    final score = item.metadata['score'] as int?;
+    final comments = item.metadata['commentsCount'] as int?;
+    final author = item.metadata['submitterUser'] as String?;
+
+    List<Widget> widgets = [];
+
+    if (score != null) {
+      widgets.add(_metadataItem(context, Icons.arrow_upward, score.toString()));
+    }
+    if (comments != null) {
+      widgets.add(_metadataItem(context, Icons.comment, comments.toString()));
+    }
+
+    if (author != null) {
+      widgets.add(_metadataItem(context, Icons.person, author));
+    }
+
     return widgets;
   }
 

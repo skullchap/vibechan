@@ -5,7 +5,12 @@ part 'generic_list_item.freezed.dart';
 
 enum MediaType { image, video, none }
 
-enum ItemSource { fourchan, hackernews, reddit } // Add more sources as needed
+enum ItemSource {
+  fourchan,
+  hackernews,
+  reddit,
+  lobsters,
+} // Add more sources as needed
 
 @freezed
 abstract class GenericListItem with _$GenericListItem {
