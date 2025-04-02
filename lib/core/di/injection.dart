@@ -12,5 +12,6 @@ final getIt = GetIt.instance;
 )
 Future<void> configureDependencies() async {
   // Do not register SharedPreferences or Dio here – let the generated code handle it.
-  getIt.init();
+  // IMPORTANT: await the initialization to ensure all futures are resolved
+  await getIt.init();
 }
