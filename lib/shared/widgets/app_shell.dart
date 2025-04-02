@@ -13,6 +13,8 @@ import '../../features/board/presentation/screens/favorites_screen.dart';
 import '../../features/board/presentation/screens/settings_screen.dart';
 import '../../features/thread/presentation/screens/thread_detail_screen.dart';
 import '../../features/hackernews/presentation/screens/hackernews_screen.dart'; // Import HN Screen
+// Import the HN provider and enum for the AppBar controls
+import '../../features/hackernews/presentation/providers/hackernews_stories_provider.dart';
 
 import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart';
 
@@ -70,14 +72,44 @@ class _AppShellState extends ConsumerState<AppShell> {
     final activeTab = ref.watch(tabManagerProvider.notifier).activeTab;
     final tabNotifier = ref.read(tabManagerProvider.notifier);
 
+    // Read the HN sort type provider for the AppBar action
+    final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
+
     String appBarTitle = activeTab?.title ?? AppConfig.appName;
-    // Add actions based on active tab type if needed
     List<Widget> appBarActions = [
       IconButton(
         icon: const Icon(Icons.add),
         tooltip: 'Add New Tab',
         onPressed: () => _showAddTabDialog(context, tabNotifier),
       ),
+      // HN Sort Dropdown (conditionally shown)
+      if (activeTab?.initialRouteName == 'hackernews')
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: DropdownButton<HackerNewsSortType>(
+            value: currentHnSortType,
+            underline: Container(),
+            icon: const Icon(Icons.sort),
+            items:
+                HackerNewsSortType.values
+                    .map(
+                      (sortType) => DropdownMenuItem(
+                        value: sortType,
+                        child: Text(
+                          sortType.name[0].toUpperCase() +
+                              sortType.name.substring(1),
+                        ),
+                      ),
+                    )
+                    .toList(),
+            onChanged: (newSortType) {
+              if (newSortType != null) {
+                ref.read(currentHackerNewsSortTypeProvider.notifier).state =
+                    newSortType;
+              }
+            },
+          ),
+        ),
       // Conditionally show view mode toggle if active tab is boards/catalog?
       if (activeTab?.initialRouteName == 'boards' ||
           activeTab?.initialRouteName == 'catalog')

@@ -8,23 +8,32 @@ class HackerNewsApiClient {
 
   HackerNewsApiClient(this._dio);
 
-  /// Fetches top story IDs.
-  Future<List<int>> getTopStoryIds() async {
+  /// Fetches story IDs based on the specified sort type.
+  Future<List<int>> _getStoryIds(String pathSegment) async {
     try {
-      final response = await _dio.get('$_baseUrl/topstories.json');
+      final response = await _dio.get('$_baseUrl/$pathSegment.json');
       if (response.statusCode == 200 && response.data is List) {
-        // The API returns a list of integers (IDs)
         return List<int>.from(response.data);
       } else {
-        throw Exception('Failed to load top story IDs: ${response.statusCode}');
+        throw Exception(
+          'Failed to load $pathSegment IDs: ${response.statusCode}',
+        );
       }
     } on DioException catch (e) {
-      // Handle Dio specific errors (network, timeout, etc.)
-      throw Exception('Network error fetching top story IDs: ${e.message}');
+      throw Exception('Network error fetching $pathSegment IDs: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error fetching top story IDs: $e');
+      throw Exception('Unexpected error fetching $pathSegment IDs: $e');
     }
   }
+
+  /// Fetches top story IDs.
+  Future<List<int>> getTopStoryIds() => _getStoryIds('topstories');
+
+  /// Fetches new story IDs.
+  Future<List<int>> getNewStoryIds() => _getStoryIds('newstories');
+
+  /// Fetches best story IDs.
+  Future<List<int>> getBestStoryIds() => _getStoryIds('beststories');
 
   /// Fetches a single item (story, comment, job, etc.) by its ID.
   Future<Map<String, dynamic>> getItemById(int id) async {
