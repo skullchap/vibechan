@@ -19,10 +19,8 @@ class BoardListScreen extends ConsumerWidget {
       child: Column(
         children: [
           // Tab bar
-          const TabBar(
-            tabs: [Tab(text: 'Worksafe'), Tab(text: 'NSFW')],
-          ),
-          
+          const TabBar(tabs: [Tab(text: 'Worksafe'), Tab(text: 'NSFW')]),
+
           // Tab content
           Expanded(
             child: TabBarView(
@@ -42,22 +40,17 @@ class BoardListScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _openBoard(BuildContext context, WidgetRef ref, dynamic board) {
-    // Check if we're in the app shell with tabs
-    final scaffold = Scaffold.maybeOf(context);
-    if (scaffold?.hasDrawer ?? false) {
-      // We're in the app shell, use the tab manager
-      final tabManager = ref.read(tabManagerProvider.notifier);
-      tabManager.addTab(
-        title: '/${board.id}/ - ${board.title}',
-        route: '/board/${board.id}',
-        pathParameters: {'boardId': board.id},
-      );
-    } else {
-      // We're not in the app shell, use normal navigation
-      context.go('/board/${board.id}');
-    }
+    // Use navigateToOrReplaceActiveTab to update the current tab
+    final tabNotifier = ref.read(tabManagerProvider.notifier);
+    // Use navigateToOrReplaceActiveTab instead of addTab
+    tabNotifier.navigateToOrReplaceActiveTab(
+      title: '/${board.id}/ - ${board.title}', // Use board info for title
+      initialRouteName: 'catalog',
+      pathParameters: {'boardId': board.id},
+      icon: Icons.view_list, // Example icon for catalog
+    );
   }
 }
 
@@ -70,50 +63,49 @@ class _BoardGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return boards.when(
-      data: (boardList) => GridView.builder(
-        padding: const EdgeInsets.all(8),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 3 / 2,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-        ),
-        itemCount: boardList.length,
-        itemBuilder: (context, index) => BoardGridItem(
-          board: boardList[index],
-          onTap: () => onBoardTap(boardList[index]),
-          onLongPress: () {
-            // Show context menu with options
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.open_in_new),
-                    title: const Text('Open in new tab'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      onBoardTap(boardList[index]);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.favorite_border),
-                    title: const Text('Add to favorites'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Add to favorites
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added /${boardList[index].id}/ to favorites')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+      data:
+          (boardList) => GridView.builder(
+            padding: const EdgeInsets.all(8),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: boardList.length,
+            itemBuilder:
+                (context, index) => BoardGridItem(
+                  board: boardList[index],
+                  onTap: () => onBoardTap(boardList[index]),
+                  onLongPress: () {
+                    // Show context menu with options
+                    showModalBottomSheet(
+                      context: context,
+                      builder:
+                          (context) => Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.favorite_border),
+                                title: const Text('Add to favorites'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  // TODO: Add to favorites (use a separate FavoritesProvider)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Added /${boardList[index].id}/ to favorites',
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                    );
+                  },
+                ),
+          ),
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('Error: $error')),
     );

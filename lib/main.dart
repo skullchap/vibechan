@@ -1,3 +1,4 @@
+import 'dart:ui'; // Import dart:ui for PointerDeviceKind
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
@@ -16,13 +17,9 @@ void main() async {
 
   // Provide it to the app:
   runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const VibeChanApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const VibeChanApp()),
   );
 }
-
 
 class VibeChanApp extends StatelessWidget {
   const VibeChanApp({super.key});
