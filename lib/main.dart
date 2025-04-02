@@ -13,6 +13,8 @@ import 'core/presentation/providers/board_providers.dart';
 import 'core/presentation/providers/thread_providers.dart';
 import 'core/domain/repositories/board_repository.dart';
 import 'core/domain/repositories/thread_repository.dart';
+// Import layout service for responsive layout
+import 'core/services/layout_service.dart';
 
 // Main function with enhanced error handling
 void main() async {
@@ -73,6 +75,13 @@ class VibeChanApp extends ConsumerWidget {
     final themeState = ref.watch(appThemeProvider);
     final themeNotifier = ref.read(appThemeProvider.notifier);
 
+    // Add a listener to initialize layout state after the app is built
+    Future.microtask(() {
+      if (context.mounted) {
+        ref.read(layoutStateNotifierProvider.notifier).updateLayout(context);
+      }
+    });
+
     return MaterialApp.router(
       title: AppConfig.appName,
       // Use themes from the notifier
@@ -81,6 +90,28 @@ class VibeChanApp extends ConsumerWidget {
       themeMode: themeState.themeMode, // Use themeMode from the state
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      // Add a builder to update layout when app is resized
+      builder: (context, child) {
+        // Trigger layout update on app start
+        Future.delayed(Duration.zero, () {
+          if (context.mounted) {
+            ref
+                .read(layoutStateNotifierProvider.notifier)
+                .updateLayout(context);
+          }
+        });
+
+        // Provide the app with Material 3 support
+        return MediaQuery(
+          // Override text scaling to prevent layout issues
+          data: MediaQuery.of(context).copyWith(
+            textScaleFactor: MediaQuery.of(
+              context,
+            ).textScaleFactor.clamp(0.8, 1.2),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

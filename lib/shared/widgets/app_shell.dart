@@ -25,6 +25,11 @@ import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart
 import '../../features/hackernews/presentation/screens/hackernews_item_screen.dart'; // Import HN detail
 import '../../features/lobsters/presentation/screens/lobsters_story_screen.dart'; // Import Lobsters detail
 
+// Import responsive layout components
+import '../../core/utils/responsive_layout.dart';
+import '../../core/presentation/widgets/responsive_widgets.dart';
+import '../../core/services/layout_service.dart';
+
 // Revert to ConsumerStatefulWidget
 class AppShell extends ConsumerStatefulWidget {
   // Remove child parameter
@@ -34,7 +39,8 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   // Internal state management will be reintroduced with TabManager
   // For now, keep it simple or placeholder state
   // int _selectedIndex = 0; // Remove state related to bottom nav index
@@ -42,12 +48,13 @@ class _AppShellState extends ConsumerState<AppShell> {
   // Add a ScrollController for the bottom tab bar
   late final ScrollController _tabScrollController;
 
-  // Remove functions related to GoRouter-based bottom nav
-  // int _calculateSelectedIndex(BuildContext context) { ... }\n  // void _onItemTapped(BuildContext context, int index) { ... }\n
   @override
   void initState() {
     super.initState();
     _tabScrollController = ScrollController();
+    // Register as widget binding observer to detect screen size changes
+    WidgetsBinding.instance.addObserver(this);
+
     // Ensure at least one tab exists when the app starts.
     // Add this in post-frame callback to safely interact with provider.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,13 +69,24 @@ class _AppShellState extends ConsumerState<AppShell> {
               icon: Icons.dashboard, // Default icon
             );
       }
+
+      // Initialize the layout state based on current context
+      ref.read(layoutStateNotifierProvider.notifier).updateLayout(context);
     });
   }
 
   @override
   void dispose() {
     _tabScrollController.dispose(); // Dispose the controller
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Update layout when screen metrics change (e.g., orientation change or window resize)
+    ref.read(layoutStateNotifierProvider.notifier).updateLayout(context);
+    super.didChangeMetrics();
   }
 
   @override
@@ -77,10 +95,15 @@ class _AppShellState extends ConsumerState<AppShell> {
     final activeTab = ref.watch(tabManagerProvider.notifier).activeTab;
     final tabNotifier = ref.read(tabManagerProvider.notifier);
 
+    // Read current layout state
+    final layoutState = ref.watch(layoutStateNotifierProvider);
+    final currentLayout = layoutState.currentLayout;
+
+    // Get layout service instance
+    final layoutService = ref.read(layoutServiceProvider);
+
     // Read the HN sort type provider for the AppBar action
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
-
-    // String appBarTitle = activeTab?.title ?? AppConfig.appName; // No longer needed
 
     // Determine if back button should be shown
     // Show if it's a detail view (HN item, Lobsters story, 4chan thread)
@@ -91,45 +114,6 @@ class _AppShellState extends ConsumerState<AppShell> {
             activeTab.initialRouteName == 'thread');
 
     List<Widget> appBarActions = [
-      // REMOVE IconButton for adding tab
-      // IconButton(
-      //   icon: const Icon(Icons.add),
-      //   tooltip: 'Add New Tab',
-      //   onPressed: () {
-      //     showDialog(
-      //       context: context,
-      //       builder: (dialogContext) => AddTabDialog(tabNotifier: tabNotifier),
-      //     );
-      //   },
-      // ),
-      // HN Sort Dropdown (conditionally shown)
-      if (activeTab?.initialRouteName == 'hackernews')
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: DropdownButton<HackerNewsSortType>(
-            value: currentHnSortType,
-            underline: Container(),
-            icon: const Icon(Icons.sort),
-            items:
-                HackerNewsSortType.values
-                    .map(
-                      (sortType) => DropdownMenuItem(
-                        value: sortType,
-                        child: Text(
-                          sortType.name[0].toUpperCase() +
-                              sortType.name.substring(1),
-                        ),
-                      ),
-                    )
-                    .toList(),
-            onChanged: (newSortType) {
-              if (newSortType != null) {
-                ref.read(currentHackerNewsSortTypeProvider.notifier).state =
-                    newSortType;
-              }
-            },
-          ),
-        ),
       // Conditionally show view mode toggle if active tab is boards/catalog?
       if (activeTab?.initialRouteName == 'boards' ||
           activeTab?.initialRouteName == 'catalog')
@@ -163,6 +147,34 @@ class _AppShellState extends ConsumerState<AppShell> {
             );
           },
         ),
+      // HN Sort Dropdown (conditionally shown)
+      if (activeTab?.initialRouteName == 'hackernews')
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: DropdownButton<HackerNewsSortType>(
+            value: currentHnSortType,
+            underline: Container(),
+            icon: const Icon(Icons.sort),
+            items:
+                HackerNewsSortType.values
+                    .map(
+                      (sortType) => DropdownMenuItem(
+                        value: sortType,
+                        child: Text(
+                          sortType.name[0].toUpperCase() +
+                              sortType.name.substring(1),
+                        ),
+                      ),
+                    )
+                    .toList(),
+            onChanged: (newSortType) {
+              if (newSortType != null) {
+                ref.read(currentHackerNewsSortTypeProvider.notifier).state =
+                    newSortType;
+              }
+            },
+          ),
+        ),
       IconButton(
         icon: const Icon(Icons.settings),
         tooltip: 'Settings',
@@ -174,6 +186,12 @@ class _AppShellState extends ConsumerState<AppShell> {
         },
       ),
     ];
+
+    // Determine if we should use side navigation instead of bottom tabs
+    final bool useSideNavigation = layoutService.shouldShowSidePanel(
+      currentLayout,
+    );
+    final double sideNavWidth = layoutService.getSidePanelWidth(currentLayout);
 
     // Wrap Scaffold with WillPopScope
     return WillPopScope(
@@ -200,7 +218,7 @@ class _AppShellState extends ConsumerState<AppShell> {
           return false;
         }
       },
-      child: Scaffold(
+      child: ResponsiveScaffold(
         appBar: AppBar(
           // Use the source selector dropdown as the title
           title: _buildSourceSelector(context, ref, activeTab, tabNotifier),
@@ -219,154 +237,251 @@ class _AppShellState extends ConsumerState<AppShell> {
                   : null, // No back button if not applicable
           actions: appBarActions,
         ),
-        // Body displays the content for the active tab
-        body:
-            activeTab != null
-                ? _buildTabContent(activeTab) // Use helper to build content
-                : const Center(
-                  child: Text('No tabs open. Press + to add one.'),
+        // Conditionally use side drawer for larger screens
+        drawer:
+            useSideNavigation
+                ? _buildSideNavigation(tabs, activeTab, tabNotifier)
+                : null,
+        // Adapt body based on layout
+        body: AnimatedLayoutBuilder(
+          child: Row(
+            children: [
+              // Side navigation for larger screens (visible directly, not in drawer)
+              if (useSideNavigation && false) // Disabled to use drawer instead
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: sideNavWidth,
+                  child: _buildSideNavigation(tabs, activeTab, tabNotifier),
                 ),
-
-        // Dynamically build the bottom tab bar
-        bottomNavigationBar: SafeArea(
-          child: Container(
-            height: 50, // Adjust height as needed
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            decoration: BoxDecoration(
-              color:
-                  Theme.of(
-                    context,
-                  ).colorScheme.surfaceVariant, // Or appropriate color
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 0.5,
-                ),
+              // Main content
+              Expanded(
+                child:
+                    activeTab != null
+                        ? _buildTabContent(
+                          activeTab,
+                        ) // Use helper to build content
+                        : const Center(
+                          child: Text('No tabs open. Press + to add one.'),
+                        ),
               ),
-            ),
-            // Add Listener to intercept scroll wheel events -> Restore
-            child: Listener(
-              onPointerSignal: (pointerSignal) {
-                if (pointerSignal is PointerScrollEvent) {
-                  final double scrollAmount = pointerSignal.scrollDelta.dy;
-                  final double sensitivity = 30.0; // Adjust scroll sensitivity
-
-                  if (scrollAmount.abs() > 0) {
-                    // Check if there is vertical scroll
-                    // Corrected calculation:
-                    // Scroll Up (dy < 0) -> Move Right (increase offset)
-                    // Scroll Down (dy > 0) -> Move Left (decrease offset)
-                    // So, the offset change should be the *negative* of dy's sign.
-                    double newOffset =
-                        _tabScrollController.offset -
-                        (scrollAmount.sign * sensitivity);
-
-                    // Clamp the offset to prevent overscrolling
-                    newOffset = newOffset.clamp(
-                      _tabScrollController.position.minScrollExtent,
-                      _tabScrollController.position.maxScrollExtent,
-                    );
-                    _tabScrollController.animateTo(
-                      newOffset,
-                      duration: const Duration(
-                        milliseconds: 100,
-                      ), // Adjust animation speed
-                      curve: Curves.easeOut, // Adjust animation curve
-                    );
-                  }
-                }
-              },
-              // Keep the ReorderableListView.builder as the child of the Listener
-              child: ReorderableListView.builder(
-                key: const Key('tab-reorderable-list'),
-                scrollController: _tabScrollController,
-                scrollDirection: Axis.horizontal,
-                buildDefaultDragHandles: false,
-                itemCount: tabs.length,
-                itemBuilder: (context, index) {
-                  final tab = tabs[index];
-                  // MUST provide a unique key for each item
-                  return KeyedSubtree(
-                    key: ValueKey(tab.id),
-                    // Wrap the button with the drag listener
-                    child: ReorderableDragStartListener(
-                      index: index, // Pass the item's index
-                      child: _buildTabButton(context, tab),
-                    ),
-                  );
-                },
-                onReorder: (oldIndex, newIndex) {
-                  ref
-                      .read(tabManagerProvider.notifier)
-                      .reorderTab(oldIndex, newIndex);
-                },
-                proxyDecorator: (
-                  Widget child,
-                  int index,
-                  Animation<double> animation,
-                ) {
-                  // Keep the existing proxy decorator for visual feedback
-                  return Material(
-                    elevation: 4.0,
-                    color: Colors.transparent,
-                    child: ScaleTransition(
-                      scale: animation.drive(
-                        Tween<double>(begin: 1.0, end: 1.05),
-                      ),
-                      child: child,
-                    ),
-                  );
-                },
-              ),
-            ),
+            ],
           ),
         ),
-      ), // End Scaffold
-    ); // End WillPopScope
+        // Only show bottom navigation bar on smaller screens
+        bottomNavigationBar:
+            !useSideNavigation
+                ? SafeArea(
+                  child: Container(
+                    height: 50, // Adjust height as needed
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color:
+                          Theme.of(
+                            context,
+                          ).colorScheme.surfaceVariant, // Or appropriate color
+                      border: Border(
+                        top: BorderSide(
+                          color: Theme.of(context).dividerColor,
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    // Add Listener to intercept scroll wheel events -> Restore
+                    child: Listener(
+                      onPointerSignal: (pointerSignal) {
+                        if (pointerSignal is PointerScrollEvent) {
+                          final double scrollAmount =
+                              pointerSignal.scrollDelta.dy;
+                          final double sensitivity =
+                              30.0; // Adjust scroll sensitivity
+
+                          if (scrollAmount.abs() > 0) {
+                            // Check if there is vertical scroll
+                            // Corrected calculation:
+                            // Scroll Up (dy < 0) -> Move Right (increase offset)
+                            // Scroll Down (dy > 0) -> Move Left (decrease offset)
+                            // So, the offset change should be the *negative* of dy's sign.
+                            double newOffset =
+                                _tabScrollController.offset -
+                                (scrollAmount.sign * sensitivity);
+
+                            // Clamp the offset to prevent overscrolling
+                            newOffset = newOffset.clamp(
+                              _tabScrollController.position.minScrollExtent,
+                              _tabScrollController.position.maxScrollExtent,
+                            );
+                            _tabScrollController.animateTo(
+                              newOffset,
+                              duration: const Duration(
+                                milliseconds: 100,
+                              ), // Adjust animation speed
+                              curve: Curves.easeOut, // Adjust animation curve
+                            );
+                          }
+                        }
+                      },
+                      // Keep the ReorderableListView.builder as the child of the Listener
+                      child: ReorderableListView.builder(
+                        key: const Key('tab-reorderable-list'),
+                        scrollController: _tabScrollController,
+                        scrollDirection: Axis.horizontal,
+                        buildDefaultDragHandles: false,
+                        itemCount: tabs.length,
+                        itemBuilder: (context, index) {
+                          final tab = tabs[index];
+                          // MUST provide a unique key for each item
+                          return KeyedSubtree(
+                            key: ValueKey(tab.id),
+                            // Wrap the button with the drag listener
+                            child: ReorderableDragStartListener(
+                              index: index, // Pass the item's index
+                              child: _buildTabButton(context, tab),
+                            ),
+                          );
+                        },
+                        onReorder: (oldIndex, newIndex) {
+                          ref
+                              .read(tabManagerProvider.notifier)
+                              .reorderTab(oldIndex, newIndex);
+                        },
+                        proxyDecorator: (
+                          Widget child,
+                          int index,
+                          Animation<double> animation,
+                        ) {
+                          // Keep the existing proxy decorator for visual feedback
+                          return Material(
+                            elevation: 4.0,
+                            color: Colors.transparent,
+                            child: ScaleTransition(
+                              scale: animation.drive(
+                                Tween<double>(begin: 1.0, end: 1.05),
+                              ),
+                              child: child,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                )
+                : null,
+      ),
+    );
+  }
+
+  // Build side navigation panel for larger screens
+  Widget _buildSideNavigation(
+    List<ContentTab> tabs,
+    ContentTab? activeTab,
+    TabManagerNotifier tabNotifier,
+  ) {
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          // Source selector at the top
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: _buildSideSourceSelector(context, ref, tabNotifier),
+          ),
+          const Divider(),
+          // Tab list
+          Expanded(
+            child: ListView.builder(
+              itemCount: tabs.length,
+              itemBuilder: (context, index) {
+                final tab = tabs[index];
+                final isActive = tab.id == activeTab?.id;
+
+                return ListTile(
+                  leading: Icon(tab.icon),
+                  title: Text(tab.title),
+                  selected: isActive,
+                  onTap: () => tabNotifier.setActiveTab(tab.id),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    onPressed: () => tabNotifier.removeTab(tab.id),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // --- Helper function to build tab content ---
   Widget _buildTabContent(ContentTab tab) {
+    // Get padding based on current layout
+    final layoutState = ref.watch(layoutStateNotifierProvider);
+    final layoutService = ref.read(layoutServiceProvider);
+    final padding = layoutService.getPaddingForLayout(
+      layoutState.currentLayout,
+    );
+
     // This logic determines which screen to show based on the active tab's state
+    Widget content;
     switch (tab.initialRouteName) {
       case 'boards':
-        return const BoardListScreen();
+        content = const BoardListScreen();
+        break;
       case 'catalog':
         // Need boardId from pathParameters
         final boardId = tab.pathParameters['boardId'];
-        return boardId != null
-            ? BoardCatalogScreen(boardId: boardId)
-            : const Center(child: Text('Error: Missing boardId'));
+        content =
+            boardId != null
+                ? BoardCatalogScreen(boardId: boardId)
+                : const Center(child: Text('Error: Missing boardId'));
+        break;
       case 'thread':
         // Need boardId and threadId from pathParameters
         final boardId = tab.pathParameters['boardId'];
         final threadId = tab.pathParameters['threadId'];
-        return (boardId != null && threadId != null)
-            ? ThreadDetailScreen(boardId: boardId, threadId: threadId)
-            : const Center(child: Text('Error: Missing board/thread ID'));
+        content =
+            (boardId != null && threadId != null)
+                ? ThreadDetailScreen(boardId: boardId, threadId: threadId)
+                : const Center(child: Text('Error: Missing board/thread ID'));
+        break;
       case 'favorites':
-        return const FavoritesScreen();
+        content = const FavoritesScreen();
+        break;
       case 'settings':
-        return const SettingsScreen();
+        content = const SettingsScreen();
+        break;
       case 'hackernews':
-        return const HackerNewsScreen();
+        content = const HackerNewsScreen();
+        break;
       case 'hackernews_item':
         final itemIdStr = tab.pathParameters['itemId'];
         final itemId = int.tryParse(itemIdStr ?? '');
-        return itemId != null
-            ? HackerNewsItemScreen(itemId: itemId)
-            : const Center(child: Text('Error: Missing item ID'));
+        content =
+            itemId != null
+                ? HackerNewsItemScreen(itemId: itemId)
+                : const Center(child: Text('Error: Missing item ID'));
+        break;
       case 'lobsters':
-        return const LobstersScreen();
+        content = const LobstersScreen();
+        break;
       case 'lobsters_story':
         final storyId = tab.pathParameters['storyId'];
-        return storyId != null
-            ? LobstersStoryScreen(storyId: storyId)
-            : const Center(child: Text('Error: Missing story ID'));
+        content =
+            storyId != null
+                ? LobstersStoryScreen(storyId: storyId)
+                : const Center(child: Text('Error: Missing story ID'));
+        break;
       default:
         // Fallback for unknown route or initial state
-        return Center(child: Text('Content for: ${tab.title}'));
+        content = Center(child: Text('Content for: ${tab.title}'));
     }
+
+    // Wrap content with padding based on layout
+    return Padding(padding: padding, child: content);
   }
   // --- End Helper ---
 
@@ -596,5 +711,79 @@ Widget _buildSourceSelector(
         }
       },
     ),
+  );
+}
+
+// Widget builder for side navigation source selector
+Widget _buildSideSourceSelector(
+  BuildContext context,
+  WidgetRef ref,
+  TabManagerNotifier tabNotifier,
+) {
+  final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
+
+  // Define available sources
+  final List<Map<String, dynamic>> sources = [
+    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard},
+    {
+      'title': 'Hacker News',
+      'routeName': 'hackernews',
+      'icon': Icons.newspaper,
+    },
+    {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
+    {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
+    {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
+  ];
+
+  return Row(
+    children: [
+      Icon(Icons.source, color: colorScheme.primary),
+      const SizedBox(width: 8),
+      Expanded(
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            isExpanded: true,
+            icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
+            style: theme.textTheme.titleMedium,
+            items:
+                sources.map((source) {
+                  return DropdownMenuItem<String>(
+                    value: source['routeName'] as String,
+                    child: Row(
+                      children: [
+                        Icon(source['icon'] as IconData?, size: 18),
+                        const SizedBox(width: 8),
+                        Text(source['title'] as String),
+                      ],
+                    ),
+                  );
+                }).toList(),
+            onChanged: (String? newRouteName) {
+              if (newRouteName != null) {
+                final selectedSource = sources.firstWhere(
+                  (s) => s['routeName'] == newRouteName,
+                );
+                // Add a new tab
+                tabNotifier.addTab(
+                  title: selectedSource['title'] as String,
+                  initialRouteName: selectedSource['routeName'] as String,
+                  icon: selectedSource['icon'] ?? Icons.web,
+                );
+              }
+            },
+            hint: const Text('Add new tab'),
+          ),
+        ),
+      ),
+      IconButton(
+        icon: const Icon(Icons.add),
+        tooltip: 'Add new tab',
+        onPressed: () {
+          // Show dialog or dropdown to add a new tab
+          // This is a duplicate way to add tabs for accessibility
+        },
+      ),
+    ],
   );
 }

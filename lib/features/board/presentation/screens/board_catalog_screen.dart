@@ -10,6 +10,9 @@ import '../../../../core/domain/models/thread.dart';
 import '../widgets/catalog/catalog_view_mode.dart';
 import '../widgets/catalog/catalog_media_feed.dart';
 import '../widgets/thread_preview_card.dart';
+import '../../../../core/utils/responsive_layout.dart';
+import '../../../../core/presentation/widgets/responsive_widgets.dart';
+import '../../../../core/services/layout_service.dart';
 
 class BoardCatalogScreen extends ConsumerWidget {
   final String boardId;
@@ -29,36 +32,75 @@ class BoardCatalogScreen extends ConsumerWidget {
     final threads = ref.watch(catalogNotifierProvider(boardId));
     final viewMode = ref.watch(catalogViewModeProvider);
 
+    final layoutState = ref.watch(layoutStateNotifierProvider);
+    final currentLayout = layoutState.currentLayout;
+    final layoutService = ref.read(layoutServiceProvider);
+
+    final columnCount = layoutService.getColumnCountForLayout(currentLayout);
+    final padding = layoutService.getPaddingForLayout(currentLayout);
+
     return RefreshIndicator(
       onRefresh:
           () => ref.read(catalogNotifierProvider(boardId).notifier).refresh(),
       child: threads.when(
         data:
-            (threads) =>
-                viewMode == CatalogViewMode.grid
-                    ? MasonryGridView.builder(
-                      padding: const EdgeInsets.all(8),
-                      gridDelegate:
-                          const SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                          ),
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      itemCount: threads.length,
-                      itemBuilder:
-                          (context, index) => ThreadPreviewCard(
-                            thread: threads[index],
-                            onTap:
-                                () => _openThread(context, ref, threads[index]),
-                          ),
-                    )
-                    : CatalogMediaFeed(
-                      threads: threads,
-                      onTap: (thread) => _openThread(context, ref, thread),
-                    ),
+            (threads) => AnimatedLayoutBuilder(
+              child:
+                  viewMode == CatalogViewMode.grid
+                      ? MasonryGridView.builder(
+                        padding: padding,
+                        gridDelegate:
+                            SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: columnCount,
+                            ),
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        itemCount: threads.length,
+                        itemBuilder:
+                            (context, index) => _buildThreadCard(
+                              context,
+                              threads[index],
+                              index,
+                              () => _openThread(context, ref, threads[index]),
+                            ),
+                      )
+                      : CatalogMediaFeed(
+                        threads: threads,
+                        onTap: (thread) => _openThread(context, ref, thread),
+                        padding: padding,
+                        layoutType: currentLayout,
+                      ),
+            ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
       ),
+    );
+  }
+
+  Widget _buildThreadCard(
+    BuildContext context,
+    Thread thread,
+    int index,
+    VoidCallback onTap,
+  ) {
+    final delay = Duration(milliseconds: 30 * (index % 10));
+
+    return FutureBuilder(
+      future: Future.delayed(delay),
+      builder: (context, snapshot) {
+        return AnimatedOpacity(
+          opacity: snapshot.connectionState == ConnectionState.done ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: AnimatedScale(
+            scale:
+                snapshot.connectionState == ConnectionState.done ? 1.0 : 0.95,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutBack,
+            child: ThreadPreviewCard(thread: thread, onTap: onTap),
+          ),
+        );
+      },
     );
   }
 
