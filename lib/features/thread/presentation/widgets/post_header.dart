@@ -15,61 +15,53 @@ class PostHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final smallTextStyle = theme.textTheme.bodySmall;
+    final boldSmallTextStyle = smallTextStyle?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final tripcodeStyle = smallTextStyle?.copyWith(
+      color: Colors.green.shade700,
+    );
+    final subjectStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+
+    // Format the timestamp manually as MM/dd/yy
+    final dt = post.timestamp;
+    final year = dt.year.toString().substring(2); // Get last two digits of year
+    final month = dt.month.toString().padLeft(2, '0');
+    final day = dt.day.toString().padLeft(2, '0');
+    final formattedDate = '$month/$day/$year';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      child: Row(
+      child: Wrap(
+        // Use Wrap for better flexibility
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8.0, // Horizontal spacing between items
+        runSpacing: 4.0, // Vertical spacing if items wrap
         children: [
-          if (post.subject != null)
-            Expanded(
-              child: Text(
-                post.subject!,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          if (!isOriginalPost) ...[
-            const Spacer(),
-            if (post.subject != null) const SizedBox(width: 16),
+          // Name
+          Text(post.name ?? 'Anonymous', style: boldSmallTextStyle),
+
+          // Tripcode
+          if (post.tripcode != null) Text(post.tripcode!, style: tripcodeStyle),
+
+          // Post ID
+          Text('#${post.id}', style: smallTextStyle),
+
+          // Timestamp
+          Text(formattedDate, style: smallTextStyle),
+
+          // Subject (only if it exists)
+          if (post.subject != null && post.subject!.isNotEmpty)
             Text(
-              post.name ?? 'Anonymous',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              post.subject!,
+              style: subjectStyle,
+              // Consider adding maxLines and overflow if subjects can be very long
+              // maxLines: 1,
+              // overflow: TextOverflow.ellipsis,
             ),
-            if (post.tripcode != null) ...[
-              const SizedBox(width: 4),
-              Text(
-                post.tripcode!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.green.shade700,
-                ),
-              ),
-            ],
-            const SizedBox(width: 8),
-            Text('#${post.id}', style: theme.textTheme.bodySmall),
-          ],
-          if (isOriginalPost) ...[
-            const Spacer(),
-            PopupMenuButton<String>(
-              padding: EdgeInsets.zero,
-              icon: const Icon(Icons.more_vert, size: 18),
-              itemBuilder:
-                  (context) => [
-                    const PopupMenuItem(
-                      value: 'share_thread',
-                      child: Text('Share Thread'),
-                    ),
-                  ],
-              onSelected: (value) {
-                if (value == 'share_thread') {
-                  // TODO: Implement share thread logic (need thread URL)
-                }
-              },
-            ),
-          ],
         ],
       ),
     );

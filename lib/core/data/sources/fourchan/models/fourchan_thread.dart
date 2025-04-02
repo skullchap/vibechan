@@ -75,50 +75,63 @@ abstract class FourChanThread with _$FourChanThread {
 
   /// Converts this DTO into your domain `Thread` model.
   Thread toThread(String boardId) {
-    // Build the OP post
-    final Post op = Post(
-      id: no.toString(),
-      boardId: boardId,
-      threadId: no.toString(),
-      timestamp: DateTime.fromMillisecondsSinceEpoch(time * 1000),
-      name: name.isEmpty ? 'Anonymous' : name,
-      tripcode: trip,
-      subject: sub,
-      comment: com,
-      isOp: true,
-      media:
-          (tim != 0 && ext != null && ext!.isNotEmpty)
-              ? Media(
-                filename: '$filename$ext',
-                url: 'https://i.4cdn.org/$boardId/$tim$ext',
-                thumbnailUrl: 'https://i.4cdn.org/$boardId/${tim}s.jpg',
-                type:
-                    (ext == '.webm' || ext == '.mp4')
-                        ? MediaType.video
-                        : ext == '.gif'
-                        ? MediaType.gif
-                        : MediaType.image,
-                width: w,
-                height: h,
-                size: fsize,
-              )
-              : null,
-    );
+    // Determine the source of the OP data
+    final bool isFullThread = posts.isNotEmpty;
+    final FourChanPost opSource =
+        isFullThread
+            ? posts[0]
+            : FourChanPost(
+              // Reconstruct a FourChanPost from top-level fields for catalog case
+              no: no,
+              resto: resto, // resto is 0 for OP
+              sticky: sticky,
+              closed: closed,
+              now: now,
+              time: time,
+              name: name,
+              trip: trip,
+              id: id,
+              capcode: capcode,
+              country: country,
+              countryName: countryName,
+              boardFlag: boardFlag,
+              flagName: flagName,
+              sub: sub,
+              com: com,
+              tim: tim,
+              filename: filename,
+              ext: ext,
+              fsize: fsize,
+              md5: md5,
+              w: w,
+              h: h,
+              tnW: tnW,
+              tnH: tnH,
+              filedeleted: filedeleted,
+              spoiler: spoiler,
+              customSpoiler: customSpoiler,
+              // Aggregate fields aren't part of a single post DTO
+            );
 
-    // If we're viewing the actual thread endpoint, "posts" is populated
-    // If from the catalog, "last_replies" is used
-    final repliesList = posts.isNotEmpty ? posts : lastReplies;
+    // Build the OP post using the determined source
+    final Post op = opSource.toPost(boardId, opSource.no.toString());
+
+    // Select the correct list for replies (posts from full thread, lastReplies from catalog)
+    final repliesList = isFullThread ? posts : lastReplies;
 
     return Thread(
-      id: no.toString(),
+      id: opSource.no.toString(), // Use OP's actual ID
       boardId: boardId,
-      originalPost: op,
+      originalPost: op.copyWith(isOp: true), // Ensure isOp is true
       replies:
-          repliesList.map((p) => p.toPost(boardId, no.toString())).toList(),
+          repliesList
+              .where((p) => p.resto != 0) // Keep this filter for replies
+              .map((p) => p.toPost(boardId, opSource.no.toString()))
+              .toList(),
       isSticky: sticky == 1,
       isClosed: closed == 1,
-      repliesCount: replies,
-      imagesCount: images,
+      repliesCount: replies, // Use aggregate count from thread data
+      imagesCount: images, // Use aggregate count from thread data
       lastModified: DateTime.fromMillisecondsSinceEpoch(lastModified * 1000),
     );
   }
