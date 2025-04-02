@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart'; // Import for PointerScrollEvent
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:go_router/go_router.dart'; // Remove if not directly used for navigation inside AppShell
@@ -28,6 +29,9 @@ class _AppShellState extends ConsumerState<AppShell> {
   // For now, keep it simple or placeholder state
   // int _selectedIndex = 0; // Remove state related to bottom nav index
 
+  // Add a ScrollController for the bottom tab bar
+  late final ScrollController _tabScrollController;
+
   // Remove functions related to GoRouter-based bottom nav
   // int _calculateSelectedIndex(BuildContext context) { ... }
   // void _onItemTapped(BuildContext context, int index) { ... }
@@ -35,6 +39,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
+    _tabScrollController = ScrollController();
     // Ensure at least one tab exists when the app starts.
     // Add this in post-frame callback to safely interact with provider.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -50,6 +55,12 @@ class _AppShellState extends ConsumerState<AppShell> {
             );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _tabScrollController.dispose(); // Dispose the controller
+    super.dispose();
   }
 
   @override
@@ -132,13 +143,81 @@ class _AppShellState extends ConsumerState<AppShell> {
               ),
             ),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children:
-                  tabs.map((tab) => _buildTabButton(context, tab)).toList(),
+          // Add Listener to intercept scroll wheel events -> Restore
+          child: Listener(
+            onPointerSignal: (pointerSignal) {
+              if (pointerSignal is PointerScrollEvent) {
+                final double scrollAmount = pointerSignal.scrollDelta.dy;
+                final double sensitivity = 30.0; // Adjust scroll sensitivity
+
+                if (scrollAmount.abs() > 0) {
+                  // Check if there is vertical scroll
+                  // Corrected calculation:
+                  // Scroll Up (dy < 0) -> Move Right (increase offset)
+                  // Scroll Down (dy > 0) -> Move Left (decrease offset)
+                  // So, the offset change should be the *negative* of dy's sign.
+                  double newOffset =
+                      _tabScrollController.offset -
+                      (scrollAmount.sign * sensitivity);
+
+                  // Clamp the offset to prevent overscrolling
+                  newOffset = newOffset.clamp(
+                    _tabScrollController.position.minScrollExtent,
+                    _tabScrollController.position.maxScrollExtent,
+                  );
+                  _tabScrollController.animateTo(
+                    newOffset,
+                    duration: const Duration(
+                      milliseconds: 100,
+                    ), // Adjust animation speed
+                    curve: Curves.easeOut, // Adjust animation curve
+                  );
+                }
+              }
+            },
+            // Keep the ReorderableListView.builder as the child of the Listener
+            child: ReorderableListView.builder(
+              key: const Key('tab-reorderable-list'),
+              scrollController: _tabScrollController,
+              scrollDirection: Axis.horizontal,
+              buildDefaultDragHandles: false,
+              itemCount: tabs.length,
+              itemBuilder: (context, index) {
+                final tab = tabs[index];
+                // MUST provide a unique key for each item
+                return KeyedSubtree(
+                  key: ValueKey(tab.id),
+                  // Wrap the button with the drag listener
+                  child: ReorderableDragStartListener(
+                    index: index, // Pass the item's index
+                    child: _buildTabButton(context, tab),
+                  ),
+                );
+              },
+              onReorder: (oldIndex, newIndex) {
+                ref
+                    .read(tabManagerProvider.notifier)
+                    .reorderTab(oldIndex, newIndex);
+              },
+              proxyDecorator: (
+                Widget child,
+                int index,
+                Animation<double> animation,
+              ) {
+                // Keep the existing proxy decorator for visual feedback
+                return Material(
+                  elevation: 4.0,
+                  color: Colors.transparent,
+                  child: ScaleTransition(
+                    scale: animation.drive(
+                      Tween<double>(begin: 1.0, end: 1.05),
+                    ),
+                    child: child,
+                  ),
+                );
+              },
             ),
-          ),
+          ), // End of Listener
         ),
       ),
     );
@@ -234,29 +313,28 @@ class _AppShellState extends ConsumerState<AppShell> {
                 maxLines: 1,
               ),
             ),
-            // Close Button - Wrap InkWell with Tooltip
-            Tooltip(
-              message: 'Close Tab',
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () => tabNotifier.removeTab(tab.id),
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: Icon(
-                    Icons.close,
-                    size: 14,
-                    color:
-                        isActive
-                            ? theme.colorScheme.onPrimaryContainer.withOpacity(
-                              0.7,
-                            )
-                            : theme.colorScheme.onSurfaceVariant.withOpacity(
-                              0.7,
-                            ),
-                  ),
+            // Close Button - Temporarily remove Tooltip
+            // Tooltip(
+            //   message: 'Close Tab',
+            //   child:
+            InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => tabNotifier.removeTab(tab.id),
+              child: Padding(
+                padding: const EdgeInsets.all(2.0),
+                child: Icon(
+                  Icons.close,
+                  size: 14,
+                  color:
+                      isActive
+                          ? theme.colorScheme.onPrimaryContainer.withOpacity(
+                            0.7,
+                          )
+                          : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                 ),
               ),
             ),
+            // ), // End of Tooltip
           ],
         ),
       ),

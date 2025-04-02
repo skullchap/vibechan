@@ -7,8 +7,8 @@ import '../models/content_tab.dart';
 /// Manages the list of open content tabs.
 class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
   TabManagerNotifier() : super([]) {
-    // Initialize with a default tab if desired, e.g., Boards list
-    // addTab(title: 'Boards', initialRouteName: 'boards');
+    // Initialize with a default tab if desired
+    // addTab(title: 'Boards', initialRouteName: 'boards', icon: Icons.dashboard);
   }
 
   final _uuid = const Uuid();
@@ -20,6 +20,10 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
     Map<String, String> pathParameters = const {},
     IconData icon = Icons.web,
   }) {
+    // Deactivate current active tab
+    final List<ContentTab> deactivatedTabs =
+        state.map((tab) => tab.copyWith(isActive: false)).toList();
+
     final newTab = ContentTab(
       id: _uuid.v4(),
       title: title,
@@ -29,22 +33,16 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
       isActive: true, // Make the new tab active
     );
 
-    // Deactivate current active tab
-    final updatedTabs =
-        state.map((tab) => tab.copyWith(isActive: false)).toList();
-
-    updatedTabs.add(newTab);
-    state = updatedTabs;
+    state = [...deactivatedTabs, newTab];
   }
 
   /// Sets the tab with the given [id] as active.
   void setActiveTab(String id) {
-    // Check if the tab is already active
-    final currentActive = state.firstWhere(
-      (tab) => tab.isActive,
-      orElse: () => state.first,
-    );
-    if (currentActive.id == id) return; // Already active, do nothing
+    // Avoid redundant state updates if already active
+    final currentActiveIndex = state.indexWhere((tab) => tab.isActive);
+    if (currentActiveIndex != -1 && state[currentActiveIndex].id == id) {
+      return;
+    }
 
     state =
         state.map((tab) {
@@ -53,25 +51,25 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
   }
 
   /// Removes the tab with the given [id].
-  /// If the removed tab was active, activates the previous tab.
+  /// If the removed tab was active, activates the previous tab or the first one.
   void removeTab(String id) {
     final index = state.indexWhere((tab) => tab.id == id);
     if (index == -1) return; // Tab not found
 
     final wasActive = state[index].isActive;
-    final newTabs = [...state];
-    newTabs.removeAt(index);
+    final List<ContentTab> updatedTabs = List.from(state);
+    updatedTabs.removeAt(index);
 
     // If we removed the active tab and there are still tabs left,
-    // activate the one before it, or the new first one.
-    if (wasActive && newTabs.isNotEmpty) {
+    // activate the one before it, or the new first one if it was the first.
+    if (wasActive && updatedTabs.isNotEmpty) {
       final newActiveIndex = (index > 0) ? index - 1 : 0;
-      newTabs[newActiveIndex] = newTabs[newActiveIndex].copyWith(
-        isActive: true,
-      );
+      // Ensure the index is valid for the reduced list
+      final safeIndex = newActiveIndex.clamp(0, updatedTabs.length - 1);
+      updatedTabs[safeIndex] = updatedTabs[safeIndex].copyWith(isActive: true);
     }
 
-    state = newTabs;
+    state = updatedTabs;
   }
 
   /// Updates the currently active tab to show new content.
@@ -95,15 +93,15 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
                 initialRouteName: initialRouteName,
                 pathParameters: pathParameters,
                 icon: icon,
-                // Ensure it remains active (though it should be already)
-                isActive: true,
+                isActive: true, // Ensure it remains active
               );
             }
-            // Ensure other tabs are inactive (in case state was inconsistent)
+            // This ensures only the target tab is active after the update
             return tab.copyWith(isActive: false);
           }).toList();
     } else {
       // No active tab (or no tabs at all?), fall back to adding a new one
+      // This automatically makes the new tab active
       addTab(
         title: title,
         initialRouteName: initialRouteName,
@@ -113,8 +111,22 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
     }
   }
 
+  /// Reorders the tab list based on drag-and-drop interaction.
+  void reorderTab(int oldIndex, int newIndex) {
+    // Handle index adjustment if item is moved downwards
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+
+    // Perform reordering
+    final List<ContentTab> updatedTabs = List.from(state);
+    final ContentTab item = updatedTabs.removeAt(oldIndex);
+    updatedTabs.insert(newIndex, item);
+
+    state = updatedTabs;
+  }
+
   /// Updates the properties of an existing tab (e.g., title or icon).
-  /// Does NOT handle route changes within a tab - that's for the tab content view.
   void updateTabDetails(String id, {String? newTitle, IconData? newIcon}) {
     state =
         state.map((tab) {
@@ -131,12 +143,13 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
   /// Gets the currently active tab, if any.
   ContentTab? get activeTab {
     try {
+      // Find the first tab marked as active
       return state.firstWhere((tab) => tab.isActive);
     } catch (e) {
-      // If no tab is explicitly active (e.g., after removing the last one was active),
-      // try returning the first one. This might need refinement based on desired behavior.
+      // If no tab is explicitly active, default to the first tab if the list isn't empty
       if (state.isNotEmpty) {
-        // To avoid infinite loops if state update fails, return first without modifying state here
+        // Important: Don't modify state here, just return the first one.
+        // If no tab should be active, the UI should handle the null case.
         return state.first;
       }
       return null; // No tabs left
