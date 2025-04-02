@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart'; // Import for PointerScrollEvent
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:go_router/go_router.dart'; // Remove if not directly used for navigation inside AppShell
+import 'dart:async'; // Import for Future
 
 import '../../config/app_config.dart';
 import '../models/content_tab.dart';
@@ -157,121 +158,153 @@ class _AppShellState extends ConsumerState<AppShell> {
         ),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(appBarTitle),
-        // Conditionally add the leading back button
-        leading:
-            showBackButton
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back',
-                  onPressed: () => _handleBackButton(ref, activeTab),
-                )
-                : null, // No back button if not applicable
-        actions: appBarActions,
-      ),
-      // Body displays the content for the active tab
-      body:
-          activeTab != null
-              ? _buildTabContent(activeTab) // Use helper to build content
-              : const Center(child: Text('No tabs open. Press + to add one.')),
+    // Wrap Scaffold with WillPopScope
+    return WillPopScope(
+      onWillPop: () async {
+        final activeTab = ref.read(tabManagerProvider.notifier).activeTab;
 
-      // Dynamically build the bottom tab bar
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          height: 50, // Adjust height as needed
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          decoration: BoxDecoration(
-            color:
-                Theme.of(
-                  context,
-                ).colorScheme.surfaceVariant, // Or appropriate color
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 0.5,
+        if (activeTab != null) {
+          // Check if the current tab is a detail view that should have custom back behavior
+          final isDetailView =
+              activeTab.initialRouteName == 'thread' ||
+              activeTab.initialRouteName == 'hackernews_item' ||
+              activeTab.initialRouteName == 'lobsters_story';
+
+          if (isDetailView) {
+            // If it's a detail view, trigger the custom back navigation logic
+            _handleBackButton(ref, activeTab);
+            return false; // Prevent default system back behavior
+          } else {
+            // If not a detail view, do nothing on back press
+            return false; // Prevent default system back behavior (e.g., closing tab/app)
+          }
+        } else {
+          // No active tab, should ideally not happen, but prevent exit just in case
+          return false;
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(appBarTitle),
+          // Conditionally add the leading back button
+          leading:
+              showBackButton
+                  ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    tooltip: 'Back',
+                    onPressed:
+                        () => _handleBackButton(
+                          ref,
+                          activeTab!,
+                        ), // Pass activeTab directly
+                  )
+                  : null, // No back button if not applicable
+          actions: appBarActions,
+        ),
+        // Body displays the content for the active tab
+        body:
+            activeTab != null
+                ? _buildTabContent(activeTab) // Use helper to build content
+                : const Center(
+                  child: Text('No tabs open. Press + to add one.'),
+                ),
+
+        // Dynamically build the bottom tab bar
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            height: 50, // Adjust height as needed
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color:
+                  Theme.of(
+                    context,
+                  ).colorScheme.surfaceVariant, // Or appropriate color
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 0.5,
+                ),
+              ),
+            ),
+            // Add Listener to intercept scroll wheel events -> Restore
+            child: Listener(
+              onPointerSignal: (pointerSignal) {
+                if (pointerSignal is PointerScrollEvent) {
+                  final double scrollAmount = pointerSignal.scrollDelta.dy;
+                  final double sensitivity = 30.0; // Adjust scroll sensitivity
+
+                  if (scrollAmount.abs() > 0) {
+                    // Check if there is vertical scroll
+                    // Corrected calculation:
+                    // Scroll Up (dy < 0) -> Move Right (increase offset)
+                    // Scroll Down (dy > 0) -> Move Left (decrease offset)
+                    // So, the offset change should be the *negative* of dy's sign.
+                    double newOffset =
+                        _tabScrollController.offset -
+                        (scrollAmount.sign * sensitivity);
+
+                    // Clamp the offset to prevent overscrolling
+                    newOffset = newOffset.clamp(
+                      _tabScrollController.position.minScrollExtent,
+                      _tabScrollController.position.maxScrollExtent,
+                    );
+                    _tabScrollController.animateTo(
+                      newOffset,
+                      duration: const Duration(
+                        milliseconds: 100,
+                      ), // Adjust animation speed
+                      curve: Curves.easeOut, // Adjust animation curve
+                    );
+                  }
+                }
+              },
+              // Keep the ReorderableListView.builder as the child of the Listener
+              child: ReorderableListView.builder(
+                key: const Key('tab-reorderable-list'),
+                scrollController: _tabScrollController,
+                scrollDirection: Axis.horizontal,
+                buildDefaultDragHandles: false,
+                itemCount: tabs.length,
+                itemBuilder: (context, index) {
+                  final tab = tabs[index];
+                  // MUST provide a unique key for each item
+                  return KeyedSubtree(
+                    key: ValueKey(tab.id),
+                    // Wrap the button with the drag listener
+                    child: ReorderableDragStartListener(
+                      index: index, // Pass the item's index
+                      child: _buildTabButton(context, tab),
+                    ),
+                  );
+                },
+                onReorder: (oldIndex, newIndex) {
+                  ref
+                      .read(tabManagerProvider.notifier)
+                      .reorderTab(oldIndex, newIndex);
+                },
+                proxyDecorator: (
+                  Widget child,
+                  int index,
+                  Animation<double> animation,
+                ) {
+                  // Keep the existing proxy decorator for visual feedback
+                  return Material(
+                    elevation: 4.0,
+                    color: Colors.transparent,
+                    child: ScaleTransition(
+                      scale: animation.drive(
+                        Tween<double>(begin: 1.0, end: 1.05),
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          // Add Listener to intercept scroll wheel events -> Restore
-          child: Listener(
-            onPointerSignal: (pointerSignal) {
-              if (pointerSignal is PointerScrollEvent) {
-                final double scrollAmount = pointerSignal.scrollDelta.dy;
-                final double sensitivity = 30.0; // Adjust scroll sensitivity
-
-                if (scrollAmount.abs() > 0) {
-                  // Check if there is vertical scroll
-                  // Corrected calculation:
-                  // Scroll Up (dy < 0) -> Move Right (increase offset)
-                  // Scroll Down (dy > 0) -> Move Left (decrease offset)
-                  // So, the offset change should be the *negative* of dy's sign.
-                  double newOffset =
-                      _tabScrollController.offset -
-                      (scrollAmount.sign * sensitivity);
-
-                  // Clamp the offset to prevent overscrolling
-                  newOffset = newOffset.clamp(
-                    _tabScrollController.position.minScrollExtent,
-                    _tabScrollController.position.maxScrollExtent,
-                  );
-                  _tabScrollController.animateTo(
-                    newOffset,
-                    duration: const Duration(
-                      milliseconds: 100,
-                    ), // Adjust animation speed
-                    curve: Curves.easeOut, // Adjust animation curve
-                  );
-                }
-              }
-            },
-            // Keep the ReorderableListView.builder as the child of the Listener
-            child: ReorderableListView.builder(
-              key: const Key('tab-reorderable-list'),
-              scrollController: _tabScrollController,
-              scrollDirection: Axis.horizontal,
-              buildDefaultDragHandles: false,
-              itemCount: tabs.length,
-              itemBuilder: (context, index) {
-                final tab = tabs[index];
-                // MUST provide a unique key for each item
-                return KeyedSubtree(
-                  key: ValueKey(tab.id),
-                  // Wrap the button with the drag listener
-                  child: ReorderableDragStartListener(
-                    index: index, // Pass the item's index
-                    child: _buildTabButton(context, tab),
-                  ),
-                );
-              },
-              onReorder: (oldIndex, newIndex) {
-                ref
-                    .read(tabManagerProvider.notifier)
-                    .reorderTab(oldIndex, newIndex);
-              },
-              proxyDecorator: (
-                Widget child,
-                int index,
-                Animation<double> animation,
-              ) {
-                // Keep the existing proxy decorator for visual feedback
-                return Material(
-                  elevation: 4.0,
-                  color: Colors.transparent,
-                  child: ScaleTransition(
-                    scale: animation.drive(
-                      Tween<double>(begin: 1.0, end: 1.05),
-                    ),
-                    child: child,
-                  ),
-                );
-              },
-            ),
-          ),
         ),
-      ),
-    );
+      ), // End Scaffold
+    ); // End WillPopScope
   }
 
   // --- Helper function to build tab content ---
