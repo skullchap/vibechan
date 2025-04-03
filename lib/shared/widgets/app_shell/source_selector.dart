@@ -24,31 +24,34 @@ Widget buildSourceSelector(
   String currentSourceName = 'Select Source';
   IconData currentIcon = Icons.menu;
 
-  // Determine the current selected source
-  if (activeTab != null) {
-    switch (activeTab.initialRouteName) {
-      case 'boards':
-      case 'catalog':
-      case 'thread':
-        currentSourceName = useCompactLayout ? '4chan' : '4chan Boards';
-        currentIcon = Icons.grid_view;
-        break;
-      case 'favorites':
-        currentSourceName = 'Favorites';
-        currentIcon = Icons.favorite;
-        break;
-      case 'hackernews':
-      case 'hackernews_item':
-        currentSourceName = useCompactLayout ? 'HN' : 'Hacker News';
-        currentIcon = Icons.trending_up;
-        break;
-      case 'lobsters':
-      case 'lobsters_story':
-        currentSourceName = useCompactLayout ? 'Lobsters' : 'Lobsters';
-        currentIcon = Icons.adjust_rounded;
-        break;
-    }
-  }
+  // Define available sources including Settings
+  final List<Map<String, dynamic>> sources = [
+    {'title': '4chan Boards', 'routeName': 'boards', 'icon': Icons.grid_view},
+    {
+      'title': 'Hacker News',
+      'routeName': 'hackernews',
+      'icon': Icons.trending_up,
+    },
+    {
+      'title': 'Lobsters',
+      'routeName': 'lobsters',
+      'icon': Icons.adjust_rounded,
+    },
+    {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
+    {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
+  ];
+
+  final String currentCategory = _getCategoryFromTab(activeTab);
+  final currentSource = sources.firstWhere(
+    (s) => s['routeName'] == currentCategory,
+    orElse: () => sources.first, // Default to first item if not found
+  );
+
+  currentSourceName =
+      useCompactLayout && currentCategory == 'hackernews'
+          ? 'HN'
+          : currentSource['title'];
+  currentIcon = currentSource['icon'];
 
   // Create a Material 3 style container design for larger screens
   final selectorWidget =
@@ -67,6 +70,8 @@ Widget buildSourceSelector(
               tabNotifier,
               colorScheme,
               theme,
+              sources,
+              currentCategory,
             ),
           )
           // On mobile, just use the popup button directly
@@ -78,6 +83,8 @@ Widget buildSourceSelector(
             tabNotifier,
             colorScheme,
             theme,
+            sources,
+            currentCategory,
           );
 
   return selectorWidget;
@@ -92,6 +99,8 @@ Widget _buildPopupButton(
   TabManagerNotifier tabNotifier,
   ColorScheme colorScheme,
   ThemeData theme,
+  List<Map<String, dynamic>> sources,
+  String currentCategory,
 ) {
   final windowWidth = MediaQuery.of(context).size.width;
   final isCompact = windowWidth < 360;
@@ -121,40 +130,21 @@ Widget _buildPopupButton(
       ],
     ),
     itemBuilder:
-        (context) => [
-          _buildPopupMenuItem(
-            context,
-            'boards',
-            '4chan Boards',
-            Icons.grid_view,
-            activeTab?.initialRouteName == 'boards' ||
-                activeTab?.initialRouteName == 'catalog' ||
-                activeTab?.initialRouteName == 'thread',
-          ),
-          _buildPopupMenuItem(
-            context,
-            'favorites',
-            'Favorites',
-            Icons.favorite,
-            activeTab?.initialRouteName == 'favorites',
-          ),
-          _buildPopupMenuItem(
-            context,
-            'hackernews',
-            'Hacker News',
-            Icons.trending_up,
-            activeTab?.initialRouteName == 'hackernews' ||
-                activeTab?.initialRouteName == 'hackernews_item',
-          ),
-          _buildPopupMenuItem(
-            context,
-            'lobsters',
-            'Lobsters',
-            Icons.adjust_rounded,
-            activeTab?.initialRouteName == 'lobsters' ||
-                activeTab?.initialRouteName == 'lobsters_story',
-          ),
-        ],
+        (context) =>
+            sources.map((source) {
+              final routeName = source['routeName'] as String;
+              final title = source['title'] as String;
+              final icon = source['icon'] as IconData?;
+              final isSelected = routeName == currentCategory;
+
+              return _buildPopupMenuItem(
+                context,
+                routeName,
+                title,
+                icon ?? Icons.web,
+                isSelected,
+              );
+            }).toList(),
     onSelected: (value) {
       switch (value) {
         case 'boards':
@@ -168,6 +158,9 @@ Widget _buildPopupButton(
           break;
         case 'lobsters':
           _openLobstersTab(tabNotifier);
+          break;
+        case 'settings':
+          _openSettingsTab(tabNotifier);
           break;
       }
     },
@@ -224,6 +217,8 @@ String _getCategoryFromTab(ContentTab? tab) {
       return 'lobsters';
     case 'favorites':
       return 'favorites';
+    case 'settings':
+      return 'settings';
     default:
       return 'boards'; // Fallback category
   }
@@ -273,6 +268,13 @@ Widget buildSideSourceSelector(
           ),
         ],
       ),
+      const Divider(height: 24),
+      // Settings Button
+      ActionChip(
+        avatar: const Icon(Icons.settings, size: 18),
+        label: const Text('Settings'),
+        onPressed: () => _openSettingsTab(tabNotifier),
+      ),
     ],
   );
 }
@@ -308,5 +310,13 @@ void _openLobstersTab(TabManagerNotifier tabNotifier) {
     title: 'Lobsters',
     initialRouteName: 'lobsters',
     icon: Icons.adjust_rounded,
+  );
+}
+
+void _openSettingsTab(TabManagerNotifier tabNotifier) {
+  tabNotifier.navigateToOrReplaceActiveTab(
+    title: 'Settings',
+    initialRouteName: 'settings',
+    icon: Icons.settings,
   );
 }

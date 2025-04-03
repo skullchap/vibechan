@@ -12,6 +12,7 @@ import '../../../features/lobsters/presentation/screens/lobsters_story_screen.da
 import '../../../features/thread/presentation/screens/thread_detail_screen.dart';
 import '../../models/content_tab.dart';
 import '../../providers/search_provider.dart';
+import '../../../features/board/presentation/screens/settings_screen.dart';
 
 /// Widget to display the content based on the active tab
 class ContentTabView extends ConsumerWidget {
@@ -64,6 +65,10 @@ class ContentTabView extends ConsumerWidget {
       case 'lobsters_story':
         final storyId = params['storyId'] ?? '';
         return LobstersStoryScreen(storyId: storyId);
+
+      // Add case for settings
+      case 'settings':
+        return const SettingsScreen();
 
       // Default / fallback
       default:

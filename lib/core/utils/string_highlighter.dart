@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Creates a TextSpan with search terms highlighted
+/// Creates a TextSpan with search terms highlighted.
+///
+/// Takes a [text] string, a base [style], the [searchTerms] string
+/// (space-separated), and a [highlightColor].
+/// Returns a TextSpan with matched terms highlighted.
 TextSpan buildHighlightedTextSpan(
   String text,
   TextStyle? style,
   String searchTerms,
   Color highlightColor,
 ) {
-  if (searchTerms.isEmpty) return TextSpan(text: text, style: style);
+  if (searchTerms.isEmpty || text.isEmpty) {
+    return TextSpan(text: text, style: style);
+  }
 
   final List<InlineSpan> spans = [];
   final RegExp regExp = RegExp(
@@ -45,6 +51,11 @@ TextSpan buildHighlightedTextSpan(
   // Add remaining text after the last match
   if (lastMatchEnd < text.length) {
     spans.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+  }
+
+  // If no spans were generated (e.g., no matches), return the original text
+  if (spans.isEmpty) {
+    return TextSpan(text: text, style: style);
   }
 
   return TextSpan(children: spans);

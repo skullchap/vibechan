@@ -5,18 +5,21 @@ import 'package:html/dom.dart' as dom;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'list_context.dart';
-import 'text_highlight.dart';
 
 /// Parses HTML string into a list of InlineSpan objects
 List<InlineSpan> parseHtml(
+  BuildContext context,
   String htmlData,
-  TextStyle defaultStyle,
-  String? highlightTerms,
-  Color highlightColor,
+  TextStyle? defaultStyle,
+  Function(String)? onQuoteLink,
 ) {
   final List<InlineSpan> spans = [];
   final document = parse(htmlData);
   final List<GestureRecognizer> recognizers = [];
+  final defaultTextStyle =
+      defaultStyle ??
+      Theme.of(context).textTheme.bodyMedium ??
+      const TextStyle();
 
   void processNode(
     dom.Node node,
@@ -27,22 +30,12 @@ List<InlineSpan> parseHtml(
     if (node is dom.Text) {
       // Add non-empty text nodes
       if (node.text.trim().isNotEmpty) {
-        if (highlightTerms != null && highlightTerms.isNotEmpty) {
-          // Highlight terms in the text
-          final highlightedSpans = getHighlightedSpans(
-            node.text,
-            currentStyle,
-            highlightTerms,
-            highlightColor,
-          );
-          currentSpans.addAll(highlightedSpans);
-        } else {
-          currentSpans.add(TextSpan(text: node.text, style: currentStyle));
-        }
+        currentSpans.add(TextSpan(text: node.text, style: currentStyle));
       }
     } else if (node is dom.Element) {
       TextStyle newStyle = currentStyle;
       String? linkHref;
+      bool isQuoteLink = false;
       List<ListContext> nextListStack = List.from(listStack);
       bool isListItem = false;
 
@@ -50,7 +43,6 @@ List<InlineSpan> parseHtml(
         case 'p':
           // Add paragraph spacing
           if (currentSpans.isNotEmpty) {
-            // Check the last non-empty span
             final lastMeaningfulSpan = currentSpans.reversed.firstWhere(
               (s) => !(s is TextSpan && s.text?.trim().isEmpty == true),
               orElse: () => const TextSpan(),
@@ -78,12 +70,25 @@ List<InlineSpan> parseHtml(
           break;
         case 'a':
           linkHref = node.attributes['href'];
+          final linkText = node.text;
+          isQuoteLink =
+              onQuoteLink != null &&
+              linkHref != null &&
+              linkHref.startsWith('#p');
+
           if (linkHref != null) {
             newStyle = newStyle.copyWith(
-              color: Colors.blue.shade800,
+              color: Colors.blue.shade800, // Standard link color
               decoration: TextDecoration.underline,
               decorationColor: Colors.blue.shade800,
             );
+            // Specific style for quote links (e.g., >>12345)
+            if (isQuoteLink) {
+              newStyle = newStyle.copyWith(
+                color: Colors.green.shade700, // Quote link color
+                decoration: TextDecoration.none, // No underline for quote links
+              );
+            }
           }
           break;
         case 'br':
@@ -93,7 +98,6 @@ List<InlineSpan> parseHtml(
         case 'ul':
         case 'ol':
           nextListStack.add(ListContext(node.localName!));
-          // Add spacing before list if needed
           if (currentSpans.isNotEmpty &&
               !(currentSpans.last is TextSpan &&
                   (currentSpans.last as TextSpan).text!.endsWith('\n'))) {
@@ -105,18 +109,15 @@ List<InlineSpan> parseHtml(
           if (nextListStack.isNotEmpty) {
             final currentList = nextListStack.last;
             currentList.itemIndex++;
-            // Calculate indentation based on list depth
             final indentation = '  ' * (nextListStack.length - 1);
             final marker =
                 (currentList.type == 'ol')
                     ? '${currentList.itemIndex}. '
                     : '• ';
-            // Add newline before item, indentation, and marker
             currentSpans.add(
               TextSpan(text: '\n$indentation$marker', style: currentStyle),
             );
           } else {
-            // List item outside of a list? Treat as paragraph.
             currentSpans.add(const TextSpan(text: '\n\n'));
           }
           break;
@@ -128,21 +129,24 @@ List<InlineSpan> parseHtml(
         processNode(child, childrenSpans, newStyle, nextListStack);
       }
 
-      // Handle links specially
+      // Handle links (regular and quote links)
       if (linkHref != null && childrenSpans.isNotEmpty) {
-        final recognizer =
-            TapGestureRecognizer()
-              ..onTap = () async {
-                final uri = Uri.tryParse(linkHref!);
-                if (uri != null && await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } else {
-                  print('Could not launch $linkHref');
-                }
-              };
+        final recognizer = TapGestureRecognizer();
+        if (isQuoteLink) {
+          final postId = linkHref.substring(2); // Remove "#p"
+          recognizer.onTap = () => onQuoteLink!(postId);
+        } else {
+          recognizer.onTap = () async {
+            final uri = Uri.tryParse(linkHref!); // It's known non-null here
+            if (uri != null && await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } else {
+              print('Could not launch $linkHref');
+            }
+          };
+        }
         recognizers.add(recognizer);
 
-        // Apply the recognizer and link style to the children spans
         currentSpans.add(
           TextSpan(
             children: childrenSpans,
@@ -172,12 +176,13 @@ List<InlineSpan> parseHtml(
   }
 
   // Process all child nodes of the document body
-  processNode(document.body!, spans, defaultStyle, []);
+  processNode(document.body!, spans, defaultTextStyle, []);
 
-  // Clean up recognizers when not in use
-  for (final recognizer in recognizers) {
-    recognizer.dispose();
-  }
+  // Clean up recognizers when not in use - moved dispose outside build
+  // Consider managing recognizers lifecycle if this widget rebuilds frequently
+  // for (final recognizer in recognizers) {
+  //   recognizer.dispose();
+  // }
 
   return spans;
 }

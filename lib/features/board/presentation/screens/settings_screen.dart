@@ -4,6 +4,12 @@ import 'package:vibechan/shared/providers/settings_provider.dart';
 import 'package:vibechan/core/theme/theme_provider.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 
+import '../widgets/settings/color_scheme_selector.dart';
+import '../widgets/settings/settings_navigation_tile.dart';
+import '../widgets/settings/settings_section_card.dart';
+import '../widgets/settings/settings_switch_tile.dart';
+import '../widgets/settings/theme_mode_selector.dart';
+
 class ColorSchemePreview extends StatelessWidget {
   final AppSchemeInfo scheme;
   final bool isSelected;
@@ -62,224 +68,78 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsState = ref.watch(appSettingsProvider);
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
-    final themeState = ref.watch(appThemeProvider);
-    final themeNotifier = ref.read(appThemeProvider.notifier);
-    final availableSchemes = appColorSchemes;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Theme Mode',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: const Text('System'),
-                    value: ThemeMode.system,
-                    groupValue: themeState.themeMode,
-                    onChanged: (value) => themeNotifier.setThemeMode(value!),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: const Text('Light'),
-                    value: ThemeMode.light,
-                    groupValue: themeState.themeMode,
-                    onChanged: (value) => themeNotifier.setThemeMode(value!),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: const Text('Dark'),
-                    value: ThemeMode.dark,
-                    groupValue: themeState.themeMode,
-                    onChanged: (value) => themeNotifier.setThemeMode(value!),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ),
+          // Theme Mode Section
+          const SettingsSectionCard(
+            title: 'Theme Mode',
+            children: [ThemeModeSelector()],
           ),
           const SizedBox(height: 8),
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Color Scheme',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            availableSchemes[themeState.selectedSchemeIndex]
-                                .name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            width: 200,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey.withOpacity(0.5),
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Container(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      child: Center(
-                                        child: Text(
-                                          'Primary',
-                                          style: TextStyle(
-                                            color:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.onPrimary,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Container(
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                      child: Center(
-                                        child: Text(
-                                          'Secondary',
-                                          style: TextStyle(
-                                            color:
-                                                Theme.of(
-                                                  context,
-                                                ).colorScheme.onSecondary,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  DropdownButtonFormField<int>(
-                    value: themeState.selectedSchemeIndex,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      border: OutlineInputBorder(),
-                    ),
-                    items:
-                        availableSchemes.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final scheme = entry.value;
-                          return DropdownMenuItem<int>(
-                            value: index,
-                            child: ColorSchemePreview(
-                              scheme: scheme,
-                              isSelected:
-                                  index == themeState.selectedSchemeIndex,
-                            ),
-                          );
-                        }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        themeNotifier.setSchemeIndex(value);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
+
+          // Color Scheme Section
+          const SettingsSectionCard(
+            title: 'Color Scheme',
+            children: [ColorSchemeSelector()],
           ),
           const SizedBox(height: 8),
-          Card(
-            elevation: 2,
-            child: ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Media Settings'),
-              subtitle: const Text('Image and video preferences'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // TODO: Implement media settings
-              },
-            ),
+
+          // Media Settings Navigation
+          SettingsNavigationTile(
+            leadingIcon: Icons.image,
+            title: 'Media Settings',
+            subtitle: 'Image and video preferences',
+            onTap: () {
+              // TODO: Implement media settings navigation
+            },
           ),
           const SizedBox(height: 8),
-          Card(
-            elevation: 2,
-            child: settingsState.when(
-              data:
-                  (settings) => SwitchListTile(
-                    secondary: const Icon(Icons.tab_unselected),
-                    title: const Text('Switch to existing tab'),
-                    subtitle: const Text(
+
+          // Tab Settings Switch
+          settingsState.when(
+            data:
+                (settings) => SettingsSwitchTile(
+                  leadingIcon: Icons.tab_unselected,
+                  title: 'Switch to existing tab',
+                  subtitle:
                       'Switch to an existing tab if one is already open when selecting a source.',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    value: settingsNotifier.switchToExistingTab,
-                    onChanged: (value) {
-                      settingsNotifier.setSwitchToExistingTab(value);
-                    },
-                  ),
-              loading:
-                  () => const ListTile(
+                  value: settingsNotifier.switchToExistingTab,
+                  onChanged: (value) {
+                    settingsNotifier.setSwitchToExistingTab(value);
+                  },
+                ),
+            loading:
+                () => const Card(
+                  elevation: 2,
+                  child: ListTile(
                     leading: CircularProgressIndicator(),
                     title: Text('Loading Tab Settings...'),
                   ),
-              error:
-                  (error, stack) => ListTile(
+                ),
+            error:
+                (error, stack) => Card(
+                  elevation: 2,
+                  child: ListTile(
                     leading: const Icon(Icons.error, color: Colors.red),
                     title: const Text('Error loading settings'),
                     subtitle: Text('$error'),
                   ),
-            ),
+                ),
           ),
           const SizedBox(height: 8),
-          Card(
-            elevation: 2,
-            child: ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
-              subtitle: const Text('App information and licenses'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // TODO: Implement about page
-              },
-            ),
+
+          // About Navigation
+          SettingsNavigationTile(
+            leadingIcon: Icons.info_outline,
+            title: 'About',
+            subtitle: 'App information and licenses',
+            onTap: () {
+              // TODO: Implement about page navigation
+            },
           ),
         ],
       ),

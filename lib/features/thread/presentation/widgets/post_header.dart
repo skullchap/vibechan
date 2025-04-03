@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:vibechan/core/utils/string_highlighter.dart';
 import '../../../../core/domain/models/post.dart';
-import '../../../../shared/providers/search_provider.dart';
 
-class PostHeader extends ConsumerWidget {
+class PostHeader extends StatelessWidget {
   final Post post;
   final bool isOriginalPost;
+  final String? highlightQuery;
 
   const PostHeader({
     super.key,
     required this.post,
     this.isOriginalPost = false,
+    this.highlightQuery,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final smallTextStyle = theme.textTheme.bodySmall;
@@ -36,35 +38,26 @@ class PostHeader extends ConsumerWidget {
     final day = dt.day.toString().padLeft(2, '0');
     final formattedDate = '$month/$day/$year';
 
-    // Get search state for highlighting
-    final isSearchActive = ref.watch(isSearchActiveProvider);
-    final searchQuery = ref.watch(searchQueryProvider);
-    final shouldHighlight = isSearchActive && searchQuery.isNotEmpty;
+    // Check if highlighting should be applied
+    final shouldHighlight =
+        highlightQuery != null && highlightQuery!.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Wrap(
-        // Use Wrap for better flexibility
         crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 8.0, // Horizontal spacing between items
-        runSpacing: 4.0, // Vertical spacing if items wrap
+        spacing: 8.0,
+        runSpacing: 4.0,
         children: [
           // Name with optional highlighting
-          if (shouldHighlight &&
-              post.name != null &&
-              post.name!.toLowerCase().contains(searchQuery.toLowerCase()))
-            RichText(
-              text: TextSpan(
-                children: _getHighlightedSpans(
-                  post.name ?? 'Anonymous',
-                  boldSmallTextStyle ?? TextStyle(),
-                  searchQuery,
-                  colorScheme.tertiaryContainer,
-                ),
-              ),
-            )
-          else
-            Text(post.name ?? 'Anonymous', style: boldSmallTextStyle),
+          Text.rich(
+            buildHighlightedTextSpan(
+              post.name ?? 'Anonymous',
+              boldSmallTextStyle,
+              shouldHighlight ? highlightQuery! : '',
+              colorScheme.tertiaryContainer,
+            ),
+          ),
 
           // Tripcode
           if (post.tripcode != null) Text(post.tripcode!, style: tripcodeStyle),
@@ -77,77 +70,32 @@ class PostHeader extends ConsumerWidget {
 
           // Subject with optional highlighting
           if (post.subject != null && post.subject!.isNotEmpty)
-            if (shouldHighlight &&
-                post.subject!.toLowerCase().contains(searchQuery.toLowerCase()))
-              RichText(
-                text: TextSpan(
-                  children: _getHighlightedSpans(
-                    post.subject!,
-                    subjectStyle ?? TextStyle(),
-                    searchQuery,
-                    colorScheme.tertiaryContainer,
-                  ),
-                ),
-              )
-            else
-              Text(post.subject!, style: subjectStyle),
+            Text.rich(
+              buildHighlightedTextSpan(
+                post.subject!,
+                subjectStyle,
+                shouldHighlight ? highlightQuery! : '',
+                colorScheme.tertiaryContainer,
+              ),
+            ),
+
+          // Share button
+          IconButton(
+            icon: Icon(
+              Icons.share,
+              size: 16,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: 'Share Post',
+            onPressed: () {
+              // TODO: Generate shareable link/text
+              Share.share('Check out this post: # ${post.id}');
+            },
+          ),
         ],
       ),
     );
-  }
-
-  // Helper method to highlight search terms in text
-  List<InlineSpan> _getHighlightedSpans(
-    String text,
-    TextStyle style,
-    String searchTerms,
-    Color highlightColor,
-  ) {
-    if (searchTerms.isEmpty) return [TextSpan(text: text, style: style)];
-
-    final List<InlineSpan> result = [];
-    final RegExp regExp = RegExp(
-      searchTerms
-          .split(' ')
-          .where((term) => term.isNotEmpty)
-          .map((term) {
-            return RegExp.escape(term);
-          })
-          .join('|'),
-      caseSensitive: false,
-    );
-
-    int lastMatchEnd = 0;
-    for (final match in regExp.allMatches(text)) {
-      // Add text before the match
-      if (match.start > lastMatchEnd) {
-        result.add(
-          TextSpan(
-            text: text.substring(lastMatchEnd, match.start),
-            style: style,
-          ),
-        );
-      }
-
-      // Add the highlighted match
-      result.add(
-        TextSpan(
-          text: text.substring(match.start, match.end),
-          style: style.copyWith(
-            backgroundColor: highlightColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-
-      lastMatchEnd = match.end;
-    }
-
-    // Add remaining text after the last match
-    if (lastMatchEnd < text.length) {
-      result.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
-    }
-
-    return result;
   }
 }

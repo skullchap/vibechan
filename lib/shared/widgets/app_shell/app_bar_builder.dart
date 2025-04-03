@@ -162,7 +162,6 @@ AppBar buildAppBar(
             initialValue: mode,
             onSelected:
                 (mode) => ref.read(catalogViewModeProvider.notifier).set(mode),
-            // Show current layout icon
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 8.0,
@@ -177,7 +176,6 @@ AppBar buildAppBar(
                         : Icons.photo_library_rounded,
                     size: 24,
                   ),
-                  // Show text label on desktop layouts
                   if (isDesktop) ...[
                     const SizedBox(width: 6),
                     Text(
@@ -251,14 +249,6 @@ AppBar buildAppBar(
                 ],
           );
         },
-      ),
-
-    // More options menu
-    if (!isSearchVisible)
-      IconButton(
-        icon: const Icon(Icons.more_vert),
-        tooltip: 'More options',
-        onPressed: () => _showMoreOptionsSheet(context),
       ),
   ];
 
