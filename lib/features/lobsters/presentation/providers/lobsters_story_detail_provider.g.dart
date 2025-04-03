@@ -7,7 +7,7 @@ part of 'lobsters_story_detail_provider.dart';
 // **************************************************************************
 
 String _$lobstersStoryDetailHash() =>
-    r'3b8ed77f31e7595aaa5dae247165346bf8431605';
+    r'ffa77971c3c5a0e25ff7fe2f3e3f8e48858f1128';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -67,7 +67,8 @@ class LobstersStoryDetailFamily extends Family<AsyncValue<LobstersStory>> {
 }
 
 /// See also [lobstersStoryDetail].
-class LobstersStoryDetailProvider extends FutureProvider<LobstersStory> {
+class LobstersStoryDetailProvider
+    extends AutoDisposeFutureProvider<LobstersStory> {
   /// See also [lobstersStoryDetail].
   LobstersStoryDetailProvider(String storyId)
     : this._internal(
@@ -115,7 +116,7 @@ class LobstersStoryDetailProvider extends FutureProvider<LobstersStory> {
   }
 
   @override
-  FutureProviderElement<LobstersStory> createElement() {
+  AutoDisposeFutureProviderElement<LobstersStory> createElement() {
     return _LobstersStoryDetailProviderElement(this);
   }
 
@@ -135,13 +136,13 @@ class LobstersStoryDetailProvider extends FutureProvider<LobstersStory> {
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin LobstersStoryDetailRef on FutureProviderRef<LobstersStory> {
+mixin LobstersStoryDetailRef on AutoDisposeFutureProviderRef<LobstersStory> {
   /// The parameter `storyId` of this provider.
   String get storyId;
 }
 
 class _LobstersStoryDetailProviderElement
-    extends FutureProviderElement<LobstersStory>
+    extends AutoDisposeFutureProviderElement<LobstersStory>
     with LobstersStoryDetailRef {
   _LobstersStoryDetailProviderElement(super.provider);
 

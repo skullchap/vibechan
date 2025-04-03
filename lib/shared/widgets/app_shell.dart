@@ -30,6 +30,8 @@ import '../../core/utils/responsive_layout.dart';
 import '../../core/presentation/widgets/responsive_widgets.dart';
 import '../../core/services/layout_service.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
+import 'package:vibechan/shared/providers/settings_provider.dart'; // Import the settings provider
+import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 
 // Revert to ConsumerStatefulWidget
 class AppShell extends ConsumerStatefulWidget {
@@ -465,16 +467,6 @@ class _AppShellState extends ConsumerState<AppShell>
             );
           },
         ),
-      IconButton(
-        icon: const Icon(Icons.settings),
-        tooltip: 'Settings',
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => const SettingsDialog(),
-          );
-        },
-      ),
     ];
 
     // Determine if we should use side navigation instead of bottom tabs
@@ -1040,6 +1032,10 @@ Widget _buildSourceSelector(
 ) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
+  // Get settings state
+  final settings = ref.watch(appSettingsProvider);
+  final switchToExistingTab =
+      ref.read(appSettingsProvider.notifier).switchToExistingTab;
 
   // Define available sources (can be refactored later)
   final List<Map<String, dynamic>> sources = [
@@ -1161,12 +1157,27 @@ Widget _buildSourceSelector(
         final selectedSource = sources.firstWhere(
           (s) => s['routeName'] == newRouteName,
         );
-        // Add a *new* tab for the selected source
-        tabNotifier.addTab(
-          title: selectedSource['title'] as String,
-          initialRouteName: selectedSource['routeName'] as String,
-          icon: selectedSource['icon'] ?? Icons.web,
-        );
+
+        // Check setting and if a tab with the same routeName already exists
+        ContentTab? existingTab;
+        if (settings.value != null && switchToExistingTab) {
+          final tabs = ref.read(tabManagerProvider); // Read current tabs
+          existingTab = tabs.firstWhereOrNull(
+            (tab) => tab.initialRouteName == newRouteName,
+          );
+        }
+
+        if (existingTab != null) {
+          // Switch to existing tab
+          tabNotifier.setActiveTab(existingTab.id);
+        } else {
+          // Add a *new* tab for the selected source
+          tabNotifier.addTab(
+            title: selectedSource['title'] as String,
+            initialRouteName: selectedSource['routeName'] as String,
+            icon: selectedSource['icon'] ?? Icons.web,
+          );
+        }
       }
     },
   );
@@ -1180,6 +1191,10 @@ Widget _buildSideSourceSelector(
 ) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
+  // Get settings state
+  final settings = ref.watch(appSettingsProvider);
+  final switchToExistingTab =
+      ref.read(appSettingsProvider.notifier).switchToExistingTab;
 
   // Define available sources
   final List<Map<String, dynamic>> sources = [
@@ -1235,11 +1250,29 @@ Widget _buildSideSourceSelector(
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      tabNotifier.addTab(
-                        title: source['title'] as String,
-                        initialRouteName: source['routeName'] as String,
-                        icon: source['icon'] ?? Icons.web,
-                      );
+                      final String newRouteName = source['routeName'] as String;
+                      // Check setting and if a tab with the same routeName already exists
+                      ContentTab? existingTab;
+                      if (settings.value != null && switchToExistingTab) {
+                        final tabs = ref.read(
+                          tabManagerProvider,
+                        ); // Read current tabs
+                        existingTab = tabs.firstWhereOrNull(
+                          (tab) => tab.initialRouteName == newRouteName,
+                        );
+                      }
+
+                      if (existingTab != null) {
+                        // Switch to existing tab
+                        tabNotifier.setActiveTab(existingTab.id);
+                      } else {
+                        // Add a *new* tab for the selected source
+                        tabNotifier.addTab(
+                          title: source['title'] as String,
+                          initialRouteName: newRouteName,
+                          icon: source['icon'] ?? Icons.web,
+                        );
+                      }
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

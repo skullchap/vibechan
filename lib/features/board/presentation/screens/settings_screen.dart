@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibechan/shared/providers/settings_provider.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsState = ref.watch(appSettingsProvider);
+    final settingsNotifier = ref.read(appSettingsProvider.notifier);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -35,6 +38,36 @@ class SettingsScreen extends StatelessWidget {
               onTap: () {
                 // TODO: Implement media settings
               },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 2,
+            child: settingsState.when(
+              data:
+                  (settings) => SwitchListTile(
+                    secondary: const Icon(Icons.tab_unselected),
+                    title: const Text('Switch to existing tab'),
+                    subtitle: const Text(
+                      'Switch to an existing tab if one is already open when selecting a source.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: settingsNotifier.switchToExistingTab,
+                    onChanged: (value) {
+                      settingsNotifier.setSwitchToExistingTab(value);
+                    },
+                  ),
+              loading:
+                  () => const ListTile(
+                    leading: CircularProgressIndicator(),
+                    title: Text('Loading Tab Settings...'),
+                  ),
+              error:
+                  (error, stack) => ListTile(
+                    leading: const Icon(Icons.error, color: Colors.red),
+                    title: const Text('Error loading settings'),
+                    subtitle: Text('$error'),
+                  ),
             ),
           ),
           const SizedBox(height: 8),

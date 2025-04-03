@@ -69,8 +69,7 @@ class SettingsDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeState = ref.watch(appThemeProvider);
     final themeNotifier = ref.read(appThemeProvider.notifier);
-    final availableSchemes =
-        appColorSchemes; // Get the list from the provider file
+    final availableSchemes = appColorSchemes;
 
     return AlertDialog(
       title: const Text('Settings'),
