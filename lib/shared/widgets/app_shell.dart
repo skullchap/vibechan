@@ -55,25 +55,10 @@ class _AppShellState extends ConsumerState<AppShell>
   void initState() {
     super.initState();
     _tabScrollController = ScrollController();
-    // Register as widget binding observer to detect screen size changes
     WidgetsBinding.instance.addObserver(this);
 
-    // Ensure at least one tab exists when the app starts.
-    // Add this in post-frame callback to safely interact with provider.
+    // Initialize the layout state based on current context - KEEP THIS
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tabs = ref.read(tabManagerProvider);
-      if (tabs.isEmpty) {
-        ref
-            .read(tabManagerProvider.notifier)
-            .addTab(
-              title: 'Boards', // Initial tab title
-              initialRouteName:
-                  'boards', // Match route name if using logic below
-              icon: Icons.dashboard, // Default icon
-            );
-      }
-
-      // Initialize the layout state based on current context
       ref.read(layoutStateNotifierProvider.notifier).updateLayout(context);
     });
   }

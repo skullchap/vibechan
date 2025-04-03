@@ -12,17 +12,20 @@ part of 'content_tab.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$ContentTab {
 
  String get id; String get title; String get initialRouteName;// e.g., 'catalog', 'thread', 'favorites'
- Map<String, String> get pathParameters; IconData get icon; bool get isActive;
+ Map<String, String> get pathParameters;@IconDataConverter() IconData get icon; bool get isActive;
 /// Create a copy of ContentTab
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ContentTabCopyWith<ContentTab> get copyWith => _$ContentTabCopyWithImpl<ContentTab>(this as ContentTab, _$identity);
 
+  /// Serializes this ContentTab to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -30,7 +33,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ContentTab&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.initialRouteName, initialRouteName) || other.initialRouteName == initialRouteName)&&const DeepCollectionEquality().equals(other.pathParameters, pathParameters)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,id,title,initialRouteName,const DeepCollectionEquality().hash(pathParameters),icon,isActive);
 
@@ -47,7 +50,7 @@ abstract mixin class $ContentTabCopyWith<$Res>  {
   factory $ContentTabCopyWith(ContentTab value, $Res Function(ContentTab) _then) = _$ContentTabCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String initialRouteName, Map<String, String> pathParameters, IconData icon, bool isActive
+ String id, String title, String initialRouteName, Map<String, String> pathParameters,@IconDataConverter() IconData icon, bool isActive
 });
 
 
@@ -80,11 +83,11 @@ as bool,
 
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _ContentTab implements ContentTab {
-  const _ContentTab({required this.id, required this.title, required this.initialRouteName, required final  Map<String, String> pathParameters, this.icon = Icons.web, this.isActive = false}): _pathParameters = pathParameters;
-  
+  const _ContentTab({required this.id, required this.title, required this.initialRouteName, required final  Map<String, String> pathParameters, @IconDataConverter() this.icon = Icons.web, this.isActive = false}): _pathParameters = pathParameters;
+  factory _ContentTab.fromJson(Map<String, dynamic> json) => _$ContentTabFromJson(json);
 
 @override final  String id;
 @override final  String title;
@@ -98,7 +101,7 @@ class _ContentTab implements ContentTab {
   return EqualUnmodifiableMapView(_pathParameters);
 }
 
-@override@JsonKey() final  IconData icon;
+@override@JsonKey()@IconDataConverter() final  IconData icon;
 @override@JsonKey() final  bool isActive;
 
 /// Create a copy of ContentTab
@@ -107,14 +110,17 @@ class _ContentTab implements ContentTab {
 @pragma('vm:prefer-inline')
 _$ContentTabCopyWith<_ContentTab> get copyWith => __$ContentTabCopyWithImpl<_ContentTab>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$ContentTabToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContentTab&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.initialRouteName, initialRouteName) || other.initialRouteName == initialRouteName)&&const DeepCollectionEquality().equals(other._pathParameters, _pathParameters)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,id,title,initialRouteName,const DeepCollectionEquality().hash(_pathParameters),icon,isActive);
 
@@ -131,7 +137,7 @@ abstract mixin class _$ContentTabCopyWith<$Res> implements $ContentTabCopyWith<$
   factory _$ContentTabCopyWith(_ContentTab value, $Res Function(_ContentTab) _then) = __$ContentTabCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String initialRouteName, Map<String, String> pathParameters, IconData icon, bool isActive
+ String id, String title, String initialRouteName, Map<String, String> pathParameters,@IconDataConverter() IconData icon, bool isActive
 });
 
 

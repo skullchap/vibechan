@@ -27,8 +27,8 @@ class CatalogMediaFeed extends StatelessWidget {
         padding ?? const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
 
     // Determine if we should use staggered animation based on layout
-    final bool useAnimations =
-        layoutType != null && layoutType != AppLayout.mobile;
+    // final bool useAnimations =
+    //     layoutType != null && layoutType != AppLayout.mobile;
 
     return ListView.builder(
       padding: effectivePadding,
@@ -36,46 +36,47 @@ class CatalogMediaFeed extends StatelessWidget {
       itemBuilder: (context, index) {
         final thread = threads[index];
 
-        // Build the card with or without animations
+        // Build the card
         Widget card = ThreadPreviewCard(
           thread: thread,
           onTap: () => onTap(thread),
           fullWidth: true,
-          squareAspect: true,
+          squareAspect: true, // Ensure square aspect is passed (already true)
           useFullMedia: true,
           searchQuery: searchQuery,
         );
 
-        // Add animations for non-mobile layouts
-        if (useAnimations) {
-          // Stagger the animation based on index
-          final delay = Duration(milliseconds: 25 * (index % 15));
+        // --- TEMPORARILY REMOVED ANIMATION ---
+        // if (useAnimations) {
+        //   // Stagger the animation based on index
+        //   final delay = Duration(milliseconds: 25 * (index % 15));
+        //
+        //   return FutureBuilder(
+        //     future: Future.delayed(delay),
+        //     builder: (context, snapshot) {
+        //       final isVisible =
+        //           snapshot.connectionState == ConnectionState.done;
+        //
+        //       return AnimatedSlide(
+        //         offset: isVisible ? Offset.zero : const Offset(0, 0.05),
+        //         duration: const Duration(milliseconds: 350),
+        //         curve: Curves.easeOutCubic,
+        //         child: AnimatedOpacity(
+        //           opacity: isVisible ? 1.0 : 0.0,
+        //           duration: const Duration(milliseconds: 350),
+        //           curve: Curves.easeInOut,
+        //           child: Padding(
+        //             padding: EdgeInsets.only(bottom: verticalSpacing),
+        //             child: card,
+        //           ),
+        //         ),
+        //       );
+        //     },
+        //   );
+        // }
+        // --- END TEMPORARY REMOVAL ---
 
-          return FutureBuilder(
-            future: Future.delayed(delay),
-            builder: (context, snapshot) {
-              final isVisible =
-                  snapshot.connectionState == ConnectionState.done;
-
-              return AnimatedSlide(
-                offset: isVisible ? Offset.zero : const Offset(0, 0.05),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOutCubic,
-                child: AnimatedOpacity(
-                  opacity: isVisible ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeInOut,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: verticalSpacing),
-                    child: card,
-                  ),
-                ),
-              );
-            },
-          );
-        }
-
-        // Basic padding for mobile layout
+        // Always return the card wrapped in padding for now
         return Padding(
           padding: EdgeInsets.only(bottom: verticalSpacing),
           child: card,

@@ -46,108 +46,123 @@ class ThreadPreviewCard extends StatelessWidget {
               Card(
                 margin: EdgeInsets.zero,
                 child: AspectRatio(
-                  aspectRatio: useFullMedia ? 1 : media.width / media.height,
+                  aspectRatio:
+                      useFullMedia
+                          ? 1
+                          : (media.width > 0 && media.height > 0
+                              ? media.width / media.height
+                              : 1.0),
                   child:
-                      media.type == MediaType.video && useFullMedia
-                          ? PostVideo(media: media)
+                      media.type == MediaType.video
+                          ? PostVideo(media: media, isPreview: true)
                           : Container(
-                            color: colorScheme.scrim,
+                            color: colorScheme.surfaceVariant,
                             child: CachedNetworkImage(
                               imageUrl:
                                   useFullMedia ? media.url : media.thumbnailUrl,
-                              fit: BoxFit.contain,
+                              fit: useFullMedia ? BoxFit.cover : BoxFit.contain,
                               placeholder:
                                   (context, url) => Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(color: Colors.white),
+                                    baseColor:
+                                        colorScheme.surfaceContainerHighest,
+                                    highlightColor:
+                                        colorScheme.surfaceContainerLow,
+                                    child: Container(
+                                      color:
+                                          colorScheme.surfaceContainerHighest,
+                                    ),
                                   ),
                               errorWidget:
-                                  (context, url, error) =>
-                                      const Center(child: Icon(Icons.error)),
+                                  (context, url, error) => Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      color: colorScheme.outline,
+                                    ),
+                                  ),
                             ),
                           ),
                 ),
               ),
 
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (originalPost.subject != null) ...[
-                    if (searchQuery != null && searchQuery!.isNotEmpty)
-                      RichText(
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          children: _getHighlightedSpans(
-                            originalPost.subject!,
-                            textTheme.titleMedium!.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
+            if (!useFullMedia)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (originalPost.subject != null) ...[
+                      if (searchQuery != null && searchQuery!.isNotEmpty)
+                        RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            children: _getHighlightedSpans(
+                              originalPost.subject!,
+                              textTheme.titleMedium!.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                              searchQuery!,
+                              colorScheme.tertiaryContainer,
                             ),
-                            searchQuery!,
-                            colorScheme.tertiaryContainer,
                           ),
+                        )
+                      else
+                        Text(
+                          originalPost.subject!,
+                          style: textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                      const SizedBox(height: 4),
+                    ],
+                    if (searchQuery != null &&
+                        searchQuery!.isNotEmpty &&
+                        originalPost.comment != null)
+                      SimpleHtmlRenderer(
+                        htmlString: originalPost.comment ?? '',
+                        baseStyle: textTheme.bodyMedium!.copyWith(
+                          height: 1.4,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 12,
+                        highlightTerms: searchQuery,
+                        highlightColor: colorScheme.tertiaryContainer,
                       )
                     else
-                      Text(
-                        originalPost.subject!,
-                        style: textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
+                      SimpleHtmlRenderer(
+                        htmlString: originalPost.comment ?? '',
+                        baseStyle: textTheme.bodyMedium!.copyWith(
+                          height: 1.4,
+                          color: colorScheme.onSurfaceVariant,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    const SizedBox(height: 4),
-                  ],
-                  if (searchQuery != null &&
-                      searchQuery!.isNotEmpty &&
-                      originalPost.comment != null)
-                    SimpleHtmlRenderer(
-                      htmlString: originalPost.comment ?? '',
-                      baseStyle: textTheme.bodyMedium!.copyWith(
-                        height: 1.4,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 12,
-                      highlightTerms: searchQuery,
-                      highlightColor: colorScheme.tertiaryContainer,
-                    )
-                  else
-                    SimpleHtmlRenderer(
-                      htmlString: originalPost.comment ?? '',
-                      baseStyle: textTheme.bodyMedium!.copyWith(
-                        height: 1.4,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.comment, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${thread.repliesCount}'),
+                        const SizedBox(width: 16),
+                        const Icon(Icons.image, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${thread.imagesCount}'),
+                        if (thread.isSticky) ...[
+                          const SizedBox(width: 16),
+                          const Icon(Icons.push_pin, size: 16),
+                        ],
+                        if (thread.isClosed) ...[
+                          const SizedBox(width: 16),
+                          const Icon(Icons.lock, size: 16),
+                        ],
+                      ],
                     ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.comment, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${thread.repliesCount}'),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.image, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${thread.imagesCount}'),
-                      if (thread.isSticky) ...[
-                        const SizedBox(width: 16),
-                        const Icon(Icons.push_pin, size: 16),
-                      ],
-                      if (thread.isClosed) ...[
-                        const SizedBox(width: 16),
-                        const Icon(Icons.lock, size: 16),
-                      ],
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
