@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/core/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
+import 'package:vibechan/core/utils/date_formatter.dart';
 
 import 'generic_list/generic_list_card.dart';
 
@@ -190,7 +191,8 @@ class GenericListCardImpl extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 16 / 9, // Default aspect ratio, might need adjustment
       child: Container(
-        color: colorScheme.surfaceVariant, // Background color while loading
+        color:
+            colorScheme.surfaceContainerHighest, // Updated from surfaceVariant
         child: CachedNetworkImage(
           imageUrl: imageUrl,
           fit: BoxFit.cover,
@@ -233,9 +235,12 @@ class GenericListCardImpl extends StatelessWidget {
 
     // Add timestamp if available
     if (item.timestamp != null) {
-      // TODO: Format timestamp nicely
       metadataWidgets.add(
-        _metadataItem(context, Icons.access_time, item.timestamp.toString()),
+        _metadataItem(
+          context,
+          Icons.access_time,
+          formatTimestamp(item.timestamp!),
+        ),
       );
     }
 
@@ -324,7 +329,9 @@ class GenericListCardImpl extends StatelessWidget {
         Icon(
           icon,
           size: 16,
-          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+          color: colorScheme.onSurfaceVariant.withValues(
+            alpha: 179,
+          ), // Updated from withOpacity(0.7)
         ),
         const SizedBox(width: 4),
         Text(
