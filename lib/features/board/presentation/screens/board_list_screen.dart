@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/domain/models/board.dart';
 import '../../../../core/presentation/providers/board_providers.dart';
 import '../../../../shared/providers/tab_manager_provider.dart';
 import '../widgets/board_grid_item.dart';
@@ -102,10 +103,13 @@ class BoardListScreen extends ConsumerWidget {
     );
   }
 
-  void _openBoard(BuildContext context, WidgetRef ref, dynamic board) {
-    // Use navigateToOrReplaceActiveTab to update the current tab
+  void _openBoard(BuildContext context, WidgetRef ref, Board board) {
+    // Log the board ID before navigating
+    debugPrint(
+      '➡️ [_openBoard] Navigating to catalog for boardId: ${board.id}',
+    );
+
     final tabNotifier = ref.read(tabManagerProvider.notifier);
-    // Change to addTab to open the board in a *new* tab
     tabNotifier.addTab(
       title: '/${board.id}/ - ${board.title}', // Use board info for title
       initialRouteName: 'catalog',
@@ -116,8 +120,8 @@ class BoardListScreen extends ConsumerWidget {
 }
 
 class _ResponsiveBoardGridView extends StatelessWidget {
-  final AsyncValue<List<dynamic>> boards;
-  final Function(dynamic) onBoardTap;
+  final AsyncValue<List<Board>> boards;
+  final Function(Board) onBoardTap;
   final int columnCount;
   final bool searchActive;
   final String searchQuery;
@@ -178,7 +182,7 @@ class _ResponsiveBoardGridView extends StatelessWidget {
   }
 
   // Filter boards based on search query
-  List<dynamic> _filterBoards(List<dynamic> boards, String query) {
+  List<Board> _filterBoards(List<Board> boards, String query) {
     final lowercaseQuery = query.toLowerCase().trim();
     return boards.where((board) {
       // Get the board ID and remove any slashes that might be in it
@@ -208,7 +212,7 @@ class _ResponsiveBoardGridView extends StatelessWidget {
     }).toList();
   }
 
-  Widget _buildBoardItem(BuildContext context, dynamic board) {
+  Widget _buildBoardItem(BuildContext context, Board board) {
     return AnimatedScale(
       scale: 1.0,
       duration: const Duration(milliseconds: 300),

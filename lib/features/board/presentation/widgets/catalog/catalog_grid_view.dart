@@ -12,15 +12,19 @@ import '../../utils/catalog_navigation.dart'; // Correct path for navigation
 /// Builds the catalog grid view using Masonry layout.
 class CatalogGridView extends ConsumerWidget {
   final List<Thread> threads;
+  final String boardId;
 
-  const CatalogGridView({super.key, required this.threads});
+  const CatalogGridView({
+    super.key,
+    required this.threads,
+    required this.boardId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final layoutState = ref.watch(layoutStateNotifierProvider);
     final layoutService = ref.read(layoutServiceProvider);
     final currentLayout = layoutState.currentLayout;
-    final boardId = GoRouterState.of(context).pathParameters['boardId'] ?? '';
 
     return MasonryGridView.builder(
       padding: layoutService.getPaddingForLayout(currentLayout),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../domain/models/board.dart';
@@ -32,7 +33,9 @@ class FourChanDataSource implements ChanDataSource {
     if (_lastRequestTime != null) {
       final timeSinceLastRequest = DateTime.now().difference(_lastRequestTime!);
       if (timeSinceLastRequest < FourChanConfig.minRequestInterval) {
-        await Future.delayed(FourChanConfig.minRequestInterval - timeSinceLastRequest);
+        await Future.delayed(
+          FourChanConfig.minRequestInterval - timeSinceLastRequest,
+        );
       }
     }
     _lastRequestTime = DateTime.now();
@@ -60,9 +63,37 @@ class FourChanDataSource implements ChanDataSource {
   @override
   Future<Thread> getThread(String boardId, String threadId) async {
     await _throttleRequest();
-    final response = await _dio.get('/$boardId/thread/$threadId.json');
-    final Map<String, dynamic> threadData = response.data;
-    return FourChanThread.fromJson(threadData).toThread(boardId);
+
+    if (boardId.isEmpty) {
+      final errorMsg =
+          '🛑 [4chanDataSource] Error: boardId cannot be empty when fetching thread $threadId.';
+      debugPrint(errorMsg);
+      throw ArgumentError(errorMsg);
+    }
+
+    final urlPath = '$baseUrl/$boardId/thread/$threadId.json';
+    debugPrint('➡️ [4chanDataSource] Fetching thread: $urlPath');
+    try {
+      final response = await _dio.get(urlPath);
+      if (response.data is Map<String, dynamic>) {
+        final Map<String, dynamic> threadData =
+            response.data as Map<String, dynamic>;
+        return FourChanThread.fromJson(threadData).toThread(boardId);
+      } else {
+        throw Exception(
+          'Invalid response format for thread: expected a Map, got ${response.data?.runtimeType}',
+        );
+      }
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint(
+          '🛑 [4chanDataSource] DioError fetching thread $urlPath: ${e.message} (Status: ${e.response?.statusCode})',
+        );
+      } else {
+        debugPrint('🛑 [4chanDataSource] Error fetching thread $urlPath: $e');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -70,16 +101,20 @@ class FourChanDataSource implements ChanDataSource {
     await _throttleRequest();
     final response = await _dio.get('/$boardId/archive.json');
     final List<dynamic> threadIds = response.data;
-    return threadIds.map((id) => Thread(
-      id: id.toString(),
-      boardId: boardId,
-      originalPost: Post(
-        id: id.toString(),
-        boardId: boardId,
-        timestamp: DateTime.now(),
-        comment: '',
-      ),
-    )).toList();
+    return threadIds
+        .map(
+          (id) => Thread(
+            id: id.toString(),
+            boardId: boardId,
+            originalPost: Post(
+              id: id.toString(),
+              boardId: boardId,
+              timestamp: DateTime.now(),
+              comment: '',
+            ),
+          ),
+        )
+        .toList();
   }
 
   @override

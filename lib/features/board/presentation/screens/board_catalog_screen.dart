@@ -102,7 +102,10 @@ class _BoardCatalogScreenState extends ConsumerState<BoardCatalogScreen> {
           }
 
           return viewMode == CatalogViewMode.grid
-              ? CatalogGridView(threads: filteredThreads)
+              ? CatalogGridView(
+                threads: filteredThreads,
+                boardId: widget.boardId,
+              )
               : CatalogMediaFeed(
                 threads: filteredThreads,
                 onTap:
