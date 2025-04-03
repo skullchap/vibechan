@@ -71,7 +71,7 @@ abstract class FourChanPost with _$FourChanPost {
     // Core IDs
     id: no.toString(),
     boardId: boardId,
-    threadId: resto == 0 ? null : threadId,
+    threadId: resto == 0 ? no.toString() : threadId,
 
     // Timestamps
     timestamp: DateTime.fromMillisecondsSinceEpoch(time * 1000),

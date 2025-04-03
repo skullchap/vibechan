@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vibechan/core/utils/string_highlighter.dart';
 import '../../../../core/domain/models/post.dart';
+import '../../../../core/domain/models/generic_list_item.dart';
 
 class PostHeader extends StatelessWidget {
   final Post post;
@@ -15,6 +17,53 @@ class PostHeader extends StatelessWidget {
     this.isOriginalPost = false,
     this.highlightQuery,
   });
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  String _generateShareableText() {
+    final StringBuffer buffer = StringBuffer();
+
+    // Add subject if available
+    if (post.subject != null && post.subject!.isNotEmpty) {
+      buffer.writeln(post.subject);
+    }
+
+    // Add name and ID
+    buffer.write('Posted by ${post.name ?? 'Anonymous'}');
+    if (post.posterId != null) {
+      buffer.write(' (ID: ${post.posterId})');
+    }
+    buffer.writeln();
+
+    // Add post ID
+    buffer.write('Post #${post.id}');
+
+    // Add source URL if available
+    final sourceUrl = _getSourceUrl();
+    if (sourceUrl != null) {
+      buffer.write('\n$sourceUrl');
+    }
+
+    return buffer.toString();
+  }
+
+  String? _getSourceUrl() {
+    switch (post.source) {
+      case ItemSource.fourchan:
+        return 'https://boards.4channel.org/${post.boardId}/thread/${post.threadId}#p${post.id}';
+      case ItemSource.hackernews:
+        return 'https://news.ycombinator.com/item?id=${post.id}';
+      case ItemSource.lobsters:
+        return 'https://lobste.rs/s/${post.id}';
+      case ItemSource.reddit:
+        return null; // TODO: Implement Reddit URL format
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +90,8 @@ class PostHeader extends StatelessWidget {
     // Check if highlighting should be applied
     final shouldHighlight =
         highlightQuery != null && highlightQuery!.isNotEmpty;
+
+    final sourceUrl = _getSourceUrl();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -132,20 +183,38 @@ class PostHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
 
-          // Share button
-          IconButton(
-            icon: Icon(
-              Icons.share,
-              size: 16,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            tooltip: 'Share Post',
-            onPressed: () {
-              // TODO: Generate shareable link/text
-              Share.share('Check out this post: # ${post.id}');
-            },
+          // Action buttons
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Share button
+              IconButton(
+                icon: Icon(
+                  Icons.share,
+                  size: 16,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: 'Share Post',
+                onPressed: () {
+                  Share.share(_generateShareableText());
+                },
+              ),
+              // Open in browser button
+              if (sourceUrl != null)
+                IconButton(
+                  icon: Icon(
+                    Icons.open_in_browser,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Open in Browser',
+                  onPressed: () => _launchUrl(sourceUrl),
+                ),
+            ],
           ),
         ],
       ),

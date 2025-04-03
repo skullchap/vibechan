@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Post {
 
- String get id; String get boardId; String? get threadId; DateTime get timestamp; String? get name; String? get tripcode; String? get subject; String get comment; Media? get media; List<String> get referencedPosts; bool get isOp; String? get posterId; String? get countryCode; String? get countryName; String? get boardFlag;
+ String get id; String get boardId; String? get threadId; DateTime get timestamp; String? get name; String? get tripcode; String? get subject; String get comment; Media? get media; List<String> get referencedPosts; bool get isOp; String? get posterId; String? get countryCode; String? get countryName; String? get boardFlag; ItemSource get source; String? get board;
 /// Create a copy of Post
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $PostCopyWith<Post> get copyWith => _$PostCopyWithImpl<Post>(this as Post, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Post&&(identical(other.id, id) || other.id == id)&&(identical(other.boardId, boardId) || other.boardId == boardId)&&(identical(other.threadId, threadId) || other.threadId == threadId)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.tripcode, tripcode) || other.tripcode == tripcode)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.comment, comment) || other.comment == comment)&&(identical(other.media, media) || other.media == media)&&const DeepCollectionEquality().equals(other.referencedPosts, referencedPosts)&&(identical(other.isOp, isOp) || other.isOp == isOp)&&(identical(other.posterId, posterId) || other.posterId == posterId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.countryName, countryName) || other.countryName == countryName)&&(identical(other.boardFlag, boardFlag) || other.boardFlag == boardFlag));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Post&&(identical(other.id, id) || other.id == id)&&(identical(other.boardId, boardId) || other.boardId == boardId)&&(identical(other.threadId, threadId) || other.threadId == threadId)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.tripcode, tripcode) || other.tripcode == tripcode)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.comment, comment) || other.comment == comment)&&(identical(other.media, media) || other.media == media)&&const DeepCollectionEquality().equals(other.referencedPosts, referencedPosts)&&(identical(other.isOp, isOp) || other.isOp == isOp)&&(identical(other.posterId, posterId) || other.posterId == posterId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.countryName, countryName) || other.countryName == countryName)&&(identical(other.boardFlag, boardFlag) || other.boardFlag == boardFlag)&&(identical(other.source, source) || other.source == source)&&(identical(other.board, board) || other.board == board));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,boardId,threadId,timestamp,name,tripcode,subject,comment,media,const DeepCollectionEquality().hash(referencedPosts),isOp,posterId,countryCode,countryName,boardFlag);
+int get hashCode => Object.hash(runtimeType,id,boardId,threadId,timestamp,name,tripcode,subject,comment,media,const DeepCollectionEquality().hash(referencedPosts),isOp,posterId,countryCode,countryName,boardFlag,source,board);
 
 @override
 String toString() {
-  return 'Post(id: $id, boardId: $boardId, threadId: $threadId, timestamp: $timestamp, name: $name, tripcode: $tripcode, subject: $subject, comment: $comment, media: $media, referencedPosts: $referencedPosts, isOp: $isOp, posterId: $posterId, countryCode: $countryCode, countryName: $countryName, boardFlag: $boardFlag)';
+  return 'Post(id: $id, boardId: $boardId, threadId: $threadId, timestamp: $timestamp, name: $name, tripcode: $tripcode, subject: $subject, comment: $comment, media: $media, referencedPosts: $referencedPosts, isOp: $isOp, posterId: $posterId, countryCode: $countryCode, countryName: $countryName, boardFlag: $boardFlag, source: $source, board: $board)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $PostCopyWith<$Res>  {
   factory $PostCopyWith(Post value, $Res Function(Post) _then) = _$PostCopyWithImpl;
 @useResult
 $Res call({
- String id, String boardId, String? threadId, DateTime timestamp, String? name, String? tripcode, String? subject, String comment, Media? media, List<String> referencedPosts, bool isOp, String? posterId, String? countryCode, String? countryName, String? boardFlag
+ String id, String boardId, String? threadId, DateTime timestamp, String? name, String? tripcode, String? subject, String comment, Media? media, List<String> referencedPosts, bool isOp, String? posterId, String? countryCode, String? countryName, String? boardFlag, ItemSource source, String? board
 });
 
 
@@ -66,7 +66,7 @@ class _$PostCopyWithImpl<$Res>
 
 /// Create a copy of Post
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? boardId = null,Object? threadId = freezed,Object? timestamp = null,Object? name = freezed,Object? tripcode = freezed,Object? subject = freezed,Object? comment = null,Object? media = freezed,Object? referencedPosts = null,Object? isOp = null,Object? posterId = freezed,Object? countryCode = freezed,Object? countryName = freezed,Object? boardFlag = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? boardId = null,Object? threadId = freezed,Object? timestamp = null,Object? name = freezed,Object? tripcode = freezed,Object? subject = freezed,Object? comment = null,Object? media = freezed,Object? referencedPosts = null,Object? isOp = null,Object? posterId = freezed,Object? countryCode = freezed,Object? countryName = freezed,Object? boardFlag = freezed,Object? source = null,Object? board = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,boardId: null == boardId ? _self.boardId : boardId // ignore: cast_nullable_to_non_nullable
@@ -83,6 +83,8 @@ as bool,posterId: freezed == posterId ? _self.posterId : posterId // ignore: cas
 as String?,countryCode: freezed == countryCode ? _self.countryCode : countryCode // ignore: cast_nullable_to_non_nullable
 as String?,countryName: freezed == countryName ? _self.countryName : countryName // ignore: cast_nullable_to_non_nullable
 as String?,boardFlag: freezed == boardFlag ? _self.boardFlag : boardFlag // ignore: cast_nullable_to_non_nullable
+as String?,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as ItemSource,board: freezed == board ? _self.board : board // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -106,7 +108,7 @@ $MediaCopyWith<$Res>? get media {
 @JsonSerializable()
 
 class _Post implements Post {
-  const _Post({required this.id, required this.boardId, this.threadId, required this.timestamp, this.name, this.tripcode, this.subject, required this.comment, this.media, final  List<String> referencedPosts = const [], this.isOp = false, this.posterId, this.countryCode, this.countryName, this.boardFlag}): _referencedPosts = referencedPosts;
+  const _Post({required this.id, required this.boardId, this.threadId, required this.timestamp, this.name, this.tripcode, this.subject, required this.comment, this.media, final  List<String> referencedPosts = const [], this.isOp = false, this.posterId, this.countryCode, this.countryName, this.boardFlag, this.source = ItemSource.fourchan, this.board}): _referencedPosts = referencedPosts;
   factory _Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);
 
 @override final  String id;
@@ -130,6 +132,8 @@ class _Post implements Post {
 @override final  String? countryCode;
 @override final  String? countryName;
 @override final  String? boardFlag;
+@override@JsonKey() final  ItemSource source;
+@override final  String? board;
 
 /// Create a copy of Post
 /// with the given fields replaced by the non-null parameter values.
@@ -144,16 +148,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Post&&(identical(other.id, id) || other.id == id)&&(identical(other.boardId, boardId) || other.boardId == boardId)&&(identical(other.threadId, threadId) || other.threadId == threadId)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.tripcode, tripcode) || other.tripcode == tripcode)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.comment, comment) || other.comment == comment)&&(identical(other.media, media) || other.media == media)&&const DeepCollectionEquality().equals(other._referencedPosts, _referencedPosts)&&(identical(other.isOp, isOp) || other.isOp == isOp)&&(identical(other.posterId, posterId) || other.posterId == posterId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.countryName, countryName) || other.countryName == countryName)&&(identical(other.boardFlag, boardFlag) || other.boardFlag == boardFlag));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Post&&(identical(other.id, id) || other.id == id)&&(identical(other.boardId, boardId) || other.boardId == boardId)&&(identical(other.threadId, threadId) || other.threadId == threadId)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.tripcode, tripcode) || other.tripcode == tripcode)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.comment, comment) || other.comment == comment)&&(identical(other.media, media) || other.media == media)&&const DeepCollectionEquality().equals(other._referencedPosts, _referencedPosts)&&(identical(other.isOp, isOp) || other.isOp == isOp)&&(identical(other.posterId, posterId) || other.posterId == posterId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.countryName, countryName) || other.countryName == countryName)&&(identical(other.boardFlag, boardFlag) || other.boardFlag == boardFlag)&&(identical(other.source, source) || other.source == source)&&(identical(other.board, board) || other.board == board));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,boardId,threadId,timestamp,name,tripcode,subject,comment,media,const DeepCollectionEquality().hash(_referencedPosts),isOp,posterId,countryCode,countryName,boardFlag);
+int get hashCode => Object.hash(runtimeType,id,boardId,threadId,timestamp,name,tripcode,subject,comment,media,const DeepCollectionEquality().hash(_referencedPosts),isOp,posterId,countryCode,countryName,boardFlag,source,board);
 
 @override
 String toString() {
-  return 'Post(id: $id, boardId: $boardId, threadId: $threadId, timestamp: $timestamp, name: $name, tripcode: $tripcode, subject: $subject, comment: $comment, media: $media, referencedPosts: $referencedPosts, isOp: $isOp, posterId: $posterId, countryCode: $countryCode, countryName: $countryName, boardFlag: $boardFlag)';
+  return 'Post(id: $id, boardId: $boardId, threadId: $threadId, timestamp: $timestamp, name: $name, tripcode: $tripcode, subject: $subject, comment: $comment, media: $media, referencedPosts: $referencedPosts, isOp: $isOp, posterId: $posterId, countryCode: $countryCode, countryName: $countryName, boardFlag: $boardFlag, source: $source, board: $board)';
 }
 
 
@@ -164,7 +168,7 @@ abstract mixin class _$PostCopyWith<$Res> implements $PostCopyWith<$Res> {
   factory _$PostCopyWith(_Post value, $Res Function(_Post) _then) = __$PostCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String boardId, String? threadId, DateTime timestamp, String? name, String? tripcode, String? subject, String comment, Media? media, List<String> referencedPosts, bool isOp, String? posterId, String? countryCode, String? countryName, String? boardFlag
+ String id, String boardId, String? threadId, DateTime timestamp, String? name, String? tripcode, String? subject, String comment, Media? media, List<String> referencedPosts, bool isOp, String? posterId, String? countryCode, String? countryName, String? boardFlag, ItemSource source, String? board
 });
 
 
@@ -181,7 +185,7 @@ class __$PostCopyWithImpl<$Res>
 
 /// Create a copy of Post
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? boardId = null,Object? threadId = freezed,Object? timestamp = null,Object? name = freezed,Object? tripcode = freezed,Object? subject = freezed,Object? comment = null,Object? media = freezed,Object? referencedPosts = null,Object? isOp = null,Object? posterId = freezed,Object? countryCode = freezed,Object? countryName = freezed,Object? boardFlag = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? boardId = null,Object? threadId = freezed,Object? timestamp = null,Object? name = freezed,Object? tripcode = freezed,Object? subject = freezed,Object? comment = null,Object? media = freezed,Object? referencedPosts = null,Object? isOp = null,Object? posterId = freezed,Object? countryCode = freezed,Object? countryName = freezed,Object? boardFlag = freezed,Object? source = null,Object? board = freezed,}) {
   return _then(_Post(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,boardId: null == boardId ? _self.boardId : boardId // ignore: cast_nullable_to_non_nullable
@@ -198,6 +202,8 @@ as bool,posterId: freezed == posterId ? _self.posterId : posterId // ignore: cas
 as String?,countryCode: freezed == countryCode ? _self.countryCode : countryCode // ignore: cast_nullable_to_non_nullable
 as String?,countryName: freezed == countryName ? _self.countryName : countryName // ignore: cast_nullable_to_non_nullable
 as String?,boardFlag: freezed == boardFlag ? _self.boardFlag : boardFlag // ignore: cast_nullable_to_non_nullable
+as String?,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as ItemSource,board: freezed == board ? _self.board : board // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

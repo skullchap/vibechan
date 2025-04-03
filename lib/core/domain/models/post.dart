@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'media.dart';
+import 'generic_list_item.dart';
 
 part 'post.freezed.dart';
 part 'post.g.dart';
@@ -22,6 +23,8 @@ abstract class Post with _$Post {
     String? countryCode,
     String? countryName,
     String? boardFlag,
+    @Default(ItemSource.fourchan) ItemSource source,
+    String? board,
   }) = _Post;
 
   factory Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);

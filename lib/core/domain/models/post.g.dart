@@ -29,6 +29,10 @@ _Post _$PostFromJson(Map<String, dynamic> json) => _Post(
   countryCode: json['countryCode'] as String?,
   countryName: json['countryName'] as String?,
   boardFlag: json['boardFlag'] as String?,
+  source:
+      $enumDecodeNullable(_$ItemSourceEnumMap, json['source']) ??
+      ItemSource.fourchan,
+  board: json['board'] as String?,
 );
 
 Map<String, dynamic> _$PostToJson(_Post instance) => <String, dynamic>{
@@ -47,4 +51,13 @@ Map<String, dynamic> _$PostToJson(_Post instance) => <String, dynamic>{
   'countryCode': instance.countryCode,
   'countryName': instance.countryName,
   'boardFlag': instance.boardFlag,
+  'source': _$ItemSourceEnumMap[instance.source]!,
+  'board': instance.board,
+};
+
+const _$ItemSourceEnumMap = {
+  ItemSource.fourchan: 'fourchan',
+  ItemSource.hackernews: 'hackernews',
+  ItemSource.reddit: 'reddit',
+  ItemSource.lobsters: 'lobsters',
 };

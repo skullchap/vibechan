@@ -11,6 +11,13 @@ class LobstersStoryHeader extends StatelessWidget {
 
   const LobstersStoryHeader({super.key, required this.story, this.searchQuery});
 
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -20,11 +27,31 @@ class LobstersStoryHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            story.title,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  story.title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              // Open in browser button
+              IconButton(
+                icon: Icon(
+                  Icons.open_in_browser,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: 'Open in Browser',
+                onPressed:
+                    () => _launchUrl('https://lobste.rs/s/${story.shortId}'),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           if (story.url.isNotEmpty) // Show URL only if it exists
@@ -46,53 +73,73 @@ class LobstersStoryHeader extends StatelessWidget {
             ),
           if (story.url.isNotEmpty) const SizedBox(height: 12),
           // Story metadata row
-          DefaultTextStyle(
-            style: theme.textTheme.bodyMedium!.copyWith(
-              color: theme.textTheme.bodyMedium!.color?.withOpacity(0.8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.arrow_upward_rounded,
-                  size: 16,
-                  color: theme.colorScheme.secondary,
-                ),
-                const SizedBox(width: 3),
-                Text('${story.score}'),
-                const SizedBox(width: 12),
-                Icon(Icons.person_outline_rounded, size: 16),
-                const SizedBox(width: 3),
-                Text(story.submitterUser),
-                const SizedBox(width: 12),
-                Icon(Icons.access_time_rounded, size: 16),
-                const SizedBox(width: 3),
-                Text(formatTimeAgoSimple(story.createdAt)),
-              ],
-            ),
+          Row(
+            children: [
+              // Score
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_upward_rounded,
+                    size: 16,
+                    color: theme.colorScheme.error, // Lobsters uses red
+                  ),
+                  const SizedBox(width: 4),
+                  Text('${story.score}', style: theme.textTheme.bodySmall),
+                ],
+              ),
+              const SizedBox(width: 12),
+              // Author
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.person_outline_rounded,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(story.submitterUser, style: theme.textTheme.bodySmall),
+                ],
+              ),
+              const SizedBox(width: 12),
+              // Time
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    formatTimeAgoSimple(story.createdAt),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
           ),
-          // Separator before description
-          if (story.description != null && story.description!.isNotEmpty)
-            const Divider(height: 24, thickness: 0.5),
-          // Display description if it exists with search highlighting
-          if (story.description != null && story.description!.isNotEmpty)
+          if (story.tags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: story.tags.map((tag) => TagChip(tag: tag)).toList(),
+            ),
+          ],
+          if (story.description != null && story.description!.isNotEmpty) ...[
+            const SizedBox(height: 12),
             SimpleHtmlRenderer(
               htmlString: story.description!,
-              baseStyle: theme.textTheme.bodyLarge,
+              baseStyle: theme.textTheme.bodyMedium,
               highlightTerms: searchQuery,
               highlightColor: theme.colorScheme.primaryContainer.withOpacity(
                 0.5,
               ),
             ),
-          // Display tags if they exist
-          if (story.tags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Wrap(
-                spacing: 8.0,
-                runSpacing: 4.0,
-                children: story.tags.map((tag) => TagChip(tag: tag)).toList(),
-              ),
-            ),
+          ],
         ],
       ),
     );

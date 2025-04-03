@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibechan/core/utils/time_utils.dart';
 import 'package:vibechan/features/hackernews/data/models/hacker_news_item.dart';
-import 'package:vibechan/shared/widgets/html_renderer/simple_html_renderer.dart';
+import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 
 /// Widget to display the header section of a HackerNews item (story or comment OP).
 class HnItemHeader extends StatelessWidget {
@@ -10,6 +10,13 @@ class HnItemHeader extends StatelessWidget {
   final String? searchQuery;
 
   const HnItemHeader({super.key, required this.item, this.searchQuery});
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,62 +53,91 @@ class HnItemHeader extends StatelessWidget {
           if (item.title != null) const SizedBox(height: 12),
 
           // Metadata row
-          DefaultTextStyle(
-            style: theme.textTheme.bodyMedium!.copyWith(
-              color: theme.textTheme.bodyMedium!.color?.withOpacity(0.8),
-            ),
-            child: Row(
-              children: [
-                if (item.score != null) ...[
-                  Icon(
-                    Icons.arrow_upward_rounded,
-                    size: 16,
-                    color: theme.colorScheme.secondary,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left side: Score, author, time
+              Row(
+                children: [
+                  // Score
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text('${item.score}', style: theme.textTheme.bodySmall),
+                    ],
                   ),
-                  const SizedBox(width: 3),
-                  Text('${item.score}'),
                   const SizedBox(width: 12),
-                ],
-                if (item.by != null) ...[
-                  Icon(Icons.person_outline_rounded, size: 16),
-                  const SizedBox(width: 3),
-                  Text(item.by!),
-                  const SizedBox(width: 12),
-                ],
-                if (item.time != null) ...[
-                  Icon(Icons.access_time_rounded, size: 16),
-                  const SizedBox(width: 3),
-                  Text(
-                    formatTimeAgoSimple(
-                      DateTime.fromMillisecondsSinceEpoch(item.time! * 1000),
+                  // Author
+                  if (item.by != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.person_outline_rounded,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(item.by!, style: theme.textTheme.bodySmall),
+                      ],
                     ),
+                  const SizedBox(width: 12),
+                  // Time
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        formatTimeAgoSimple(
+                          DateTime.fromMillisecondsSinceEpoch(
+                            item.time! * 1000,
+                          ),
+                        ),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ],
-                const Spacer(), // Pushes comments to the right
-                if (item.descendants != null) ...[
-                  Icon(Icons.comment_outlined, size: 16),
-                  const SizedBox(width: 3),
-                  Text('${item.descendants}'),
-                ],
-              ],
-            ),
+              ),
+              // Right side: Open in browser button
+              IconButton(
+                icon: Icon(
+                  Icons.open_in_browser,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: 'Open in Browser',
+                onPressed:
+                    () => _launchUrl(
+                      'https://news.ycombinator.com/item?id=${item.id}',
+                    ),
+              ),
+            ],
           ),
-
-          // Separator before text/body
-          if (item.text != null && item.text!.isNotEmpty)
-            const Divider(height: 24, thickness: 0.5),
-
-          // Display item text if it exists (using HTML renderer)
-          if (item.text != null && item.text!.isNotEmpty)
-            SimpleHtmlRendererImpl(
+          if (item.text != null && item.text!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SimpleHtmlRenderer(
               htmlString: item.text!,
-              baseStyle: theme.textTheme.bodyLarge,
+              baseStyle: theme.textTheme.bodyMedium,
               highlightTerms: searchQuery,
               highlightColor: theme.colorScheme.primaryContainer.withOpacity(
                 0.5,
               ),
-              // Add onQuoteLink if needed in the future
             ),
+          ],
         ],
       ),
     );
