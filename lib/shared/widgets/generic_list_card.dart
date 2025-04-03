@@ -4,9 +4,14 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/core/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 
+import 'generic_list/generic_list_card.dart';
+
 // Placeholder for video widget if needed later
 // import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
 
+/// Wrapper for backward compatibility.
+/// The implementation has been moved to generic_list/generic_list_card.dart
+/// for better code organization.
 class GenericListCard extends StatelessWidget {
   final GenericListItem item;
   final VoidCallback onTap;
@@ -16,6 +21,38 @@ class GenericListCard extends StatelessWidget {
   final Color? highlightColor; // Color for search term highlighting
 
   const GenericListCard({
+    super.key,
+    required this.item,
+    required this.onTap,
+    this.onLongPress,
+    this.useFullMedia = false,
+    this.searchQuery,
+    this.highlightColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Use the implementation from the refactored file
+    return GenericListCardImpl(
+      item: item,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      useFullMedia: useFullMedia,
+      searchQuery: searchQuery,
+      highlightColor: highlightColor,
+    );
+  }
+}
+
+class GenericListCardImpl extends StatelessWidget {
+  final GenericListItem item;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final bool useFullMedia; // Controls whether to show thumbnail or full media
+  final String? searchQuery; // Search term for highlighting
+  final Color? highlightColor; // Color for search term highlighting
+
+  const GenericListCardImpl({
     super.key,
     required this.item,
     required this.onTap,
