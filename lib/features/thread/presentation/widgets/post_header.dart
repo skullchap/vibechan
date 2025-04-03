@@ -49,6 +49,26 @@ class PostHeader extends StatelessWidget {
         spacing: 8.0,
         runSpacing: 4.0,
         children: [
+          // Subject with optional highlighting (Moved earlier if OP)
+          if (isOriginalPost &&
+              post.subject != null &&
+              post.subject!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: 4.0,
+              ), // Add spacing below subject
+              child: Text.rich(
+                buildHighlightedTextSpan(
+                  post.subject!,
+                  subjectStyle,
+                  shouldHighlight ? highlightQuery! : '',
+                  colorScheme.tertiaryContainer,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
           // Name with optional highlighting
           Text.rich(
             buildHighlightedTextSpan(
@@ -62,14 +82,45 @@ class PostHeader extends StatelessWidget {
           // Tripcode
           if (post.tripcode != null) Text(post.tripcode!, style: tripcodeStyle),
 
-          // Post ID
-          Text('#${post.id}', style: smallTextStyle),
+          // Poster ID
+          if (post.posterId != null)
+            Text('(ID: ${post.posterId})', style: smallTextStyle),
 
+          // Country Flag/Name (Placeholder icon)
+          if (post.countryCode != null || post.countryName != null)
+            Tooltip(
+              message:
+                  post.countryName ?? post.countryCode ?? 'Unknown Country',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 4), // Spacing before flag
+                  Icon(
+                    Icons.flag,
+                    size: smallTextStyle?.fontSize ?? 12,
+                    color: smallTextStyle?.color,
+                  ),
+                  if (post.countryCode != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 2.0),
+                      child: Text(post.countryCode!, style: smallTextStyle),
+                    ),
+                ],
+              ),
+            ),
+
+          // Post ID (No.)
+          Text(
+            'No. ${post.id}',
+            style: smallTextStyle,
+          ), // Changed prefix to No.
           // Timestamp
           Text(formattedDate, style: smallTextStyle),
 
-          // Subject with optional highlighting
-          if (post.subject != null && post.subject!.isNotEmpty)
+          // Subject (Moved for non-OP posts)
+          if (!isOriginalPost &&
+              post.subject != null &&
+              post.subject!.isNotEmpty)
             Text.rich(
               buildHighlightedTextSpan(
                 post.subject!,
@@ -77,6 +128,8 @@ class PostHeader extends StatelessWidget {
                 shouldHighlight ? highlightQuery! : '',
                 colorScheme.tertiaryContainer,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
 
           // Share button

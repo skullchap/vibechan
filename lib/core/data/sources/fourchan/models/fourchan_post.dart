@@ -66,34 +66,73 @@ abstract class FourChanPost with _$FourChanPost {
   factory FourChanPost.fromJson(Map<String, dynamic> json) =>
       _$FourChanPostFromJson(json);
 
-  /// Converts this DTO into your domain `Post` model.
+  /// Converts this 4chan API post DTO to the domain [Post] model.
   Post toPost(String boardId, String threadId) => Post(
+    // Core IDs
     id: no.toString(),
     boardId: boardId,
-    threadId: threadId,
+    threadId: resto == 0 ? null : threadId,
+
+    // Timestamps
     timestamp: DateTime.fromMillisecondsSinceEpoch(time * 1000),
-    name: name.isEmpty ? 'Anonymous' : name,
+
+    // Poster Info
+    name: name,
     tripcode: trip,
     subject: sub,
     comment: com,
-    // If we have some notion of "referencedPosts," define it here
-    // e.g. referencedPosts: ...
+    posterId: id,
+    countryCode: country,
+    countryName: countryName,
+    boardFlag: boardFlag,
+
+    // Media - Create Media object if relevant fields exist
     media:
-        (tim != 0 && ext != null && ext!.isNotEmpty)
+        filename != null && ext != null && tim != 0
             ? Media(
-              filename: '$filename$ext',
+              filename:
+                  tim.toString() + ext!, // Use 'tim' + 'ext' for uniqueness
+              // Construct the URLs directly here
               url: 'https://i.4cdn.org/$boardId/$tim$ext',
-              thumbnailUrl: 'https://i.4cdn.org/$boardId/${tim}s.jpg',
-              type:
-                  (ext == '.webm' || ext == '.mp4')
-                      ? MediaType.video
-                      : ext == '.gif'
-                      ? MediaType.gif
-                      : MediaType.image,
+              thumbnailUrl:
+                  'https://t.4cdn.org/$boardId/${tim}s.jpg', // Use t.4cdn.org for thumbs
               width: w,
               height: h,
-              size: fsize,
+              size: fsize, // Use 'fsize' for 'size'
+              thumbnailWidth: tnW,
+              thumbnailHeight: tnH,
+              type: _mapMediaType(
+                ext!,
+              ), // Use helper to map extension to MediaType
             )
             : null,
+
+    // Metadata
+    referencedPosts: _extractReferencedPosts(com),
+    isOp: resto == 0,
   );
+
+  List<String> _extractReferencedPosts(String comment) {
+    final RegExp regex = RegExp(r'>>(\d+)');
+    final matches = regex.allMatches(comment);
+    return matches.map((m) => m.group(1)!).toList();
+  }
+
+  // Map file extension to domain MediaType
+  MediaType _mapMediaType(String extension) {
+    switch (extension.toLowerCase()) {
+      case '.jpg':
+      case '.jpeg':
+      case '.png':
+        return MediaType.image;
+      case '.gif':
+        return MediaType.gif; // Correctly map .gif
+      case '.webm':
+      case '.mp4':
+        return MediaType.video;
+      default:
+        // Default to image for unknown types, or handle differently if needed
+        return MediaType.image;
+    }
+  }
 }
