@@ -22,14 +22,6 @@ class ContentTabView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Reset search results when changing tabs
-    if (ref.watch(searchVisibleProvider)) {
-      Future.microtask(() {
-        ref.read(searchVisibleProvider.notifier).state = false;
-        ref.read(searchQueryProvider.notifier).state = '';
-      });
-    }
-
     return AnimatedLayoutBuilder(
       child: _buildContentForRoute(tab.initialRouteName, tab.pathParameters),
     );
