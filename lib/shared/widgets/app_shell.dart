@@ -2,9 +2,8 @@ import 'package:flutter/gestures.dart'; // Import for PointerScrollEvent
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:go_router/go_router.dart'; // Remove if not directly used for navigation inside AppShell
-import 'dart:async'; // Import for Future
+// Import for Future
 
-import '../../config/app_config.dart';
 import '../models/content_tab.dart';
 import '../providers/tab_manager_provider.dart';
 // Import the screens needed for ContentTabView logic
@@ -18,7 +17,6 @@ import '../../features/hackernews/presentation/screens/hackernews_screen.dart'; 
 import '../../features/lobsters/presentation/screens/lobsters_screen.dart';
 // Import the HN provider and enum for the AppBar controls
 import '../../features/hackernews/presentation/providers/hackernews_stories_provider.dart';
-import '../../core/presentation/widgets/settings_dialog.dart'; // Import the settings dialog
 
 import '../../features/board/presentation/widgets/catalog/catalog_view_mode.dart';
 // Import detail screens
@@ -26,7 +24,6 @@ import '../../features/hackernews/presentation/screens/hackernews_item_screen.da
 import '../../features/lobsters/presentation/screens/lobsters_story_screen.dart'; // Import Lobsters detail
 
 // Import responsive layout components
-import '../../core/utils/responsive_layout.dart';
 import '../../core/presentation/widgets/responsive_widgets.dart';
 import '../../core/services/layout_service.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
@@ -94,8 +91,7 @@ class _AppShellState extends ConsumerState<AppShell>
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
 
     // Get screen dimensions for responsive UI
-    final screenSize = MediaQuery.of(context).size;
-    final layoutType = layoutService.getLayoutForContext(context);
+    layoutService.getLayoutForContext(context);
 
     // Listen to search state changes
     final isSearchVisible = ref.watch(searchVisibleProvider);
@@ -131,7 +127,7 @@ class _AppShellState extends ConsumerState<AppShell>
             filled: true,
             fillColor: Theme.of(
               context,
-            ).colorScheme.surfaceVariant.withOpacity(0.5),
+            ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
             contentPadding: const EdgeInsets.symmetric(
               vertical: 8,
               horizontal: 16,
@@ -458,7 +454,7 @@ class _AppShellState extends ConsumerState<AppShell>
     final bool useSideNavigation = layoutService.shouldShowSidePanel(
       currentLayout,
     );
-    final double sideNavWidth = layoutService.getSidePanelWidth(currentLayout);
+    layoutService.getSidePanelWidth(currentLayout);
 
     // Wrap Scaffold with WillPopScope
     return WillPopScope(
@@ -495,7 +491,7 @@ class _AppShellState extends ConsumerState<AppShell>
                   ? IconButton(
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Back',
-                    onPressed: () => _handleBackButton(ref, activeTab!),
+                    onPressed: () => _handleBackButton(ref, activeTab),
                   )
                   : null,
           actions: appBarActions,
@@ -536,35 +532,14 @@ class _AppShellState extends ConsumerState<AppShell>
                 ),
               // Main content
               Expanded(
-                child: Row(
-                  children: [
-                    // Side navigation for larger screens (visible directly, not in drawer)
-                    if (useSideNavigation &&
-                        false) // Disabled to use drawer instead
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: sideNavWidth,
-                        child: _buildSideNavigation(
-                          tabs,
+                child:
+                    activeTab != null
+                        ? _buildTabContent(
                           activeTab,
-                          tabNotifier,
+                        ) // Use helper to build content
+                        : const Center(
+                          child: Text('No tabs open. Press + to add one.'),
                         ),
-                      ),
-                    // Main content area
-                    Expanded(
-                      child:
-                          activeTab != null
-                              ? _buildTabContent(
-                                activeTab,
-                              ) // Use helper to build content
-                              : const Center(
-                                child: Text(
-                                  'No tabs open. Press + to add one.',
-                                ),
-                              ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -815,7 +790,6 @@ class _AppShellState extends ConsumerState<AppShell>
             icon: Icons.view_list, // Or appropriate icon
           );
         } else {
-          print("Error: Missing boardId for thread back navigation.");
           // Fallback: Navigate to general boards list
           tabNotifier.navigateToOrReplaceActiveTab(
             title: 'Boards',
@@ -845,7 +819,6 @@ class _AppShellState extends ConsumerState<AppShell>
         break;
       default:
         // Should not happen if showBackButton logic is correct, but add a fallback
-        print("Warning: Back button pressed on unexpected screen type.");
         // Attempt to navigate to a default/home tab if possible
         if (ref.read(tabManagerProvider).isNotEmpty) {
           tabNotifier.setActiveTab(ref.read(tabManagerProvider).first.id);
@@ -925,62 +898,7 @@ class _AppShellState extends ConsumerState<AppShell>
   // --- End Build Tab Button ---
 
   // Build search bar for app bar
-  Widget _buildSearchBar(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return TextField(
-      autofocus: true,
-      decoration: InputDecoration(
-        hintText: 'Search...',
-        hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.7)),
-        border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-      ),
-      style: TextStyle(color: colorScheme.onSurface),
-      onChanged: (value) {
-        ref.read(searchQueryProvider.notifier).state = value;
-      },
-    );
-  }
-
   // Show more options sheet
-  void _showMoreOptionsSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  showDialog(
-                    context: context,
-                    builder: (context) => const SettingsDialog(),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.info_outline),
-                title: Text('About'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Show about dialog or navigate to about screen
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 // ADD HELPER FUNCTIONS AT THE END OF THE CLASS or outside
@@ -1228,64 +1146,62 @@ Widget _buildSideSourceSelector(
             ),
           ),
           Divider(color: colorScheme.outlineVariant, height: 16),
-          ...sources
-              .map(
-                (source) => Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      final String newRouteName = source['routeName'] as String;
-                      // Check setting and if a tab with the same routeName already exists
-                      ContentTab? existingTab;
-                      if (settings.value != null && switchToExistingTab) {
-                        final tabs = ref.read(
-                          tabManagerProvider,
-                        ); // Read current tabs
-                        existingTab = tabs.firstWhereOrNull(
-                          (tab) => tab.initialRouteName == newRouteName,
-                        );
-                      }
+          ...sources.map(
+            (source) => Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  final String newRouteName = source['routeName'] as String;
+                  // Check setting and if a tab with the same routeName already exists
+                  ContentTab? existingTab;
+                  if (settings.value != null && switchToExistingTab) {
+                    final tabs = ref.read(
+                      tabManagerProvider,
+                    ); // Read current tabs
+                    existingTab = tabs.firstWhereOrNull(
+                      (tab) => tab.initialRouteName == newRouteName,
+                    );
+                  }
 
-                      if (existingTab != null) {
-                        // Switch to existing tab
-                        tabNotifier.setActiveTab(existingTab.id);
-                      } else {
-                        // Add a *new* tab for the selected source
-                        tabNotifier.addTab(
-                          title: source['title'] as String,
-                          initialRouteName: newRouteName,
-                          icon: source['icon'] ?? Icons.web,
-                        );
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 10.0,
+                  if (existingTab != null) {
+                    // Switch to existing tab
+                    tabNotifier.setActiveTab(existingTab.id);
+                  } else {
+                    // Add a *new* tab for the selected source
+                    tabNotifier.addTab(
+                      title: source['title'] as String,
+                      initialRouteName: newRouteName,
+                      icon: source['icon'] ?? Icons.web,
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 10.0,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        source['icon'] as IconData?,
+                        size: 20,
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            source['icon'] as IconData?,
-                            size: 20,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            source['title'] as String,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 16),
+                      Text(
+                        source['title'] as String,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              )
-              .toList(),
+              ),
+            ),
+          ),
         ],
       ),
     ),

@@ -1,6 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibechan/shared/providers/settings_provider.dart';
+import 'package:vibechan/core/theme/theme_provider.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
+
+class ColorSchemePreview extends StatelessWidget {
+  final AppSchemeInfo scheme;
+  final bool isSelected;
+
+  const ColorSchemePreview({
+    super.key,
+    required this.scheme,
+    this.isSelected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final themeData =
+        isDark
+            ? FlexThemeData.dark(scheme: scheme.scheme)
+            : FlexThemeData.light(scheme: scheme.scheme);
+
+    final primaryColor = themeData.colorScheme.primary;
+    final secondaryColor = themeData.colorScheme.secondary;
+
+    return Row(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(right: 10),
+          width: 48,
+          height: 24,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.withOpacity(0.3),
+              width: isSelected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              Expanded(child: Container(color: primaryColor)),
+              Expanded(child: Container(color: secondaryColor)),
+            ],
+          ),
+        ),
+        Expanded(child: Text(scheme.name)),
+      ],
+    );
+  }
+}
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -9,6 +62,9 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsState = ref.watch(appSettingsProvider);
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
+    final themeState = ref.watch(appThemeProvider);
+    final themeNotifier = ref.read(appThemeProvider.notifier);
+    final availableSchemes = appColorSchemes;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -17,14 +73,156 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           Card(
             elevation: 2,
-            child: ListTile(
-              leading: const Icon(Icons.color_lens),
-              title: const Text('Theme'),
-              subtitle: const Text('Light/Dark/System'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // TODO: Implement theme settings
-              },
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Theme Mode',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  RadioListTile<ThemeMode>(
+                    title: const Text('System'),
+                    value: ThemeMode.system,
+                    groupValue: themeState.themeMode,
+                    onChanged: (value) => themeNotifier.setThemeMode(value!),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  RadioListTile<ThemeMode>(
+                    title: const Text('Light'),
+                    value: ThemeMode.light,
+                    groupValue: themeState.themeMode,
+                    onChanged: (value) => themeNotifier.setThemeMode(value!),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  RadioListTile<ThemeMode>(
+                    title: const Text('Dark'),
+                    value: ThemeMode.dark,
+                    groupValue: themeState.themeMode,
+                    onChanged: (value) => themeNotifier.setThemeMode(value!),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Color Scheme',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            availableSchemes[themeState.selectedSchemeIndex]
+                                .name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            width: 200,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.grey.withOpacity(0.5),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Container(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      child: Center(
+                                        child: Text(
+                                          'Primary',
+                                          style: TextStyle(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onPrimary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Container(
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.secondary,
+                                      child: Center(
+                                        child: Text(
+                                          'Secondary',
+                                          style: TextStyle(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.onSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  DropdownButtonFormField<int>(
+                    value: themeState.selectedSchemeIndex,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        availableSchemes.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final scheme = entry.value;
+                          return DropdownMenuItem<int>(
+                            value: index,
+                            child: ColorSchemePreview(
+                              scheme: scheme,
+                              isSelected:
+                                  index == themeState.selectedSchemeIndex,
+                            ),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        themeNotifier.setSchemeIndex(value);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),
