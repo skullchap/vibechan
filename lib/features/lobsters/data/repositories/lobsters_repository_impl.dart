@@ -82,16 +82,20 @@ class LobstersRepositoryImpl implements LobstersRepository {
   @override
   Future<LobstersStory> getStory(String shortId) async {
     try {
-      // Check cache first
+      // Check cache first, ensuring it includes comments
       final cachedStory = _getCachedStoryDetail(shortId);
-      if (cachedStory != null) {
+      if (cachedStory != null &&
+          cachedStory.comments != null &&
+          cachedStory.comments!.isNotEmpty) {
+        // Return cached story only if it's valid AND has comments
         return cachedStory;
       }
 
+      // Otherwise, fetch fresh data from the API
       final jsonData = await _apiClient.getStory(shortId);
       final story = LobstersStory.fromJson(jsonData);
 
-      // Cache the full story
+      // Cache the newly fetched full story
       _cacheStoryDetail(shortId, story);
 
       return story;

@@ -12,9 +12,6 @@ Future<LobstersStory> lobstersStoryDetail(
 ) async {
   final repository = getIt<LobstersRepository>();
 
-  // Force cache invalidation to ensure fresh data
-  ref.keepAlive();
-
   ref.onDispose(() {
     // Clean up resources if needed
   });
