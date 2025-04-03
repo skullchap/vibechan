@@ -52,11 +52,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i565.ThemePersistenceService>(
       () => _i565.ThemePersistenceService(gh<_i460.SharedPreferences>()),
     );
-    gh.factory<_i470.LobstersApiClient>(
-      () => _i470.LobstersApiClient(gh<_i361.Dio>()),
-    );
     gh.factory<_i765.HackerNewsApiClient>(
       () => _i765.HackerNewsApiClient(gh<_i361.Dio>()),
+    );
+    gh.factory<_i470.LobstersApiClient>(
+      () => _i470.LobstersApiClient(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i932.ChanDataSource>(
       () => _i508.FourChanDataSource(gh<_i361.Dio>()),
