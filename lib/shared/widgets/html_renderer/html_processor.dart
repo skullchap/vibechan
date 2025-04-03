@@ -48,7 +48,7 @@ List<InlineSpan> parseHtml(
               orElse: () => const TextSpan(),
             );
             if (lastMeaningfulSpan is TextSpan &&
-                lastMeaningfulSpan.text?.endsWith('\n\n') == false) {
+                lastMeaningfulSpan.text?.endsWith('\n\n') != true) {
               currentSpans.add(const TextSpan(text: '\n\n'));
             }
           }
@@ -168,7 +168,7 @@ List<InlineSpan> parseHtml(
           orElse: () => const TextSpan(),
         );
         if (lastMeaningfulSpan is TextSpan &&
-            !lastMeaningfulSpan.text!.endsWith('\n\n')) {
+            lastMeaningfulSpan.text?.endsWith('\n\n') != true) {
           currentSpans.add(const TextSpan(text: '\n\n'));
         }
       }

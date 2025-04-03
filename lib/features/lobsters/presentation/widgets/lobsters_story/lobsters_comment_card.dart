@@ -25,7 +25,7 @@ class LobstersCommentCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.only(left: 12, top: 8, right: 8, bottom: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Comment metadata
           DefaultTextStyle(
