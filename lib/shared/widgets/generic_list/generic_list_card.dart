@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:vibechan/core/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
+import 'text_highlighter.dart';
 
 import 'media_section.dart';
 import 'metadata_row.dart';
-import 'text_highlighter.dart';
 
 /// A card that displays content from various sources in a unified format
 class GenericListCardImpl extends StatelessWidget {
@@ -53,10 +53,11 @@ class GenericListCardImpl extends StatelessWidget {
                     if (searchQuery != null && searchQuery!.isNotEmpty)
                       Text.rich(
                         buildHighlightedTextSpan(
-                          item.title!,
-                          textTheme.titleMedium,
-                          searchQuery!,
-                          highlightColor ??
+                          text: item.title!,
+                          baseStyle: textTheme.titleMedium,
+                          searchQuery: searchQuery!,
+                          highlightColor:
+                              highlightColor ??
                               colorScheme.primaryContainer.withOpacity(0.5),
                         ),
                         maxLines: 2,
