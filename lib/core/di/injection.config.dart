@@ -12,6 +12,7 @@
 import 'package:dio/dio.dart' as _i361;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:logger/logger.dart' as _i974;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 import '../../features/fourchan/data/repositories/fourchan_repository.dart'
@@ -36,6 +37,8 @@ import '../../features/lobsters/data/repositories/lobsters_repository_impl.dart'
     as _i934;
 import '../../features/lobsters/domain/repositories/lobsters_repository.dart'
     as _i756;
+import '../services/download_service.dart' as _i433;
+import '../services/logger_service.dart' as _i141;
 import '../services/theme_persistence_service.dart' as _i565;
 import 'providers_module.dart' as _i770;
 import 'service_module.dart' as _i180;
@@ -48,6 +51,7 @@ extension GetItInjectableX on _i174.GetIt {
   }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final serviceModule = _$ServiceModule();
+    final loggerModule = _$LoggerModule();
     final providersModule = _$ProvidersModule();
     await gh.singletonAsync<_i460.SharedPreferences>(
       () => serviceModule.prefs,
@@ -60,6 +64,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i394.ChanDataSource>(
       () => _i347.FourChanDataSource(gh<_i361.Dio>()),
       instanceName: '4chan',
+    );
+    gh.lazySingleton<_i974.Logger>(
+      () => loggerModule.logger(),
+      instanceName: 'AppLogger',
     );
     gh.factory<_i765.HackerNewsApiClient>(
       () => _i765.HackerNewsApiClient(gh<_i361.Dio>()),
@@ -80,6 +88,13 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       instanceName: '4chan',
     );
+    gh.lazySingleton<_i433.DownloadService>(
+      () => _i433.DownloadService(
+        prefs: gh<_i460.SharedPreferences>(),
+        logger: gh<_i974.Logger>(instanceName: 'AppLogger'),
+        dio: gh<_i361.Dio>(),
+      ),
+    );
     gh.lazySingleton<_i736.BoardRepository>(
       () => providersModule.provideBoardRepository(
         gh<_i1063.FourChanRepository>(instanceName: '4chan'),
@@ -97,5 +112,7 @@ extension GetItInjectableX on _i174.GetIt {
 }
 
 class _$ServiceModule extends _i180.ServiceModule {}
+
+class _$LoggerModule extends _i141.LoggerModule {}
 
 class _$ProvidersModule extends _i770.ProvidersModule {}
