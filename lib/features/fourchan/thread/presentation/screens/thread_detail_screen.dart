@@ -4,6 +4,9 @@ import 'package:vibechan/features/fourchan/domain/models/post.dart';
 import 'package:vibechan/features/fourchan/presentation/providers/thread_providers.dart';
 import 'package:vibechan/features/fourchan/thread/presentation/widgets/post_card.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
+import 'package:vibechan/core/services/layout_service.dart';
+import 'package:vibechan/core/utils/responsive_layout.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class ThreadDetailScreen extends ConsumerWidget {
   final String boardId;
@@ -20,6 +23,9 @@ class ThreadDetailScreen extends ConsumerWidget {
     final thread = ref.watch(threadNotifierProvider(boardId, threadId));
     final isSearchActive = ref.watch(isSearchActiveProvider);
     final searchQuery = ref.watch(searchQueryProvider);
+    final layoutService = ref.read(layoutServiceProvider);
+    final layoutState = ref.watch(layoutStateNotifierProvider);
+    final currentLayout = layoutState.currentLayout;
 
     // Return just the content directly, no Scaffold or AppBar
     return RefreshIndicator(
@@ -71,41 +77,43 @@ class ThreadDetailScreen extends ConsumerWidget {
             );
           }
 
-          // Calculate total item count based on filtering
-          int totalItems = filteredReplies.length + (showOP ? 1 : 0);
+          // Prepare the list of all posts to display
+          final List<Post> postsToDisplay = [];
+          if (showOP) {
+            postsToDisplay.add(threadData.originalPost);
+          }
+          postsToDisplay.addAll(filteredReplies);
 
-          return ListView.builder(
-            // Ensure top padding is removed, keep others
-            padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
-            itemCount: totalItems,
-            itemBuilder: (context, index) {
-              // Handle the case where OP might be filtered out
-              if (showOP && index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: PostCard(
-                    post: threadData.originalPost,
-                    isOriginalPost: true,
+          // Get the appropriate column count based on layout
+          final int columnCount = _getColumnCountForLayout(
+            context,
+            currentLayout,
+          );
+
+          // Use a more responsive layout approach
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return MasonryGridView.builder(
+                padding: layoutService.getPaddingForLayout(currentLayout),
+                gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columnCount,
+                ),
+                mainAxisSpacing: 8.0,
+                crossAxisSpacing: 8.0,
+                itemCount: postsToDisplay.length,
+                itemBuilder: (context, index) {
+                  final post = postsToDisplay[index];
+                  final isOp = showOP && index == 0;
+
+                  return PostCard(
+                    post: post,
+                    isOriginalPost: isOp,
                     onQuoteLink: (quotedPostId) {
                       // TODO: Implement quote link handling
                     },
-                  ),
-                );
-              } else {
-                // Adjust index if OP is shown
-                final adjustedIndex = showOP ? index - 1 : index;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: PostCard(
-                    post: filteredReplies[adjustedIndex],
-                    isOriginalPost: false,
-                    onQuoteLink: (quotedPostId) {
-                      // TODO: Implement quote link handling
-                    },
-                  ),
-                );
-              }
+                  );
+                },
+              );
             },
           );
         },
@@ -139,6 +147,24 @@ class ThreadDetailScreen extends ConsumerWidget {
             ),
       ),
     );
+  }
+
+  // Get appropriate column count based on layout and screen width
+  int _getColumnCountForLayout(BuildContext context, AppLayout layout) {
+    final width = MediaQuery.of(context).size.width;
+
+    // Customize column count based on screen width for better responsiveness
+    if (width < ResponsiveBreakpoints.medium) {
+      return 1; // Single column on small screens
+    } else if (width < ResponsiveBreakpoints.expanded) {
+      return 2; // 2 columns on medium screens
+    } else if (width < ResponsiveBreakpoints.large) {
+      return 3; // 3 columns on large screens
+    } else if (width < ResponsiveBreakpoints.xlarge) {
+      return 4; // 4 columns on extra large screens
+    } else {
+      return 5; // 5 columns on very wide screens
+    }
   }
 
   // Check if a post matches the search query

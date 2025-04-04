@@ -18,16 +18,24 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PostHeader(post: post, isOriginalPost: isOriginalPost),
-          PostMedia(post: post),
-          PostBody(post: post),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Card(
+          margin:
+              EdgeInsets
+                  .zero, // Remove default card margin to respect grid spacing
+          clipBehavior: Clip.antiAlias, // Ensure content doesn't overflow
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              PostHeader(post: post, isOriginalPost: isOriginalPost),
+              PostMedia(post: post),
+              PostBody(post: post, onQuoteLink: onQuoteLink),
+            ],
+          ),
+        );
+      },
     );
   }
 }

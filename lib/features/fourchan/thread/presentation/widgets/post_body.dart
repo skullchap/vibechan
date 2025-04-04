@@ -6,8 +6,9 @@ import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 
 class PostBody extends ConsumerWidget {
   final Post post;
+  final Function(String)? onQuoteLink;
 
-  const PostBody({super.key, required this.post});
+  const PostBody({super.key, required this.post, this.onQuoteLink});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

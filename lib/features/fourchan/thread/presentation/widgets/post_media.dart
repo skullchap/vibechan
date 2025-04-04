@@ -14,24 +14,44 @@ class PostMedia extends StatelessWidget {
     final media = post.media;
     if (media == null) return const SizedBox.shrink();
 
-    if (media.type == domain.MediaType.video) {
-      return Card(child: PostVideo(media: media));
-    }
-
-    final aspectRatio = media.width / media.height;
     return Card(
-      child: CachedNetworkImage(
-        imageUrl: media.url,
-        placeholder:
-            (_, __) => AspectRatio(
-              aspectRatio: aspectRatio,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        errorWidget:
-            (_, __, ___) => AspectRatio(
-              aspectRatio: aspectRatio,
-              child: const Icon(Icons.error),
-            ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double maxWidth = constraints.maxWidth;
+          final aspectRatio = media.width / media.height;
+
+          // Calculate responsive height based on available width and aspect ratio
+          final double adaptiveHeight = maxWidth / aspectRatio;
+          // Limit height to reasonable bounds
+          final double finalHeight = adaptiveHeight.clamp(100, 400);
+
+          if (media.type == domain.MediaType.video) {
+            return SizedBox(
+              width: maxWidth,
+              height: finalHeight,
+              child: PostVideo(media: media),
+            );
+          }
+
+          return CachedNetworkImage(
+            imageUrl: media.url,
+            width: maxWidth,
+            height: finalHeight,
+            fit: BoxFit.cover,
+            placeholder:
+                (_, __) => SizedBox(
+                  width: maxWidth,
+                  height: finalHeight,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+            errorWidget:
+                (_, __, ___) => SizedBox(
+                  width: maxWidth,
+                  height: finalHeight,
+                  child: const Center(child: Icon(Icons.error)),
+                ),
+          );
+        },
       ),
     );
   }
