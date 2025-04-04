@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibechan/shared/providers/settings_provider.dart';
 import 'package:vibechan/core/theme/theme_provider.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:vibechan/core/services/download_service.dart';
+import 'package:vibechan/core/di/injection.dart';
 
 class ColorSchemePreview extends StatelessWidget {
   final AppSchemeInfo scheme;
@@ -226,6 +228,8 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
+          _buildDownloadSettingsCard(context),
+          const SizedBox(height: 8),
           Card(
             elevation: 2,
             child: ListTile(
@@ -283,6 +287,88 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDownloadSettingsCard(BuildContext context) {
+    final downloadService = getIt<DownloadService>();
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return FutureBuilder<String?>(
+          future: downloadService.getDownloadDirectory(),
+          builder: (context, snapshot) {
+            final String downloadPath = snapshot.data ?? 'Loading...';
+
+            return Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.download),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Download Settings',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Download Directory:'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      width: double.infinity,
+                      child: Text(
+                        downloadPath,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.folder_open),
+                        label: const Text('Change Folder'),
+                        onPressed: () async {
+                          final String? newPath =
+                              await downloadService.selectDownloadDirectory();
+                          if (newPath != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Download folder set to: $newPath',
+                                ),
+                              ),
+                            );
+                            setState(() {});
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -45,6 +45,7 @@ dependencies:
   share_plus: ^10.1.4
   collection: ^1.18.0
   uuid: ^4.3.3
+  file_picker: ^6.2.1
 
   # Player
   media_kit: ^1.1.11 # Primary package.
