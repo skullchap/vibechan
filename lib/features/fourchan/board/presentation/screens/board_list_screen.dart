@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:vibechan/features/fourchan/domain/models/board.dart';
 // Corrected package imports
 import 'package:vibechan/features/fourchan/presentation/providers/board_providers.dart';

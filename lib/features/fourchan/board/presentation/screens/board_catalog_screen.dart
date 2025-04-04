@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
-
 // Corrected Package Imports
 import 'package:vibechan/features/fourchan/presentation/providers/board_providers.dart'; // Assuming this exists
 import 'package:vibechan/features/fourchan/presentation/providers/thread_providers.dart'; // Assuming this exists
@@ -16,10 +13,6 @@ import 'package:vibechan/shared/enums/catalog_view_mode.dart';
 import 'package:vibechan/features/fourchan/board/presentation/widgets/catalog/catalog_media_feed.dart';
 import 'package:vibechan/shared/widgets/preview_card.dart'; // Use generic card
 import 'package:vibechan/features/fourchan/board/domain/adapters/thread_preview_adapter.dart'; // Import adapter
-// import '../../../../../shared/models/fourchan/thread.dart'; // Duplicate or old?
-// import 'package:vibechan/shared/widgets/post/post_view.dart'; // Assuming this exists - Commented out
-// import 'package:vibechan/features/fourchan/board/providers/fourchan_catalog_provider.dart'; // Commented out
-import 'package:vibechan/features/fourchan/presentation/widgets/responsive_widgets.dart';
 
 class BoardCatalogScreen extends ConsumerWidget {
   final String boardId;
@@ -66,7 +59,7 @@ class BoardCatalogScreen extends ConsumerWidget {
           final tabNotifier = ref.read(tabManagerProvider.notifier);
           if (tabNotifier.activeTab?.initialRouteName == 'catalog') {
             tabNotifier.updateActiveTabTitle(
-              '/${boardId}/ ${currentBoard.title}',
+              '/$boardId/ ${currentBoard.title}',
             );
           }
         });
@@ -90,7 +83,7 @@ class BoardCatalogScreen extends ConsumerWidget {
                   const Icon(Icons.search_off, size: 64),
                   const SizedBox(height: 16),
                   Text(
-                    'No threads match "${searchQuery}"',
+                    'No threads match "$searchQuery"',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
@@ -142,7 +135,7 @@ class BoardCatalogScreen extends ConsumerWidget {
     return threads.where((thread) {
       final post = thread.originalPost;
       final subject = post.subject?.toLowerCase() ?? '';
-      final comment = post.comment?.toLowerCase() ?? '';
+      final comment = post.comment.toLowerCase();
       final name = post.name?.toLowerCase() ?? '';
 
       return subject.contains(searchTerms) ||

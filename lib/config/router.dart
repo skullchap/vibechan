@@ -8,6 +8,9 @@ import 'package:vibechan/features/fourchan/board/presentation/screens/favorites_
 import 'package:vibechan/features/fourchan/board/presentation/screens/settings_screen.dart'; // Assuming this moved too
 import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_detail_screen.dart';
 import 'package:vibechan/shared/widgets/app_shell.dart';
+// Add imports for generic news screens
+import 'package:vibechan/shared/widgets/news/generic_news_screen.dart';
+import 'package:vibechan/shared/enums/news_source.dart';
 
 // Remove navigator keys unless needed for specific non-shell scenarios
 // final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -63,6 +66,59 @@ final router = GoRouter(
           path: 'settings', // Relative path
           name: 'settings',
           builder: (context, state) => const SettingsScreen(),
+        ),
+
+        // Generic news routes
+        // HackerNews routes
+        GoRoute(
+          path: 'hackernews',
+          name: 'hackernews',
+          builder:
+              (context, state) =>
+                  const GenericNewsScreen(source: NewsSource.hackernews),
+        ),
+        GoRoute(
+          path: 'hackernews/item/:itemId',
+          name: 'hackernews_item',
+          builder:
+              (context, state) => GenericNewsItemScreen(
+                source: NewsSource.hackernews,
+                itemId: state.pathParameters['itemId'] ?? '',
+              ),
+        ),
+
+        // Lobsters routes
+        GoRoute(
+          path: 'lobsters',
+          name: 'lobsters',
+          builder:
+              (context, state) =>
+                  const GenericNewsScreen(source: NewsSource.lobsters),
+        ),
+        GoRoute(
+          path: 'lobsters/story/:storyId',
+          name: 'lobsters_story',
+          builder:
+              (context, state) => GenericNewsItemScreen(
+                source: NewsSource.lobsters,
+                itemId: state.pathParameters['storyId'] ?? '',
+              ),
+        ),
+
+        // Reddit routes (placeholder for future implementation)
+        GoRoute(
+          path: 'reddit',
+          name: 'reddit',
+          builder:
+              (context, state) =>
+                  const Center(child: Text('Reddit support coming soon!')),
+        ),
+        GoRoute(
+          path: 'reddit/post/:postId',
+          name: 'reddit_post',
+          builder:
+              (context, state) =>
+                  const Center(child: Text('Reddit post view coming soon!')),
         ),
       ],
     ),

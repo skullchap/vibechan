@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart'; // Import for PointerScrollEvent
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:go_router/go_router.dart'; // Remove if not directly used for navigation inside AppShell
@@ -8,22 +7,16 @@ import '../models/content_tab.dart';
 import '../providers/tab_manager_provider.dart';
 import '../providers/search_provider.dart';
 // Fix imports for moved screens
-import 'package:vibechan/features/fourchan/board/presentation/screens/board_list_screen.dart';
-import 'package:vibechan/features/fourchan/board/presentation/screens/board_catalog_screen.dart';
-import 'package:vibechan/features/fourchan/board/presentation/screens/favorites_screen.dart'; // Assuming moved
-import 'package:vibechan/features/fourchan/board/presentation/screens/settings_screen.dart'; // Assuming moved
-import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_detail_screen.dart';
 import 'package:vibechan/features/hackernews/presentation/screens/hackernews_screen.dart'; // Import HN Screen
 import 'package:vibechan/features/lobsters/presentation/screens/lobsters_screen.dart'; // Import the Lobsters screen
+import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart'; // Import HN detail
+import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart'; // Import Lobsters detail
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_stories_provider.dart'; // Import the HN provider
 
 // Fix import for moved enum
 import 'package:vibechan/shared/enums/catalog_view_mode.dart';
 
 // Import detail screens
-import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart'; // Import HN detail
-import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart'; // Import Lobsters detail
-
 // Import responsive layout components
 import 'package:vibechan/features/fourchan/presentation/widgets/responsive_widgets.dart';
 import 'package:vibechan/core/services/layout_service.dart';

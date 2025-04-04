@@ -5,14 +5,13 @@ import 'package:vibechan/features/fourchan/board/presentation/screens/board_list
 import 'package:vibechan/features/fourchan/board/presentation/screens/favorites_screen.dart';
 import 'package:vibechan/features/fourchan/board/presentation/screens/settings_screen.dart';
 import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_detail_screen.dart';
+import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart';
+import 'package:vibechan/features/lobsters/presentation/screens/lobsters_screen.dart';
+import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart';
 
 import '../../models/content_tab.dart';
 import '../../../core/services/layout_service.dart';
-import '../../../features/fourchan/presentation/widgets/responsive_widgets.dart';
 import '../../../features/hackernews/presentation/screens/hackernews_screen.dart';
-import '../../../features/hackernews/presentation/screens/hackernews_item_screen.dart';
-import '../../../features/lobsters/presentation/screens/lobsters_screen.dart';
-import '../../../features/lobsters/presentation/screens/lobsters_story_screen.dart';
 
 class AppShellContentView extends ConsumerWidget {
   final ContentTab? activeTab;
@@ -71,8 +70,9 @@ class AppShellContentView extends ConsumerWidget {
           content = const HackerNewsScreen();
           break;
         case 'hackernews_item':
-          final itemIdStr = activeTab!.pathParameters['itemId'];
-          final itemId = int.tryParse(itemIdStr ?? '');
+          final itemId = int.tryParse(
+            activeTab!.pathParameters['itemId'] ?? '',
+          );
           content =
               itemId != null
                   ? HackerNewsItemScreen(itemId: itemId)
