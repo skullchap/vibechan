@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:vibechan/features/fourchan/domain/models/post.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
 
@@ -24,6 +23,10 @@ class PostHeader extends ConsumerWidget {
     );
     final tripcodeStyle = smallTextStyle?.copyWith(
       color: Colors.green.shade700,
+    );
+    final posterIdStyle = smallTextStyle?.copyWith(
+      color: Colors.purple.shade700,
+      fontWeight: FontWeight.w500,
     );
     final subjectStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.bold,
@@ -68,6 +71,36 @@ class PostHeader extends ConsumerWidget {
 
           // Tripcode
           if (post.tripcode != null) Text(post.tripcode!, style: tripcodeStyle),
+
+          // Poster ID (if available)
+          if (post.posterId != null && post.posterId!.isNotEmpty)
+            Text('(ID: ${post.posterId})', style: posterIdStyle),
+
+          // Country flag and name (if available)
+          if (post.countryCode != null && post.countryName != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: Text('(${post.countryCode})', style: smallTextStyle),
+                ),
+                Text(post.countryName!, style: smallTextStyle),
+              ],
+            ),
+
+          // Board flag and name (if available)
+          if (post.boardFlag != null && post.flagName != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: Text('(${post.boardFlag})', style: smallTextStyle),
+                ),
+                Text(post.flagName!, style: smallTextStyle),
+              ],
+            ),
 
           // Post ID
           Text('#${post.id}', style: smallTextStyle),

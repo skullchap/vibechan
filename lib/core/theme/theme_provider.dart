@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart';
 import 'package:vibechan/core/services/theme_persistence_service.dart';

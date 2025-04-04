@@ -25,6 +25,11 @@ _Post _$PostFromJson(Map<String, dynamic> json) => _Post(
           .toList() ??
       const [],
   isOp: json['isOp'] as bool? ?? false,
+  posterId: json['posterId'] as String?,
+  countryCode: json['countryCode'] as String?,
+  countryName: json['countryName'] as String?,
+  boardFlag: json['boardFlag'] as String?,
+  flagName: json['flagName'] as String?,
 );
 
 Map<String, dynamic> _$PostToJson(_Post instance) => <String, dynamic>{
@@ -39,4 +44,9 @@ Map<String, dynamic> _$PostToJson(_Post instance) => <String, dynamic>{
   'media': instance.media,
   'referencedPosts': instance.referencedPosts,
   'isOp': instance.isOp,
+  'posterId': instance.posterId,
+  'countryCode': instance.countryCode,
+  'countryName': instance.countryName,
+  'boardFlag': instance.boardFlag,
+  'flagName': instance.flagName,
 };

@@ -77,6 +77,12 @@ abstract class FourChanPost with _$FourChanPost {
     tripcode: trip,
     subject: sub,
     comment: com,
+    // Pass through ID and flag data
+    posterId: id,
+    countryCode: country,
+    countryName: countryName,
+    boardFlag: boardFlag,
+    flagName: flagName,
     // If we have some notion of "referencedPosts," define it here
     // e.g. referencedPosts: ...
     media:

@@ -18,6 +18,11 @@ abstract class Post with _$Post {
     Media? media,
     @Default([]) List<String> referencedPosts,
     @Default(false) bool isOp,
+    String? posterId,
+    String? countryCode,
+    String? countryName,
+    String? boardFlag,
+    String? flagName,
   }) = _Post;
 
   factory Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);

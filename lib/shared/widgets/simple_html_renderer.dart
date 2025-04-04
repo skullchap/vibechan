@@ -96,7 +96,7 @@ class SimpleHtmlRenderer extends StatelessWidget {
     final List<GestureRecognizer> recognizers = [];
 
     // Helper function to add vertical spacing if needed before block elements.
-    void _ensureSpacingBeforeBlock() {
+    void ensureSpacingBeforeBlock() {
       if (spans.isNotEmpty) {
         final lastSpan = spans.last;
         // Add double newline if the last span doesn't already end with one.
@@ -154,20 +154,16 @@ class SimpleHtmlRenderer extends StatelessWidget {
       } else if (node is dom.Element) {
         TextStyle newStyle = currentStyle;
         String? linkHref = currentHref; // Inherit href from parent <a> if any
-        bool isBlockElement = false;
-        bool isListItem = false;
 
         switch (node.localName) {
           // === Block Elements ===
           case 'p':
-            _ensureSpacingBeforeBlock();
-            isBlockElement = true;
+            ensureSpacingBeforeBlock();
             break;
           case 'ul':
           case 'ol':
-            _ensureSpacingBeforeBlock();
+            ensureSpacingBeforeBlock();
             listStack.add(_ListContext(node.localName!));
-            isBlockElement = true;
             break;
           case 'li':
             if (listStack.isNotEmpty) {
@@ -188,11 +184,10 @@ class SimpleHtmlRenderer extends StatelessWidget {
               spans.add(
                 TextSpan(text: '$indentation$marker', style: currentStyle),
               );
-              isListItem = true; // Mark as list item
+              // Mark as list item
             } else {
               // Treat <li> outside <ul>/<ol> like a paragraph.
-              _ensureSpacingBeforeBlock();
-              isBlockElement = true;
+              ensureSpacingBeforeBlock();
             }
             break;
 

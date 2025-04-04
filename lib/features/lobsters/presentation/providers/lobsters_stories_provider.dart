@@ -15,7 +15,7 @@ final currentLobstersSortTypeProvider = StateProvider<LobstersSortType>(
 
 @Riverpod(keepAlive: true)
 Future<List<GenericListItem>> lobstersStories(
-  LobstersStoriesRef ref,
+  Ref ref,
   LobstersSortType sortType,
 ) async {
   final repository = getIt<LobstersRepository>();

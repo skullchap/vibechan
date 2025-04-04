@@ -35,7 +35,7 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
     // Only load if prefs is available
     if (_prefs == null) return;
 
-    final String? tabsJson = _prefs!.getString(_tabsStorageKey);
+    final String? tabsJson = _prefs.getString(_tabsStorageKey);
     if (tabsJson != null) {
       try {
         final List<dynamic> decodedList = jsonDecode(tabsJson) as List;
@@ -78,7 +78,7 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
       final String tabsJson = jsonEncode(
         state.map((tab) => tab.toJson()).toList(),
       );
-      await _prefs!.setString(_tabsStorageKey, tabsJson);
+      await _prefs.setString(_tabsStorageKey, tabsJson);
     } catch (e) {
       print('Error saving tabs: $e');
     }

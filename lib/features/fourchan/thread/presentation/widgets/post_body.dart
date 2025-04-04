@@ -11,7 +11,7 @@ class PostBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final commentHtml = post.comment ?? '';
+    final commentHtml = post.comment;
 
     // Get search query for highlighting
     final isSearchActive = ref.watch(isSearchActiveProvider);

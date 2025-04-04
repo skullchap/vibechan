@@ -14,7 +14,7 @@ class ResponsiveContainer extends StatelessWidget {
   final AlignmentGeometry? alignment;
 
   const ResponsiveContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
@@ -24,7 +24,7 @@ class ResponsiveContainer extends StatelessWidget {
     this.decoration,
     this.constraints,
     this.alignment,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +56,13 @@ class ResponsiveGrid extends StatelessWidget {
   final int? fixedColumnCount;
 
   const ResponsiveGrid({
-    Key? key,
+    super.key,
     required this.children,
     this.spacing = 8.0,
     this.runSpacing = 8.0,
     this.padding = EdgeInsets.zero,
     this.fixedColumnCount,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -95,13 +95,13 @@ class ResponsiveList extends StatelessWidget {
   final int gridColumnCount;
 
   const ResponsiveList({
-    Key? key,
+    super.key,
     required this.children,
     this.padding = EdgeInsets.zero,
     this.useGridView = ResponsiveBreakpoints.isExpanded,
     this.controller,
     this.gridColumnCount = 2,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +144,7 @@ class ResponsiveScaffold extends StatelessWidget {
   final Color? backgroundColor;
 
   const ResponsiveScaffold({
-    Key? key,
+    super.key,
     this.body,
     this.appBar,
     this.bottomNavigationBar,
@@ -153,7 +153,7 @@ class ResponsiveScaffold extends StatelessWidget {
     this.drawer,
     this.endDrawer,
     this.backgroundColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -208,11 +208,11 @@ class AnimatedLayoutBuilder extends StatelessWidget {
   final Curve curve;
 
   const AnimatedLayoutBuilder({
-    Key? key,
+    super.key,
     required this.child,
     this.duration = const Duration(milliseconds: 300),
     this.curve = Curves.easeInOut,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -4,7 +4,6 @@ import 'package:collection/collection.dart';
 
 import '../../models/content_tab.dart';
 import '../../providers/tab_manager_provider.dart';
-import '../../providers/search_provider.dart';
 import '../../providers/settings_provider.dart'; // Import for settings access in source selector
 // import '../../../features/board/presentation/widgets/catalog/catalog_view_mode.dart'; // Old path
 import 'package:vibechan/shared/enums/catalog_view_mode.dart'; // New package path
@@ -205,6 +204,7 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback onBackButtonPressed;
   final Function(CatalogViewMode) onCatalogViewModeSelected;
   final Function(HackerNewsSortType) onHnSortTypeSelected;
+  final VoidCallback? onOpenInBrowserPressed;
 
   const AppShellAppBar({
     super.key,
@@ -219,6 +219,7 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
     required this.onBackButtonPressed,
     required this.onCatalogViewModeSelected,
     required this.onHnSortTypeSelected,
+    this.onOpenInBrowserPressed,
   });
 
   @override
@@ -271,6 +272,18 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     // Create app bar actions
     final List<Widget> appBarActions = [
+      // Open in browser button (shown when viewing threads)
+      if (!isSearchVisible &&
+          (activeTab?.initialRouteName == 'thread' ||
+              activeTab?.initialRouteName == 'hackernews_item' ||
+              activeTab?.initialRouteName == 'lobsters_story') &&
+          onOpenInBrowserPressed != null)
+        IconButton(
+          icon: const Icon(Icons.open_in_browser, size: 24),
+          tooltip: 'Open in browser',
+          onPressed: onOpenInBrowserPressed,
+        ),
+
       // Search button (shown on all screens)
       IconButton(
         icon: Icon(isSearchVisible ? Icons.close : Icons.search, size: 24),
@@ -460,34 +473,6 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
               elevation: 3,
               color: colorScheme.surfaceContainer,
-              // Show current sort type
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4.0,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.sort, color: colorScheme.onSurface, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      currentHnSortType.name[0].toUpperCase() +
-                          currentHnSortType.name.substring(1),
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      color: colorScheme.onSurface,
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ),
               // Menu items
               itemBuilder:
                   (context) =>
@@ -548,6 +533,34 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         );
                       }).toList(),
               onSelected: onHnSortTypeSelected,
+              // Show current sort type
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.sort, color: colorScheme.onSurface, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      currentHnSortType.name[0].toUpperCase() +
+                          currentHnSortType.name.substring(1),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: colorScheme.onSurface,
+                      size: 24,
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         ),

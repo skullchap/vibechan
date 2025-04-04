@@ -6,7 +6,7 @@ part of 'layout_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$layoutServiceHash() => r'4771e0f80b7b13c9c5249a54cf417f53e01d629f';
+String _$layoutServiceHash() => r'1d8b9b06202a88e8b9542b8c8f29a611a2ae8b48';
 
 /// Riverpod provider for layout service
 ///

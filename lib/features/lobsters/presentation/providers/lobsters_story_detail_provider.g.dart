@@ -7,7 +7,7 @@ part of 'lobsters_story_detail_provider.dart';
 // **************************************************************************
 
 String _$lobstersStoryDetailHash() =>
-    r'8334c46c611a560a4c742224d49a8d5eaed2a1dc';
+    r'ac2446abe374ae23793db5a516a659c8a6738cb3';
 
 /// Copied from Dart SDK
 class _SystemHash {

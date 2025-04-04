@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:vibechan/features/fourchan/domain/models/post.dart';
 import 'package:vibechan/features/fourchan/presentation/providers/thread_providers.dart';
+import 'package:vibechan/features/fourchan/thread/presentation/widgets/post_card.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
-
-import '../widgets/post_card.dart';
 
 class ThreadDetailScreen extends ConsumerWidget {
   final String boardId;
@@ -20,12 +18,10 @@ class ThreadDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final thread = ref.watch(threadNotifierProvider(boardId, threadId));
-
-    // Get search state
     final isSearchActive = ref.watch(isSearchActiveProvider);
     final searchQuery = ref.watch(searchQueryProvider);
 
-    // Return RefreshIndicator directly, remove Scaffold/AppBar
+    // Return just the content directly, no Scaffold or AppBar
     return RefreshIndicator(
       onRefresh:
           () =>
@@ -61,7 +57,7 @@ class ThreadDetailScreen extends ConsumerWidget {
                   const Icon(Icons.search_off, size: 64),
                   const SizedBox(height: 16),
                   Text(
-                    'No posts match "${searchQuery}"',
+                    'No posts match "$searchQuery"',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
@@ -164,8 +160,7 @@ class ThreadDetailScreen extends ConsumerWidget {
     }
 
     // Check post comment
-    if (post.comment != null &&
-        post.comment!.toLowerCase().contains(lowercaseQuery)) {
+    if (post.comment.toLowerCase().contains(lowercaseQuery)) {
       return true;
     }
 

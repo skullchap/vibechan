@@ -42,7 +42,7 @@ class BoardCatalogScreen extends ConsumerWidget {
     );
 
     // Get board name for display purposes and tab title updates
-    final boardName = boards.maybeWhen(
+    boards.maybeWhen(
       data: (boards) {
         final currentBoard = boards.firstWhere(
           (board) => board.id == boardId,

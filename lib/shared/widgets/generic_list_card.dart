@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
+import 'package:vibechan/core/utils/time_utils.dart';
 
 // Placeholder for video widget if needed later
 // import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
@@ -41,7 +42,7 @@ class GenericListCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (hasMedia) _buildMediaSection(context, displayImageUrl!),
+            if (hasMedia) _buildMediaSection(context, displayImageUrl),
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -196,9 +197,13 @@ class GenericListCard extends StatelessWidget {
 
     // Add timestamp if available
     if (item.timestamp != null) {
-      // TODO: Format timestamp nicely
+      // Format timestamp nicely using our utility function
       metadataWidgets.add(
-        _metadataItem(context, Icons.access_time, item.timestamp.toString()),
+        _metadataItem(
+          context,
+          Icons.access_time,
+          formatTimestamp(item.timestamp, useShortFormat: true),
+        ),
       );
     }
 

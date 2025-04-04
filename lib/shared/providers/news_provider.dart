@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_item_detail_provider.dart'
     hide hackerNewsItemRefresherProvider;
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_stories_provider.dart';

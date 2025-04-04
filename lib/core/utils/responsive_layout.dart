@@ -111,7 +111,7 @@ class ResponsiveLayout {
 class AdaptiveBuilder extends StatelessWidget {
   final Widget Function(BuildContext, DeviceType) builder;
 
-  const AdaptiveBuilder({Key? key, required this.builder}) : super(key: key);
+  const AdaptiveBuilder({super.key, required this.builder});
 
   @override
   Widget build(BuildContext context) {

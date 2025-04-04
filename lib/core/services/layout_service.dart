@@ -134,7 +134,7 @@ class LayoutState {
 
 /// Riverpod provider for layout service
 @riverpod
-LayoutService layoutService(LayoutServiceRef ref) {
+LayoutService layoutService(Ref ref) {
   return LayoutService();
 }
 
