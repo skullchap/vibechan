@@ -21,6 +21,8 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
   // Cache duration - 5 minutes for story lists, 30 minutes for individual items
   static const Duration _storyListCacheDuration = Duration(minutes: 5);
   static const Duration _itemCacheDuration = Duration(minutes: 30);
+  // Define max depth for recursive comment fetching
+  static const int _maxCommentDepth = 5;
 
   HackerNewsRepositoryImpl(this._apiClient);
 
@@ -146,13 +148,14 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
 
   @override
   Future<HackerNewsItem> getItem(int id) async {
-    try {
-      // Check cache first
-      final cachedItem = _getCachedItem(id);
-      if (cachedItem != null) {
-        return cachedItem;
-      }
+    // Check cache first (including items possibly cached with comments)
+    final cachedItem = _getCachedItem(id);
+    if (cachedItem != null) {
+      return cachedItem;
+    }
 
+    // If not in cache, fetch basic item data
+    try {
       final itemJson = await _apiClient
           .getItemById(id)
           .timeout(
@@ -165,65 +168,95 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
       // Initial parse without nested comments
       final item = HackerNewsItem.fromJson(itemJson);
 
-      // Cache the item without comments
+      // Cache the basic item (without comments) immediately
+      // This allows partial data display even if comment fetching fails later
       _cacheItem(id, item);
 
-      // Return the item without loading comments - they'll be loaded on demand
       return item;
     } catch (e) {
+      // Rethrow to allow upstream handling (e.g., in recursive fetch)
       rethrow;
     }
   }
 
-  // New method to load comments for a specific item
+  // Fetches comments recursively up to a max depth
+  Future<HackerNewsItem> _fetchCommentsRecursive(
+    HackerNewsItem item,
+    int currentDepth,
+  ) async {
+    // Base case: Max depth reached or no kids
+    if (currentDepth >= _maxCommentDepth ||
+        item.kids == null ||
+        item.kids!.isEmpty) {
+      // Return the item as is (potentially with comments from previous levels)
+      return item;
+    }
+
+    // Limit the number of comments to fetch per level
+    final commentIds = item.kids!.take(20).toList();
+
+    // Fetch children recursively
+    final futureComments =
+        commentIds.where((kidId) => kidId != null).map((kidId) async {
+          try {
+            // 1. Fetch the basic child item
+            final basicChildItem = await getItem(kidId);
+            // 2. Recursively fetch its comments
+            return await _fetchCommentsRecursive(
+              basicChildItem,
+              currentDepth + 1,
+            );
+          } catch (e) {
+            // Don't log errors to avoid console pollution
+            return null; // Return null on error
+          }
+        }).toList();
+
+    final fetchedComments = await Future.wait(futureComments);
+
+    // Filter out nulls (errors during fetch) and assign to comments field
+    final validComments = fetchedComments.whereType<HackerNewsItem>().toList();
+
+    // Create a new item with the resolved comments
+    final itemWithComments = item.copyWith(comments: validComments);
+
+    // Update the cache with the item including its fetched comments
+    _cacheItem(item.id, itemWithComments);
+
+    return itemWithComments;
+  }
+
+  // Updated method to load comments for a specific item using recursion
   @override
   Future<HackerNewsItem> getItemWithComments(int id) async {
     try {
-      // First get the basic item
-      final item = await getItem(id);
-
-      // If the item has kids and doesn't already have comments loaded
-      if (item.kids != null &&
-          item.kids!.isNotEmpty &&
-          (item.comments == null || item.comments!.isEmpty)) {
-        // Limit the number of comments to fetch to avoid excessive API calls
-        final commentIds = item.kids!.take(20).toList();
-
-        // Fetch all direct children concurrently with timeouts
-        final futureComments =
-            commentIds
-                .where((kidId) => kidId != null)
-                .map(
-                  (kidId) => getItem(
-                    kidId,
-                  ).timeout(const Duration(seconds: 5)).catchError((e) {
-                    // Don't log errors to avoid console pollution
-                    return null
-                        as HackerNewsItem?; // Explicit cast for type safety
-                  }),
-                )
-                .toList();
-
-        final fetchedComments = await Future.wait(futureComments);
-
-        // Filter out nulls/errors and assign to comments field
-        final validComments =
-            fetchedComments.whereType<HackerNewsItem>().toList();
-
-        // Create a new item with comments
-        final itemWithComments = item.copyWith(comments: validComments);
-
-        // Cache the item with comments
-        _cacheItem(id, itemWithComments);
-
-        // Return the item with its direct children
-        return itemWithComments;
-      } else {
-        // Return the item as-is (might already have comments loaded)
-        return item;
+      // Check cache first. If it exists and has comments, return it.
+      final cachedItem = _getCachedItem(id);
+      if (cachedItem != null &&
+          (cachedItem.comments != null && cachedItem.comments!.isNotEmpty ||
+              cachedItem.kids == null ||
+              cachedItem.kids!.isEmpty)) {
+        return cachedItem;
       }
+
+      // Fetch the basic item (might come from cache if fetched recently)
+      final basicItem = await getItem(id);
+
+      // Start recursive fetching from depth 0
+      final itemWithFetchedComments = await _fetchCommentsRecursive(
+        basicItem,
+        0,
+      );
+
+      return itemWithFetchedComments;
     } catch (e) {
-      rethrow;
+      // If any error occurs during the process, try returning a cached version
+      // or rethrow if no cache exists.
+      final cachedItem = _getCachedItem(id);
+      if (cachedItem != null) {
+        return cachedItem; // Return potentially stale cache on error
+      }
+      rethrow; // Rethrow if no cache available at all
     }
   }
 
