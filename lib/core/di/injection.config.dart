@@ -37,6 +37,14 @@ import '../../features/lobsters/data/repositories/lobsters_repository_impl.dart'
     as _i934;
 import '../../features/lobsters/domain/repositories/lobsters_repository.dart'
     as _i756;
+import '../../features/reddit/data/repositories/reddit_repository_impl.dart'
+    as _i68;
+import '../../features/reddit/data/sources/reddit_remote_data_source.dart'
+    as _i256;
+import '../../features/reddit/data/sources/reddit_remote_data_source_impl.dart'
+    as _i456;
+import '../../features/reddit/domain/repositories/reddit_repository.dart'
+    as _i510;
 import '../services/download_service.dart' as _i433;
 import '../services/logger_service.dart' as _i141;
 import '../services/theme_persistence_service.dart' as _i565;
@@ -75,6 +83,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i470.LobstersApiClient>(
       () => _i470.LobstersApiClient(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i256.RedditRemoteDataSource>(
+      () => _i456.RedditRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i756.LobstersRepository>(
       () => _i934.LobstersRepositoryImpl(gh<_i470.LobstersApiClient>()),
     );
@@ -87,6 +98,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i460.SharedPreferences>(),
       ),
       instanceName: '4chan',
+    );
+    gh.lazySingleton<_i510.RedditRepository>(
+      () => _i68.RedditRepositoryImpl(gh<_i256.RedditRemoteDataSource>()),
     );
     gh.lazySingleton<_i433.DownloadService>(
       () => _i433.DownloadService(

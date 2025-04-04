@@ -74,7 +74,7 @@ class _PostVideoState extends State<PostVideo> {
             fit: StackFit.expand,
             children: [
               Container(
-                color: Theme.of(context).colorScheme.surfaceVariant,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Image.network(
                   widget.media.thumbnailUrl,
                   fit: BoxFit.cover,
@@ -118,7 +118,7 @@ class _PostVideoState extends State<PostVideo> {
                   fit: StackFit.expand,
                   children: [
                     Container(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: Image.network(
                         widget.media.thumbnailUrl,
                         fit: BoxFit.contain,

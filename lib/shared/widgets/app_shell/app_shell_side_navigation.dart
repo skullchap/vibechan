@@ -21,15 +21,28 @@ Widget _buildSideSourceSelector(
 
   // Define available sources
   final List<Map<String, dynamic>> sources = [
-    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard},
+    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard_outlined},
     {
       'title': 'Hacker News',
       'routeName': 'hackernews',
-      'icon': Icons.newspaper,
+      'icon': Icons.newspaper_outlined,
     },
     {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
-    {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
-    {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
+    {
+      'title': 'Reddit',
+      'routeName': 'subredditGrid',
+      'icon': Icons.reddit_outlined,
+    },
+    {
+      'title': 'Favorites',
+      'routeName': 'favorites',
+      'icon': Icons.favorite_outline,
+    },
+    {
+      'title': 'Settings',
+      'routeName': 'settings',
+      'icon': Icons.settings_outlined,
+    },
   ];
 
   return Card(

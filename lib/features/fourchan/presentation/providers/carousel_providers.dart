@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:vibechan/core/di/injection.dart';
 import 'package:vibechan/features/fourchan/domain/models/media.dart';
-import 'package:vibechan/features/fourchan/domain/repositories/board_repository.dart';
-import 'package:vibechan/features/fourchan/domain/repositories/thread_repository.dart';
+import './board_providers.dart';
+import './thread_providers.dart';
 
 part 'carousel_providers.g.dart';
 
@@ -26,7 +25,7 @@ Future<List<Media>> carouselMediaList(Ref ref, String sourceInfo) async {
     if (sourceArgs.length > 1) {
       final threadId = sourceArgs[1];
       try {
-        final repository = getIt<ThreadRepository>(instanceName: sourceName);
+        final repository = ref.read(threadRepositoryProvider);
         return repository.getAllMediaFromThreadContext(boardId, threadId);
       } catch (e) {
         print('Error getting ThreadRepository for $sourceName: $e');
@@ -34,7 +33,7 @@ Future<List<Media>> carouselMediaList(Ref ref, String sourceInfo) async {
       }
     } else {
       try {
-        final repository = getIt<BoardRepository>(instanceName: sourceName);
+        final repository = ref.read(boardRepositoryProvider);
         return repository.getAllMediaFromBoard(boardId);
       } catch (e) {
         print('Error getting BoardRepository for $sourceName: $e');
@@ -56,7 +55,7 @@ Future<bool> boardHasMedia(Ref ref, String sourceInfo) async {
   final boardId = parts[1];
 
   try {
-    final repository = getIt<BoardRepository>(instanceName: sourceName);
+    final repository = ref.read(boardRepositoryProvider);
     return await repository.boardHasMedia(boardId);
   } catch (e) {
     print('Error checking board media for $sourceName: $e');
@@ -75,7 +74,7 @@ Future<bool> threadHasMedia(Ref ref, String sourceInfo) async {
   final threadId = args[1];
 
   try {
-    final repository = getIt<ThreadRepository>(instanceName: sourceName);
+    final repository = ref.read(threadRepositoryProvider);
     return await repository.threadHasMedia(boardId, threadId);
   } catch (e) {
     print('Error checking thread media for $sourceName: $e');

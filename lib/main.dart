@@ -104,9 +104,9 @@ class VibeChanApp extends ConsumerWidget {
         return MediaQuery(
           // Override text scaling to prevent layout issues
           data: MediaQuery.of(context).copyWith(
-            textScaleFactor: MediaQuery.of(
+            textScaler: TextScaler.linear(MediaQuery.of(
               context,
-            ).textScaleFactor.clamp(0.8, 1.2),
+            ).textScaleFactor.clamp(0.8, 1.2)),
           ),
           child: child ?? const SizedBox.shrink(),
         );

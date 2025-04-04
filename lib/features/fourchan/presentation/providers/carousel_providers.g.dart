@@ -6,7 +6,7 @@ part of 'carousel_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$carouselMediaListHash() => r'e5b9d6a13a5de421b434771e7aafb6eb28f74644';
+String _$carouselMediaListHash() => r'0b0453be6c4dfaedf4fde657e3bf722e8684fb0d';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -148,7 +148,7 @@ class _CarouselMediaListProviderElement
   String get sourceInfo => (origin as CarouselMediaListProvider).sourceInfo;
 }
 
-String _$boardHasMediaHash() => r'3c97945af0c42a741401bc270ccffbee355ee26e';
+String _$boardHasMediaHash() => r'a07f1a4c48cf62a07437bea100e6eb047dd961ae';
 
 /// See also [boardHasMedia].
 @ProviderFor(boardHasMedia)
@@ -269,7 +269,7 @@ class _BoardHasMediaProviderElement
   String get sourceInfo => (origin as BoardHasMediaProvider).sourceInfo;
 }
 
-String _$threadHasMediaHash() => r'3393f54b4fd10ea24d1bf240220980a6f379963c';
+String _$threadHasMediaHash() => r'd3fb19ed0cc57ab36933e02abfb98462ad02f4a9';
 
 /// See also [threadHasMedia].
 @ProviderFor(threadHasMedia)

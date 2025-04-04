@@ -8,6 +8,9 @@ import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_de
 import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart';
 import 'package:vibechan/features/lobsters/presentation/screens/lobsters_screen.dart';
 import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart';
+import 'package:vibechan/features/reddit/presentation/screens/post_detail_screen.dart';
+import 'package:vibechan/features/reddit/presentation/screens/subreddit_grid_screen.dart';
+import 'package:vibechan/features/reddit/presentation/screens/subreddit_screen.dart';
 
 import '../../models/content_tab.dart';
 import '../../../core/services/layout_service.dart';
@@ -88,6 +91,28 @@ class AppShellContentView extends ConsumerWidget {
               storyId != null
                   ? LobstersStoryScreen(storyId: storyId)
                   : const Center(child: Text('Error: Missing story ID'));
+          addPadding = false;
+          break;
+        case 'subredditGrid':
+          content = const SubredditGridScreen();
+          break;
+        case 'subreddit':
+          final subredditName = activeTab!.pathParameters['subreddit'];
+          content =
+              subredditName != null
+                  ? SubredditScreen(subreddit: subredditName)
+                  : const Center(child: Text('Error: Missing subreddit name'));
+          addPadding = false;
+          break;
+        case 'postDetail':
+          final subredditName = activeTab!.pathParameters['subreddit'];
+          final postId = activeTab!.pathParameters['postId'];
+          content =
+              (subredditName != null && postId != null)
+                  ? PostDetailScreen(subreddit: subredditName, postId: postId)
+                  : const Center(
+                    child: Text('Error: Missing subreddit/post ID'),
+                  );
           addPadding = false;
           break;
         default:

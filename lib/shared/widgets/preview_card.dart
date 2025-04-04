@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart'; // For launching URLs
 import 'package:vibechan/core/di/injection.dart'; // For getIt
 import 'package:vibechan/core/services/download_service.dart'; // Import DownloadService
 import 'package:logger/logger.dart'; // Import Logger
-import 'package:cross_file/cross_file.dart'; // Import XFile for sharing
+// Import XFile for sharing
 import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/features/fourchan/thread/presentation/widgets/post_video.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
@@ -65,7 +65,7 @@ class GenericPreviewCard extends StatelessWidget {
                                 isPreview: true,
                               )
                               : Container(
-                                color: colorScheme.surfaceVariant,
+                                color: colorScheme.surfaceContainerHighest,
                                 child: CachedNetworkImage(
                                   imageUrl: mediaUrl,
                                   fit:
@@ -221,7 +221,7 @@ class GenericPreviewCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                '#${orderIndex}',
+                '#$orderIndex',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,

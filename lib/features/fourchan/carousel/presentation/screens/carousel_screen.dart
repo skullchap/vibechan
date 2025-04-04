@@ -65,10 +65,6 @@ class _CarouselScreenState extends ConsumerState<CarouselScreen> {
     }
   }
 
-  void _jumpToPage(int index, List<Media> mediaList) {
-    // ... same as before ...
-  }
-
   @override
   Widget build(BuildContext context) {
     // Use the new provider with sourceInfo

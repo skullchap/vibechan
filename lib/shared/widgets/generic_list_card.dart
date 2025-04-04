@@ -1,42 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For Clipboard
-import 'package:share_plus/share_plus.dart'; // For sharing
-import 'package:url_launcher/url_launcher.dart'; // For launching URLs
-import 'package:vibechan/core/di/injection.dart'; // For getIt
-import 'package:vibechan/core/services/download_service.dart'; // Import DownloadService
-import 'package:logger/logger.dart'; // Import Logger
-import 'package:cross_file/cross_file.dart'; // Import XFile for sharing
-// Assume these services exist and are registered with get_it
-// import 'package:vibechan/core/services/url_launcher_service.dart';
-// import 'package:vibechan/core/services/clipboard_service.dart';
-// import 'package:vibechan/core/services/share_service.dart';
-// import 'package:vibechan/core/services/voting_service.dart';
-// import 'package:vibechan/core/services/favorites_service.dart';
-
+import 'package:flutter/services.dart'; // ADD BACK for Clipboard
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:vibechan/core/di/injection.dart';
+import 'package:vibechan/core/services/download_service.dart';
+import 'package:logger/logger.dart';
+// import 'package:cross_file/cross_file.dart'; // REMOVE Unused
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 import 'package:vibechan/core/utils/time_utils.dart';
+import 'package:vibechan/config/app_config.dart'; // ADD BACK for AppConfig
 
 // Placeholder for video widget if needed later
 // import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
 
 class GenericListCard extends StatelessWidget {
   final GenericListItem item;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final VoidCallback? onLongPress;
-  final bool useFullMedia; // Controls whether to show thumbnail or full media
-  final String? searchQuery; // Search term for highlighting
+  final bool useFullMedia;
+  final bool isSelected;
+  final String? searchQuery; // For highlighting
+  final bool isDetailView; // New flag
   final Color? highlightColor; // Color for search term highlighting
 
   const GenericListCard({
     super.key,
     required this.item,
-    required this.onTap,
+    this.onTap,
     this.onLongPress,
     this.useFullMedia = false,
+    this.isSelected = false,
     this.searchQuery,
+    this.isDetailView = false, // Default to false
     this.highlightColor,
   });
 
@@ -46,12 +44,18 @@ class GenericListCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final displayImageUrl = useFullMedia ? item.mediaUrl : item.thumbnailUrl;
-    final hasMedia = displayImageUrl != null;
+    final hasMedia =
+        displayImageUrl != null &&
+        displayImageUrl.isNotEmpty &&
+        Uri.tryParse(displayImageUrl)?.isAbsolute == true;
 
     return Card(
+      // Removed explicit color: let Card Theme handle it or use surfaceContainerLow
+      // color: cardColor,
       clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero, // Assume parent handles margin/padding
       child: InkWell(
-        onTap: onTap,
+        onTap: isDetailView ? null : onTap, // Disable tap in detail view
         onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,6 +68,7 @@ class GenericListCard extends StatelessWidget {
                 children: [
                   if (item.title != null && item.title!.isNotEmpty) ...[
                     // If search is active, use RichText with highlighting
+                    /* --- Temporarily removed highlighting --- 
                     if (searchQuery != null && searchQuery!.isNotEmpty)
                       Text.rich(
                         _buildHighlightedTextSpan(
@@ -77,21 +82,52 @@ class GenericListCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       )
                     else
-                      Text(
-                        item.title!,
-                        style: textTheme.titleMedium,
-                        maxLines: 2, // Allow a bit more space for titles
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    */
+                    Text(
+                      // Use simple Text for now
+                      item.title!,
+                      style: textTheme.titleMedium,
+                      maxLines: 2, // Allow a bit more space for titles
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 6),
                   ],
+                  // ADDED Condition: Only show domain/URL if NOT in detail view
+                  if (!isDetailView &&
+                      item.metadata['displayUrl'] != null &&
+                      item.mediaType == MediaType.none &&
+                      (item.body == null || item.body!.isEmpty))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6.0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.link,
+                            size: 16,
+                            color: colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              item.metadata['domain'] as String? ??
+                                  item.metadata['displayUrl'] as String? ??
+                                  '', // Show domain if available, else full URL
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.secondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (item.body != null && item.body!.isNotEmpty)
-                    // Use SimpleHtmlRenderer with highlight terms
+                    // Use SimpleHtmlRenderer with highlight terms - REMOVE HIGHLIGHTING FOR NOW
                     SimpleHtmlRenderer(
-                      htmlString: item.body ?? '',
-                      baseStyle: textTheme.bodyMedium,
-                      highlightTerms: searchQuery,
-                      highlightColor: highlightColor,
+                      htmlString: item.body!, // Fixed param name
+                      baseStyle: textTheme.bodyMedium, // Fixed param name
+                      // highlightTerms: searchQuery, // Removed
+                      // highlightColor: highlightColor, // Removed
                       maxLines: 5,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -112,85 +148,27 @@ class GenericListCard extends StatelessWidget {
     );
   }
 
-  // Helper method to highlight text (for non-HTML content)
-  TextSpan _buildHighlightedTextSpan(
-    String text,
-    TextStyle? style,
-    String searchTerms,
-    Color highlightColor,
-  ) {
-    if (searchTerms.isEmpty) return TextSpan(text: text, style: style);
-
-    final List<InlineSpan> spans = [];
-    final RegExp regExp = RegExp(
-      searchTerms
-          .split(' ')
-          .where((term) => term.isNotEmpty)
-          .map((term) {
-            return RegExp.escape(term);
-          })
-          .join('|'),
-      caseSensitive: false,
-    );
-
-    int lastMatchEnd = 0;
-    for (final match in regExp.allMatches(text)) {
-      // Add text before the match
-      if (match.start > lastMatchEnd) {
-        spans.add(
-          TextSpan(
-            text: text.substring(lastMatchEnd, match.start),
-            style: style,
-          ),
-        );
-      }
-
-      // Add the highlighted match
-      spans.add(
-        TextSpan(
-          text: text.substring(match.start, match.end),
-          style: style?.copyWith(
-            backgroundColor: highlightColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-
-      lastMatchEnd = match.end;
-    }
-
-    // Add remaining text after the last match
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
-    }
-
-    return TextSpan(children: spans);
-  }
-
-  Widget _buildMediaSection(BuildContext context, String imageUrl) {
-    // Basic image handling for now. Video could be added based on item.mediaType.
-    // Aspect ratio might need adjustment based on source or metadata.
+  Widget _buildMediaSection(BuildContext context, String mediaUrl) {
     final colorScheme = Theme.of(context).colorScheme;
+    const double aspectRatio = 16 / 9;
     return AspectRatio(
-      aspectRatio: 16 / 9, // Default aspect ratio, might need adjustment
+      aspectRatio: aspectRatio,
       child: Container(
-        color: colorScheme.surfaceVariant, // Background color while loading
+        color: colorScheme.surfaceContainerHighest,
         child: CachedNetworkImage(
-          imageUrl: imageUrl,
+          imageUrl: mediaUrl,
           fit: BoxFit.cover,
           placeholder:
               (context, url) => Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(color: Colors.white),
+                baseColor: colorScheme.surfaceContainerHighest,
+                highlightColor: colorScheme.onSurfaceVariant.withAlpha(
+                  (255 * 0.1).round(),
+                ),
+                child: Container(color: colorScheme.surfaceContainerHighest),
               ),
           errorWidget:
-              (context, url, error) => Center(
-                child: Icon(
-                  Icons.broken_image,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
+              (context, url, error) =>
+                  const Center(child: Icon(Icons.broken_image)),
         ),
       ),
     );
@@ -211,7 +189,7 @@ class GenericListCard extends StatelessWidget {
         metadataWidgets = _buildLobstersMetadata(context);
         break;
       case ItemSource.reddit:
-        // Add Reddit specific metadata handling here
+        metadataWidgets = _buildRedditMetadata(context);
         break;
     }
 
@@ -303,16 +281,51 @@ class GenericListCard extends StatelessWidget {
     return widgets;
   }
 
+  List<Widget> _buildRedditMetadata(BuildContext context) {
+    final score = item.metadata['score'] as int?;
+    final comments = item.metadata['numComments'] as int?;
+    final author = item.metadata['author'] as String?;
+    final subreddit = item.metadata['subreddit'] as String?;
+    // TODO: Add flair display?
+
+    List<Widget> widgets = [];
+
+    if (score != null) {
+      // Use a different icon for score potentially?
+      widgets.add(_metadataItem(context, Icons.trending_up, score.toString()));
+    }
+    if (comments != null) {
+      widgets.add(
+        _metadataItem(
+          context,
+          Icons.mode_comment_outlined,
+          comments.toString(),
+        ),
+      );
+    }
+    if (author != null && author != '[deleted]') {
+      widgets.add(_metadataItem(context, Icons.person_outline, author));
+    }
+    if (subreddit != null) {
+      // Could make this tappable later to navigate to the subreddit
+      widgets.add(
+        _metadataItem(context, Icons.subtitles_outlined, 'r/$subreddit'),
+      );
+    }
+
+    return widgets;
+  }
+
   Widget _metadataItem(BuildContext context, IconData icon, String text) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Row(
-      mainAxisSize: MainAxisSize.min, // Ensure row takes minimum space
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
           size: 16,
-          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+          color: colorScheme.onSurfaceVariant.withAlpha((255 * 0.7).round()),
         ),
         const SizedBox(width: 4),
         Text(
@@ -331,7 +344,9 @@ class GenericListCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outline.withAlpha((255 * 0.5).round()),
+        ),
       ),
       child: PopupMenuButton<String>(
         icon: Icon(
@@ -418,7 +433,6 @@ class GenericListCard extends StatelessWidget {
         // 4chan-specific options
         break;
       case ItemSource.reddit:
-        // Reddit-specific options
         items.add(
           PopupMenuItem<String>(
             value: 'upvote',
@@ -482,135 +496,108 @@ class GenericListCard extends StatelessWidget {
   }
 
   void _handleMenuSelection(BuildContext context, String value) async {
-    // Get services from DI
+    final logger = getIt<Logger>();
     final downloadService = getIt<DownloadService>();
-    final logger = getIt<Logger>(instanceName: 'AppLogger');
+    // Assume services are available via getIt
+    // final urlLauncher = getIt<UrlLauncherService>();
+    // final clipboard = getIt<ClipboardService>();
+    // final share = getIt<ShareService>();
+    // final voting = getIt<VotingService>();
+    // final favorites = getIt<FavoritesService>();
 
-    // Construct URLs and data (replace with actual logic based on item source)
-    // These are placeholders - needs proper logic based on item source & data
-    final String itemUrl =
-        item.metadata['url'] as String? ??
-        'https://example.com/item/${item.id}';
-    final String? mediaUrl = item.mediaUrl;
-    final String mediaFilename =
-        item.mediaUrl?.split('/').last ?? 'media_${item.id}.unknown';
+    // Define target URL based on item source and metadata
+    String? targetUrl;
+    if (item.source == ItemSource.hackernews ||
+        item.source == ItemSource.lobsters) {
+      targetUrl =
+          item.metadata['url'] as String? ??
+          item.metadata['commentsUrl'] as String?;
+    } else if (item.source == ItemSource.reddit) {
+      // Use permalink for Reddit posts
+      targetUrl =
+          item.metadata['permalink'] != null
+              ? 'https://www.reddit.com${item.metadata['permalink']}'
+              : item.mediaUrl;
+    } else {
+      targetUrl = item.mediaUrl; // Fallback for other types like 4chan media
+    }
 
-    // Hide any previous snackbars before showing new ones
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    final String shareText = item.title ?? 'Check this out';
+    final String shareSubject = item.title ?? AppConfig.appName;
+    final String? shareUrl = targetUrl;
 
     switch (value) {
       case 'save_media':
-        if (mediaUrl == null) return;
-
-        // Show downloading message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Checking permissions and starting download...'),
-          ),
-        );
-
-        // Download the media
-        bool success = await downloadService.saveMedia(mediaUrl, mediaFilename);
-
-        // Show result message
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Media saved successfully!'
-                  : 'Failed to save media. Check permissions and storage.',
-            ),
-            action:
-                success
-                    ? null
-                    : SnackBarAction(
-                      label: 'Settings',
-                      onPressed: () {
-                        // Navigate to settings screen
-                        Navigator.of(context).pushNamed('/settings');
-                      },
-                    ),
-          ),
-        );
+        if (item.mediaUrl != null) {
+          try {
+            // Use correct method: saveMedia
+            // Generate a filename (this could be improved)
+            final suggestedFilename = item.mediaUrl!.split('/').last;
+            final success = await downloadService.saveMedia(
+              item.mediaUrl!,
+              suggestedFilename,
+            );
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(success ? 'Media saved!' : 'Download failed'),
+              ),
+            );
+          } catch (e) {
+            logger.e('Error saving media: $e');
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Error saving media')));
+          }
+        }
         break;
-
-      case 'share_media':
-        if (mediaUrl == null) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preparing media for sharing...')),
-        );
-
-        // Download to temporary location for sharing
-        final tempFile = await downloadService.downloadMediaToTemp(
-          mediaUrl,
-          mediaFilename,
-        );
-
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-        if (tempFile != null) {
-          logger.i("Sharing temporary file: ${tempFile.path}");
-          await Share.shareXFiles([
-            XFile(tempFile.path),
-          ], text: item.title ?? 'Shared Media');
-        } else {
-          logger.w("Failed to download media for sharing");
+      case 'share':
+        if (shareUrl != null) {
+          // If it's media, try sharing the file directly if possible/downloaded
+          if (item.mediaUrl != null) {
+            // For simplicity, just share the URL for now.
+            // File sharing would require downloading first.
+            await Share.share('$shareText\n$shareUrl', subject: shareSubject);
+          } else {
+            await Share.share('$shareText\n$shareUrl', subject: shareSubject);
+          }
+        }
+        break;
+      case 'open_in_browser':
+        if (targetUrl != null) {
+          final uri = Uri.tryParse(targetUrl);
+          if (uri != null && await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            logger.w('Could not launch URL: $targetUrl');
+            // Add mounted check before showing SnackBar
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not open URL: $targetUrl')),
+            );
+          }
+        }
+        break;
+      case 'copy_link':
+        if (targetUrl != null) {
+          // Use Clipboard
+          await Clipboard.setData(ClipboardData(text: targetUrl));
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not share media')),
+            const SnackBar(content: Text('Link copied to clipboard')),
           );
         }
         break;
-
-      case 'share':
-        // Share content (title + URL)
-        await Share.share(
-          '${item.title ?? "Check this out"}: $itemUrl',
-          subject: item.title ?? 'Shared Item',
-        );
-        break;
-
       case 'upvote':
-        // TODO: Call VotingService
-        // bool success = await votingService.vote(item.id, item.source, VoteType.up);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Upvote: Not implemented yet')),
-        );
-        break;
-
       case 'downvote':
         // TODO: Call VotingService (only for sources that support it, like Reddit)
-        // if (item.source == ItemSource.reddit) {
-        //   bool success = await votingService.vote(item.id, item.source, VoteType.down);
-        // }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Downvote: Not implemented yet')),
-        );
+        print('Voting action ($value) not implemented yet.');
         break;
-
-      case 'open_in_browser':
-        final url = Uri.parse(itemUrl);
-        try {
-          if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-            throw 'Could not launch $url';
-          }
-        } catch (e) {
-          logger.e("Could not launch URL: $itemUrl", error: e);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Could not open link: $e')));
-        }
-        break;
-
-      case 'add_to_favorites':
+      case 'add_favorite':
+      case 'remove_favorite':
         // TODO: Call FavoritesService
-        // await favoritesService.addItem(item);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Add to Favorites: Not implemented yet'),
-          ),
-        );
+        print('Favorite action ($value) not implemented yet.');
         break;
     }
   }

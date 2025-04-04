@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart'; // For launching URLs
 import 'package:vibechan/core/di/injection.dart'; // For getIt
 import 'package:logger/logger.dart'; // Import Logger
 import 'package:vibechan/core/services/download_service.dart'; // Import DownloadService
-import 'package:cross_file/cross_file.dart'; // Import XFile for sharing
+// Import XFile for sharing
 
 import 'package:vibechan/features/fourchan/domain/models/post.dart';
 import 'post_header.dart';
@@ -69,7 +69,7 @@ class PostCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    '#${orderIndex}',
+                    '#$orderIndex',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,

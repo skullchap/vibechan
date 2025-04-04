@@ -18,19 +18,26 @@ String _getCategoryFromTab(ContentTab? tab) {
     case 'boards':
     case 'catalog':
     case 'thread':
-      return '4chan'; // Use the registered instance name '4chan'
+      return 'boards'; // Use 'boards' as the primary 4chan key
     case 'hackernews':
     case 'hackernews_item':
       return 'hackernews';
     case 'lobsters':
     case 'lobsters_story':
       return 'lobsters';
+    case 'subredditGrid':
+    case 'subreddit':
+    case 'postDetail':
+      return 'reddit'; // Use 'reddit' as the key
     case 'favorites':
       return 'favorites';
     case 'settings':
       return 'settings';
     default:
-      return '4chan'; // Fallback to 4chan
+      print(
+        "Warning: Unknown initialRouteName '${tab.initialRouteName}' in _getCategoryFromTab, defaulting to boards",
+      );
+      return 'boards'; // Fallback
   }
 }
 
@@ -50,15 +57,28 @@ Widget _buildSourceSelector(
 
   // Define available sources
   final List<Map<String, dynamic>> sources = [
-    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard},
+    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard_outlined},
     {
       'title': 'Hacker News',
       'routeName': 'hackernews',
-      'icon': Icons.newspaper,
+      'icon': Icons.newspaper_outlined,
     },
     {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
-    {'title': 'Favorites', 'routeName': 'favorites', 'icon': Icons.favorite},
-    {'title': 'Settings', 'routeName': 'settings', 'icon': Icons.settings},
+    {
+      'title': 'Reddit',
+      'routeName': 'subredditGrid',
+      'icon': Icons.reddit_outlined,
+    },
+    {
+      'title': 'Favorites',
+      'routeName': 'favorites',
+      'icon': Icons.favorite_outline,
+    },
+    {
+      'title': 'Settings',
+      'routeName': 'settings',
+      'icon': Icons.settings_outlined,
+    },
   ];
 
   final String currentCategory = _getCategoryFromTab(activeTab);
@@ -66,7 +86,11 @@ Widget _buildSourceSelector(
   // Find the current source
   final currentSource = sources.firstWhere(
     (s) => s['routeName'] == currentCategory,
-    orElse: () => sources.first,
+    orElse:
+        () => sources.firstWhere(
+          (s) => s['routeName'] == 'boards',
+          orElse: () => sources.first,
+        ),
   );
 
   // Build a Material 3 styled dropdown

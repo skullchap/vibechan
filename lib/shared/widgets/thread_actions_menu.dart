@@ -27,7 +27,7 @@ class ThreadActionsButton extends StatelessWidget {
   final bool showAsMenu;
 
   const ThreadActionsButton({
-    Key? key,
+    super.key,
     this.source,
     this.boardId,
     this.threadId,
@@ -35,7 +35,7 @@ class ThreadActionsButton extends StatelessWidget {
     this.iconSize = 20,
     this.icon,
     this.showAsMenu = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

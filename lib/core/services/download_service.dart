@@ -2,14 +2,12 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:get_it/get_it.dart';
 
 /// A service to handle downloading and saving media files.
 @lazySingleton
@@ -160,7 +158,7 @@ class DownloadService {
       final cleanedFilename = _sanitizeFilename(suggestedFilename);
 
       // Create full destination path
-      final fullPath = '$downloadPath/${cleanedFilename}';
+      final fullPath = '$downloadPath/$cleanedFilename';
 
       // Check if file exists, add number suffix if it does
       final File file = await _createUniqueFile(fullPath);

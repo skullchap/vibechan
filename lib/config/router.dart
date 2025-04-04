@@ -13,6 +13,12 @@ import 'package:vibechan/shared/widgets/news/generic_news_screen.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 // Import the new CarouselScreen
 import 'package:vibechan/features/fourchan/carousel/presentation/screens/carousel_screen.dart';
+// --- Import New Reddit Screens ---
+import 'package:vibechan/features/reddit/presentation/screens/subreddit_grid_screen.dart';
+import 'package:vibechan/features/reddit/presentation/screens/subreddit_screen.dart';
+import 'package:vibechan/features/reddit/presentation/screens/post_detail_screen.dart';
+// --- Import AppRoute enum ---
+import 'package:vibechan/app/app_routes.dart';
 
 // Remove navigator keys unless needed for specific non-shell scenarios
 // final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -20,36 +26,32 @@ import 'package:vibechan/features/fourchan/carousel/presentation/screens/carouse
 
 final router = GoRouter(
   // navigatorKey: _rootNavigatorKey, // Remove ShellRoute keys
-  initialLocation: '/', // Root shows AppShell
+  initialLocation: AppRoute.home.path, // Use enum for initial location
   routes: [
     // Root route renders the AppShell, which manages its own content via TabManager
     GoRoute(
-      path: '/',
-      name: 'home', // Give it a name
+      path: AppRoute.home.path, // Use enum
+      name: AppRoute.home.name, // Use enum
       builder: (context, state) => const AppShell(),
-      // Note: AppShell itself will handle displaying different screens based on its internal tab state,
-      // not directly based on these sub-routes unless we design it that way.
-      // These routes *could* potentially be used by the ContentTabView logic if needed,
-      // but they are not driving the AppShell structure directly anymore.
+      // Routes accessible *within* the AppShell structure
       routes: [
-        // Keep these nested definitions available if ContentTabView needs them for routing *within* a tab view
+        // 4chan Routes
         GoRoute(
-          path: 'boards', // Relative path now under '/'
-          name: 'boards',
+          path: 'boards',
+          name: 'boards', // REVERTED
           builder: (context, state) => const BoardListScreen(),
           routes: [
             GoRoute(
-              path: 'board/:boardId', // Keep path params relative
-              name: 'catalog',
+              path: 'board/:boardId',
+              name: 'catalog', // REVERTED
               builder:
                   (context, state) => BoardCatalogScreen(
                     boardId: state.pathParameters['boardId']!,
                   ),
               routes: [
-                // Thread Detail Route
                 GoRoute(
                   path: 'thread/:threadId',
-                  name: 'thread',
+                  name: AppRoute.thread.name, // OK
                   builder:
                       (context, state) => ThreadDetailScreen(
                         boardId: state.pathParameters['boardId']!,
@@ -60,75 +62,102 @@ final router = GoRouter(
             ),
           ],
         ),
+        // Favorites Route
         GoRoute(
-          path: 'favorites', // Relative path
-          name: 'favorites',
+          path: 'favorites',
+          name: 'favorites', // REVERTED
           builder: (context, state) => const FavoritesScreen(),
         ),
+        // Settings Route
         GoRoute(
-          path: 'settings', // Relative path
-          name: 'settings',
+          path: 'settings',
+          name: AppRoute.settings.name, // OK
           builder: (context, state) => const SettingsScreen(),
         ),
 
-        // Generic news routes
-        // HackerNews routes
+        // HackerNews Routes
         GoRoute(
           path: 'hackernews',
-          name: 'hackernews',
+          name: 'hackernews', // REVERTED
           builder:
               (context, state) =>
                   const GenericNewsScreen(source: NewsSource.hackernews),
-        ),
-        GoRoute(
-          path: 'hackernews/item/:itemId',
-          name: 'hackernews_item',
-          builder:
-              (context, state) => GenericNewsItemScreen(
-                source: NewsSource.hackernews,
-                itemId: state.pathParameters['itemId'] ?? '',
-              ),
+          routes: [
+            GoRoute(
+              path: 'item/:itemId',
+              name: 'hackernews_item', // REVERTED
+              builder:
+                  (context, state) => GenericNewsItemScreen(
+                    source: NewsSource.hackernews,
+                    itemId: state.pathParameters['itemId'] ?? '',
+                  ),
+            ),
+          ],
         ),
 
-        // Lobsters routes
+        // Lobsters Routes
         GoRoute(
           path: 'lobsters',
-          name: 'lobsters',
+          name: AppRoute.lobsters.name, // OK
           builder:
               (context, state) =>
                   const GenericNewsScreen(source: NewsSource.lobsters),
-        ),
-        GoRoute(
-          path: 'lobsters/story/:storyId',
-          name: 'lobsters_story',
-          builder:
-              (context, state) => GenericNewsItemScreen(
-                source: NewsSource.lobsters,
-                itemId: state.pathParameters['storyId'] ?? '',
-              ),
+          routes: [
+            GoRoute(
+              path: 'story/:storyId',
+              name: 'lobsters_story', // REVERTED
+              builder:
+                  (context, state) => GenericNewsItemScreen(
+                    source: NewsSource.lobsters,
+                    itemId: state.pathParameters['storyId'] ?? '',
+                  ),
+            ),
+          ],
         ),
 
-        // Reddit routes (placeholder for future implementation)
+        // --- NEW Reddit Routes (within AppShell) ---
         GoRoute(
-          path: 'reddit',
-          name: 'reddit',
-          builder:
-              (context, state) =>
-                  const Center(child: Text('Reddit support coming soon!')),
-        ),
-        GoRoute(
-          path: 'reddit/post/:postId',
-          name: 'reddit_post',
-          builder:
-              (context, state) =>
-                  const Center(child: Text('Reddit post view coming soon!')),
+          // Path matches the AppRoute enum path but relative to '/'
+          // GoRouter handles combining parent/child paths
+          path: AppRoute.subredditGrid.path.substring(1), // remove leading '/'
+          name: AppRoute.subredditGrid.name, // OK: Use enum
+          builder: (context, state) => const SubredditGridScreen(),
+          routes: [
+            GoRoute(
+              // Path segment for subreddit: r/:subreddit
+              path: 'r/:subreddit',
+              name: AppRoute.subreddit.name, // OK: Use enum
+              builder: (context, state) {
+                final subredditName =
+                    state.pathParameters['subreddit'] ?? 'all';
+                return SubredditScreen(subreddit: subredditName);
+              },
+              routes: [
+                GoRoute(
+                  // Path segment for post detail: comments/:postId
+                  path: 'comments/:postId',
+                  name: AppRoute.postDetail.name, // OK: Use enum
+                  builder: (context, state) {
+                    final subredditName =
+                        state.pathParameters['subreddit'] ?? 'unknown';
+                    final postId = state.pathParameters['postId'] ?? 'unknown';
+                    // Add error handling/validation for params if needed
+                    return PostDetailScreen(
+                      subreddit: subredditName,
+                      postId: postId,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     ),
-    // NEW: Top-level route for the generic Carousel
+    // --- Separate Routes (Outside AppShell) ---
     GoRoute(
-      path: '/carousel/:sourceInfo', // Path parameter :sourceInfo
-      name: 'carousel', // Simple name
+      path: '/carousel/:sourceInfo', // REVERTED
+      name: 'carousel', // REVERTED
       builder: (context, state) {
         final sourceInfo = state.pathParameters['sourceInfo'];
         if (sourceInfo == null) {
@@ -141,12 +170,7 @@ final router = GoRouter(
         return CarouselScreen(sourceInfo: sourceInfo);
       },
     ),
-    // Define any routes that should NOT show the AppShell (e.g., a standalone login screen)
-    // GoRoute(
-    //   path: '/login',
-    //   name: 'login',
-    //   builder: (context, state) => const LoginScreen(),
-    // ),
+    // Add other non-shell routes here (like login if needed)
   ],
   errorBuilder:
       (context, state) =>
