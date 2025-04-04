@@ -23,6 +23,7 @@ class _ListContext {
 /// - <br>: Line breaks.
 /// - <ul>, <ol>, <li>: Unordered and ordered lists with basic indentation.
 ///
+/// Also detects URLs in plain text and makes them clickable.
 /// Ignores other HTML tags and does not support CSS or complex layouts.
 /// Handles text wrapping via RichText's softWrap property.
 class SimpleHtmlRenderer extends StatelessWidget {
@@ -44,6 +45,12 @@ class SimpleHtmlRenderer extends StatelessWidget {
   /// The color used for highlighting search terms. Defaults to yellow with opacity.
   final Color? highlightColor;
 
+  /// The color used for links. Defaults to blue.
+  final Color linkColor;
+
+  /// Whether to auto-detect URLs in plain text and make them clickable.
+  final bool autoDetectUrls;
+
   const SimpleHtmlRenderer({
     super.key,
     required this.htmlString,
@@ -52,14 +59,23 @@ class SimpleHtmlRenderer extends StatelessWidget {
     this.overflow = TextOverflow.clip,
     this.highlightTerms,
     this.highlightColor,
+    this.linkColor = Colors.blue,
+    this.autoDetectUrls = true,
   });
 
   @override
   Widget build(BuildContext context) {
     // Determine the default style from the context if not provided.
     final defaultStyle = baseStyle ?? DefaultTextStyle.of(context).style;
+
+    // Remove <wbr> tags before parsing
+    final cleanedHtml = htmlString.replaceAll(
+      RegExp(r'<[/]?wbr>', caseSensitive: false),
+      '',
+    );
+
     // Parse the HTML and generate InlineSpans.
-    final spans = _parseHtml(htmlString, defaultStyle);
+    final spans = _parseHtml(cleanedHtml, defaultStyle);
 
     // Use RichText to display the parsed spans.
     // softWrap enables text wrapping based on available width.
@@ -139,6 +155,15 @@ class SimpleHtmlRenderer extends StatelessWidget {
                 recognizers, // Pass recognizers list
               ),
             );
+          } else if (autoDetectUrls && currentHref == null) {
+            // Auto-detect URLs in plain text if not already within an <a> tag
+            spans.addAll(
+              _createSpansWithUrlDetection(
+                textContent,
+                currentStyle,
+                recognizers,
+              ),
+            );
           } else {
             // Create a regular TextSpan.
             spans.add(
@@ -208,14 +233,15 @@ class SimpleHtmlRenderer extends StatelessWidget {
             );
             break;
           case 'a':
-            // Only override href if this 'a' tag has one.
+            // Extract href attribute
             final hrefAttr = node.attributes['href'];
             if (hrefAttr != null && hrefAttr.isNotEmpty) {
               linkHref = hrefAttr;
+              // Apply link style
               newStyle = newStyle.copyWith(
-                color: Colors.blue.shade700, // Link color
+                color: linkColor,
                 decoration: TextDecoration.underline,
-                decorationColor: Colors.blue.shade700,
+                decorationColor: linkColor,
               );
             }
             break;
@@ -308,6 +334,142 @@ class SimpleHtmlRenderer extends StatelessWidget {
     return spans;
   }
 
+  /// Detects URLs in plain text and creates separate text spans for them.
+  List<InlineSpan> _createSpansWithUrlDetection(
+    String text,
+    TextStyle style,
+    List<GestureRecognizer> recognizers,
+  ) {
+    if (text.isEmpty) {
+      return [TextSpan(text: text, style: style)];
+    }
+
+    // Regex to find the *start* of potential URLs (http://, https://, www.)
+    final urlStartRegExp = RegExp(r'(https?://|www\.)', caseSensitive: false);
+
+    final List<InlineSpan> result = [];
+    int currentSearchIndex = 0; // Track position in the text
+
+    while (currentSearchIndex < text.length) {
+      // Find the next potential URL start from the current search index
+      final match = urlStartRegExp.firstMatch(
+        text.substring(currentSearchIndex),
+      );
+
+      if (match == null) {
+        // No more URL starts found, add the remaining text
+        if (currentSearchIndex < text.length) {
+          result.add(
+            TextSpan(text: text.substring(currentSearchIndex), style: style),
+          );
+        }
+        break; // Exit the loop
+      }
+
+      // Calculate the actual start index in the original string
+      final matchStartIndex = currentSearchIndex + match.start;
+
+      // Add the text segment *before* the detected URL start
+      if (matchStartIndex > currentSearchIndex) {
+        result.add(
+          TextSpan(
+            text: text.substring(currentSearchIndex, matchStartIndex),
+            style: style,
+          ),
+        );
+      }
+
+      // --- Scan forward to find the end of the URL ---
+      int urlEndIndex =
+          matchStartIndex +
+          match.group(0)!.length; // Start scanning after the initial pattern
+      while (urlEndIndex < text.length) {
+        final char = text[urlEndIndex];
+        if (char == ' ' || char == '\n' || char == '<') {
+          break; // Stop at whitespace or tag start
+        }
+        urlEndIndex++;
+      }
+      String potentialUrl = text.substring(matchStartIndex, urlEndIndex);
+      // --- End URL Scan ---
+
+      // --- Intelligent Trimming of Trailing Punctuation ---
+      String displayText = potentialUrl;
+      String urlToLaunch = potentialUrl;
+      const String punctuationChars =
+          '.,;!?)]}"\''; // Chars to check for trimming
+
+      while (displayText.isNotEmpty &&
+          punctuationChars.contains(displayText.characters.last)) {
+        // Check character immediately *after* the potential URL in the original text
+        final nextCharIndex =
+            urlEndIndex; // Index right after the potential URL
+        if (nextCharIndex >= text.length || // End of text
+            text[nextCharIndex] == ' ' || // Space
+            text[nextCharIndex] == '\n' || // Newline
+            text[nextCharIndex] == '<') {
+          // Start of a tag
+          // Trim the last character if it's punctuation and followed by a delimiter
+          displayText = displayText.substring(0, displayText.length - 1);
+          urlToLaunch = displayText; // Update launch URL as well
+        } else {
+          // Don't trim if the punctuation is likely part of the URL path/query
+          break;
+        }
+      }
+      // --- End Trimming ---
+
+      // Normalize URLs that start with www.
+      if (urlToLaunch.toLowerCase().startsWith('www.')) {
+        urlToLaunch = 'https://$urlToLaunch';
+      }
+
+      // Add the URL segment as a clickable link
+      final linkStyle = style.copyWith(
+        color: linkColor,
+        decoration: TextDecoration.underline,
+        decorationColor: linkColor,
+      );
+
+      // Check if the trimmed URL is actually launchable before adding recognizer
+      final uri = Uri.tryParse(urlToLaunch);
+      TapGestureRecognizer? recognizer;
+      if (uri != null) {
+        recognizer =
+            TapGestureRecognizer()
+              ..onTap = () async {
+                // Use the final urlToLaunch determined after trimming/normalization
+                try {
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    debugPrint(
+                      'Could not launch $urlToLaunch - Scheme not supported?',
+                    );
+                  }
+                } catch (e) {
+                  debugPrint('Error launching URL $urlToLaunch: $e');
+                }
+              };
+        recognizers.add(recognizer); // Keep track for potential disposal
+      }
+
+      result.add(
+        TextSpan(
+          text: displayText, // Use the potentially trimmed text for display
+          style:
+              uri != null ? linkStyle : style, // Apply link style only if valid
+          recognizer: recognizer, // Add recognizer only if valid
+        ),
+      );
+
+      // Move the search index past the detected URL segment
+      currentSearchIndex = urlEndIndex;
+    }
+
+    return result;
+  }
+
   // --- Helper Methods ---
 
   /// Creates a TextSpan, potentially with a TapGestureRecognizer for links.
@@ -317,14 +479,14 @@ class SimpleHtmlRenderer extends StatelessWidget {
     String? href,
     List<GestureRecognizer> recognizers,
   ) {
-    if (href != null) {
+    if (href != null && href.isNotEmpty) {
+      // Create a tap recognizer for links
       final recognizer =
           TapGestureRecognizer()
             ..onTap = () async {
               final uri = Uri.tryParse(href);
               if (uri != null) {
                 try {
-                  // Try launching the URL externally.
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } else {
@@ -339,10 +501,14 @@ class SimpleHtmlRenderer extends StatelessWidget {
                 debugPrint('Invalid URL: $href');
               }
             };
-      recognizers.add(recognizer); // Keep track for potential disposal
+
+      // Add to list for potential disposal
+      recognizers.add(recognizer);
+
+      // Return span with tap recognizer
       return TextSpan(text: text, style: style, recognizer: recognizer);
     } else {
-      // Regular text span without a recognizer.
+      // Regular text span without a recognizer
       return TextSpan(text: text, style: style);
     }
   }

@@ -36,8 +36,6 @@ class GenericNewsListScreen extends ConsumerWidget {
     final searchQuery = ref.watch(searchQueryProvider);
 
     // Get current sort type from provider if available
-    final currentSortType =
-        sortTypeProvider != null ? ref.watch(sortTypeProvider!) : null;
 
     return itemsAsync.when(
       data: (items) {
@@ -92,14 +90,14 @@ class GenericNewsListScreen extends ConsumerWidget {
       switch (source) {
         case NewsSource.hackernews:
           matchesSourceSpecific =
-              (metadata['by'] as String?)?.toLowerCase()?.contains(
+              (metadata['by'] as String?)?.toLowerCase().contains(
                 searchTerms,
               ) ==
               true;
           break;
         case NewsSource.lobsters:
           matchesSourceSpecific =
-              (metadata['submitter_user'] as String?)?.toLowerCase()?.contains(
+              (metadata['submitter_user'] as String?)?.toLowerCase().contains(
                 searchTerms,
               ) ==
               true;
@@ -107,7 +105,7 @@ class GenericNewsListScreen extends ConsumerWidget {
         case NewsSource.reddit:
           // Add Reddit-specific search when implemented
           matchesSourceSpecific =
-              (metadata['author'] as String?)?.toLowerCase()?.contains(
+              (metadata['author'] as String?)?.toLowerCase().contains(
                 searchTerms,
               ) ==
               true;
