@@ -7,10 +7,10 @@ import '../models/content_tab.dart';
 import '../providers/tab_manager_provider.dart';
 import '../providers/search_provider.dart';
 // Fix imports for moved screens
-import 'package:vibechan/features/hackernews/presentation/screens/hackernews_screen.dart'; // Import HN Screen
-import 'package:vibechan/features/lobsters/presentation/screens/lobsters_screen.dart'; // Import the Lobsters screen
-import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart'; // Import HN detail
-import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart'; // Import Lobsters detail
+// Import HN Screen
+// Import the Lobsters screen
+// Import HN detail
+// Import Lobsters detail
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_stories_provider.dart'; // Import the HN provider
 
 // Fix import for moved enum
