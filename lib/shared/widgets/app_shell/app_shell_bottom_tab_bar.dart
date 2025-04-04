@@ -16,6 +16,7 @@ Widget _buildTabButton(
   final TextTheme textTheme = Theme.of(context).textTheme;
 
   return Material(
+    key: ValueKey(tab.id),
     color: Colors.transparent, // Use transparent for Material ripple effect
     child: InkWell(
       onTap: () => ref.read(tabManagerProvider.notifier).setActiveTab(tab.id),
@@ -128,40 +129,40 @@ class AppShellBottomTabBar extends ConsumerWidget {
             }
           }
         },
-        child: ReorderableListView.builder(
-          key: const Key('tab-reorderable-list'),
-          scrollController: tabScrollController,
+        child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          buildDefaultDragHandles: false,
-          itemCount: tabs.length,
-          itemBuilder: (context, index) {
-            final tab = tabs[index];
-            final bool isActive = activeTab?.id == tab.id;
-            // MUST provide a unique key for each item
-            return KeyedSubtree(
-              key: ValueKey(tab.id),
-              // Wrap the button with the drag listener
-              child: ReorderableDragStartListener(
-                index: index,
-                child: _buildTabButton(context, ref, tab, isActive),
-              ),
-            );
-          },
-          onReorder: onReorder,
-          proxyDecorator: (
-            Widget child,
-            int index,
-            Animation<double> animation,
-          ) {
-            return Material(
-              elevation: 4.0,
-              color: Colors.transparent,
-              child: ScaleTransition(
-                scale: animation.drive(Tween<double>(begin: 1.0, end: 1.05)),
-                child: child,
-              ),
-            );
-          },
+          controller: tabScrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ReorderableListView.builder(
+            key: const Key('tab-reorderable-list'),
+            scrollDirection: Axis.horizontal,
+            buildDefaultDragHandles: true,
+            itemCount: tabs.length,
+            // Don't use the ScrollController here since we're using SingleChildScrollView
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              final tab = tabs[index];
+              final bool isActive = activeTab?.id == tab.id;
+              // MUST provide a unique key for each item
+              return _buildTabButton(context, ref, tab, isActive);
+            },
+            onReorder: onReorder,
+            proxyDecorator: (
+              Widget child,
+              int index,
+              Animation<double> animation,
+            ) {
+              return Material(
+                elevation: 4.0,
+                color: Colors.transparent,
+                child: ScaleTransition(
+                  scale: animation.drive(Tween<double>(begin: 1.0, end: 1.05)),
+                  child: child,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

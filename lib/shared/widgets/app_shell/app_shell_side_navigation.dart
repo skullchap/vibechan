@@ -158,40 +158,53 @@ class AppShellSideNavigation extends ConsumerWidget {
           const Divider(),
           // Tab list
           Expanded(
-            child: ListView.builder(
+            child: ReorderableListView.builder(
               itemCount: tabs.length,
+              buildDefaultDragHandles: false,
               itemBuilder: (context, index) {
                 final tab = tabs[index];
                 final isActive = tab.id == activeTab?.id;
 
-                return ListTile(
-                  leading: Icon(
-                    tab.icon,
-                    color:
-                        isActive ? Theme.of(context).colorScheme.primary : null,
-                  ),
-                  title: Text(
-                    tab.title,
-                    style:
-                        isActive
-                            ? TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            )
-                            : null,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  selected: isActive,
-                  selectedTileColor: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.2),
-                  onTap: () => tabNotifier.setActiveTab(tab.id),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    tooltip: 'Close tab',
-                    onPressed: () => tabNotifier.removeTab(tab.id),
+                return ReorderableDragStartListener(
+                  key: ValueKey(tab.id),
+                  index: index,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      leading: Icon(
+                        tab.icon,
+                        color:
+                            isActive
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                      ),
+                      title: Text(
+                        tab.title,
+                        style:
+                            isActive
+                                ? TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                                : null,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      selected: isActive,
+                      selectedTileColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withOpacity(0.2),
+                      onTap: () => tabNotifier.setActiveTab(tab.id),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        tooltip: 'Close tab',
+                        onPressed: () => tabNotifier.removeTab(tab.id),
+                      ),
+                    ),
                   ),
                 );
+              },
+              onReorder: (oldIndex, newIndex) {
+                tabNotifier.reorderTab(oldIndex, newIndex);
               },
             ),
           ),
