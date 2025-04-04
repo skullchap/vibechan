@@ -1,3 +1,4 @@
+import '../models/media.dart';
 import '../models/thread.dart';
 import '../models/post.dart';
 import 'base_repository.dart';
@@ -10,4 +11,8 @@ abstract class ThreadRepository extends BaseThreadRepository {
   Future<Post> createReply(String boardId, String threadId, Post post);
   Future<void> watchThread(String boardId, String threadId);
   Future<void> unwatchThread(String boardId, String threadId);
+  Future<List<Media>> getAllMediaFromThreadContext(
+    String boardId,
+    String threadId,
+  );
 }

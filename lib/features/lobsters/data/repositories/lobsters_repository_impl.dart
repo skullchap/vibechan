@@ -3,6 +3,7 @@ import 'package:vibechan/features/lobsters/data/datasources/lobsters_api_client.
 import 'package:vibechan/features/lobsters/data/models/lobsters_story.dart';
 import 'package:vibechan/features/lobsters/domain/repositories/lobsters_repository.dart';
 import 'dart:async';
+import 'package:vibechan/features/fourchan/domain/models/media.dart';
 
 // Define story types for caching
 enum LobstersStoryListType { hottest, newest }
@@ -103,6 +104,29 @@ class LobstersRepositoryImpl implements LobstersRepository {
       rethrow;
     }
   }
+
+  // --- Dummy Implementations for Media Carousel ---
+
+  @override
+  Future<List<Media>> getAllMediaFromBoard(String boardId) async {
+    // Lobsters doesn't have boards, media is story-specific if at all
+    return [];
+  }
+
+  @override
+  Future<List<Media>> getAllMediaFromThreadContext(
+    String boardId, // Not applicable
+    String threadId, // Corresponds to story short_id
+  ) async {
+    // Lobsters stories don't typically contain structured media lists
+    return [];
+  }
+
+  @override
+  Future<bool> boardHasMedia(String boardId) async => false;
+
+  @override
+  Future<bool> threadHasMedia(String boardId, String threadId) async => false;
 
   // Cache management methods
   void _cacheStories(LobstersStoryListType type, List<LobstersStory> stories) {

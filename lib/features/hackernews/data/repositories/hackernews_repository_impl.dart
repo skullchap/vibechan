@@ -3,6 +3,7 @@ import 'package:vibechan/features/hackernews/data/models/hacker_news_item.dart';
 import 'package:vibechan/features/hackernews/domain/repositories/hackernews_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'dart:async';
+import 'package:vibechan/features/fourchan/domain/models/media.dart';
 
 // Define story types for caching purposes
 enum HackerNewsStoryType { top, newest, best }
@@ -63,8 +64,7 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
               .map(
                 (id) => getItem(id).catchError((e) {
                   // Don't log errors to avoid console pollution
-                  return null
-                      as HackerNewsItem?; // Explicit cast for type safety
+                  return null; // Return null (compatible with Future<HackerNewsItem?>)
                 }),
               )
               .toList();
@@ -197,7 +197,7 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
 
     // Fetch children recursively
     final futureComments =
-        commentIds.where((kidId) => kidId != null).map((kidId) async {
+        commentIds.map((kidId) async {
           try {
             // 1. Fetch the basic child item
             final basicChildItem = await getItem(kidId);
@@ -288,4 +288,27 @@ class HackerNewsRepositoryImpl implements HackerNewsRepository {
     }
     return null;
   }
+
+  // --- Dummy Implementations for Media Carousel ---
+
+  @override
+  Future<List<Media>> getAllMediaFromBoard(String boardId) async {
+    // Hacker News doesn't have a concept of boards with media in this sense
+    return [];
+  }
+
+  @override
+  Future<List<Media>> getAllMediaFromThreadContext(
+    String boardId, // Not applicable, but required by interface
+    String threadId, // Corresponds to HN item ID
+  ) async {
+    // Hacker News items (threads) don't typically contain media directly
+    return [];
+  }
+
+  @override
+  Future<bool> boardHasMedia(String boardId) async => false;
+
+  @override
+  Future<bool> threadHasMedia(String boardId, String threadId) async => false;
 }

@@ -4,6 +4,7 @@ import 'package:vibechan/features/fourchan/data/sources/fourchan/chan_data_sourc
 import 'package:vibechan/features/fourchan/domain/models/board.dart';
 import 'package:vibechan/features/fourchan/domain/models/post.dart';
 import 'package:vibechan/features/fourchan/domain/models/thread.dart';
+import 'package:vibechan/features/fourchan/domain/models/media.dart';
 import 'package:vibechan/features/fourchan/domain/repositories/board_repository.dart';
 import 'package:vibechan/features/fourchan/domain/repositories/thread_repository.dart';
 
@@ -53,6 +54,18 @@ class FourChanRepository implements BoardRepository, ThreadRepository {
   Future<void> refreshBoards() async {
     _cachedBoards = null;
     await getBoards();
+  }
+
+  @override
+  Future<List<Media>> getAllMediaFromBoard(String boardId) async {
+    final threads = await getThreads(boardId); // Get all threads (catalog)
+    final List<Media> allMedia = [];
+    for (final thread in threads) {
+      if (thread.originalPost.media != null) {
+        allMedia.add(thread.originalPost.media!);
+      }
+    }
+    return allMedia;
   }
 
   // --------------------
@@ -124,6 +137,41 @@ class FourChanRepository implements BoardRepository, ThreadRepository {
       watchedThreads.remove(threadKey);
       await _prefs.setStringList(_watchedThreadsKey, watchedThreads);
     }
+  }
+
+  @override
+  Future<List<Media>> getAllMediaFromThreadContext(
+    String boardId,
+    String threadId,
+  ) async {
+    final thread = await getThreadWithReplies(boardId, threadId);
+    final List<Media> allMedia = [];
+
+    // Add media from the original post
+    if (thread.originalPost.media != null) {
+      allMedia.add(thread.originalPost.media!);
+    }
+
+    // Add media from replies
+    for (final reply in thread.replies) {
+      if (reply.media != null) {
+        allMedia.add(reply.media!);
+      }
+    }
+
+    return allMedia;
+  }
+
+  @override
+  Future<bool> boardHasMedia(String boardId) async {
+    final media = await getAllMediaFromBoard(boardId);
+    return media.isNotEmpty;
+  }
+
+  @override
+  Future<bool> threadHasMedia(String boardId, String threadId) async {
+    final media = await getAllMediaFromThreadContext(boardId, threadId);
+    return media.isNotEmpty;
   }
 
   List<String> _getWatchedThreads() {

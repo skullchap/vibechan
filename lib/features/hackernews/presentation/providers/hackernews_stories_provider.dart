@@ -9,6 +9,20 @@ part 'hackernews_stories_provider.g.dart'; // Rename generated file
 
 enum HackerNewsSortType { top, newest, best }
 
+// Add extension for display name
+extension HackerNewsSortTypeExtension on HackerNewsSortType {
+  String get displayName {
+    switch (this) {
+      case HackerNewsSortType.top:
+        return 'Top';
+      case HackerNewsSortType.newest:
+        return 'Newest';
+      case HackerNewsSortType.best:
+        return 'Best';
+    }
+  }
+}
+
 // Provider to hold the current sort type for the active Hacker News view
 final currentHackerNewsSortTypeProvider = StateProvider<HackerNewsSortType>(
   (ref) => HackerNewsSortType.top,

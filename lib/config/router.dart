@@ -11,6 +11,8 @@ import 'package:vibechan/shared/widgets/app_shell.dart';
 // Add imports for generic news screens
 import 'package:vibechan/shared/widgets/news/generic_news_screen.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
+// Import the new CarouselScreen
+import 'package:vibechan/features/fourchan/carousel/presentation/screens/carousel_screen.dart';
 
 // Remove navigator keys unless needed for specific non-shell scenarios
 // final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -44,6 +46,7 @@ final router = GoRouter(
                     boardId: state.pathParameters['boardId']!,
                   ),
               routes: [
+                // Thread Detail Route
                 GoRoute(
                   path: 'thread/:threadId',
                   name: 'thread',
@@ -121,6 +124,22 @@ final router = GoRouter(
                   const Center(child: Text('Reddit post view coming soon!')),
         ),
       ],
+    ),
+    // NEW: Top-level route for the generic Carousel
+    GoRoute(
+      path: '/carousel/:sourceInfo', // Path parameter :sourceInfo
+      name: 'carousel', // Simple name
+      builder: (context, state) {
+        final sourceInfo = state.pathParameters['sourceInfo'];
+        if (sourceInfo == null) {
+          return const Scaffold(
+            body: Center(
+              child: Text('Error: Missing source info for carousel'),
+            ),
+          );
+        }
+        return CarouselScreen(sourceInfo: sourceInfo);
+      },
     ),
     // Define any routes that should NOT show the AppShell (e.g., a standalone login screen)
     // GoRoute(

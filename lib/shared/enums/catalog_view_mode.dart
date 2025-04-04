@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 
 /// Defines the different layout modes for a catalog view.
 enum CatalogViewMode {
@@ -8,6 +9,29 @@ enum CatalogViewMode {
 
   /// Displays items as a feed emphasizing media.
   media,
+}
+
+// Add extension for display name
+extension CatalogViewModeExtension on CatalogViewMode {
+  String get displayName {
+    switch (this) {
+      case CatalogViewMode.grid:
+        return 'Grid View';
+      case CatalogViewMode.media:
+        return 'Media Feed';
+      default:
+        return name; // Fallback to enum name
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case CatalogViewMode.grid:
+        return Icons.grid_view;
+      case CatalogViewMode.media:
+        return Icons.photo_library_outlined;
+    }
+  }
 }
 
 final catalogViewModeProvider =

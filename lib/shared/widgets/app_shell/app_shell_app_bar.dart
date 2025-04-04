@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';
+import 'package:go_router/go_router.dart'; // Import GoRouter for navigation
 
 import '../../models/content_tab.dart';
 import '../../providers/tab_manager_provider.dart';
@@ -8,15 +9,16 @@ import '../../providers/settings_provider.dart'; // Import for settings access i
 // import '../../../features/board/presentation/widgets/catalog/catalog_view_mode.dart'; // Old path
 import 'package:vibechan/shared/enums/catalog_view_mode.dart'; // New package path
 import '../../../features/hackernews/presentation/providers/hackernews_stories_provider.dart'; // Needed for HN sort type
+import '../../../features/fourchan/presentation/providers/carousel_providers.dart'; // Import hasMedia providers
 
 // Helper function to determine the general category of a tab (moved here)
 String _getCategoryFromTab(ContentTab? tab) {
-  if (tab == null) return 'boards'; // Default if no tab active
+  if (tab == null) return '4chan'; // Default to '4chan'
   switch (tab.initialRouteName) {
     case 'boards':
     case 'catalog':
     case 'thread':
-      return 'boards';
+      return '4chan'; // Use the registered instance name '4chan'
     case 'hackernews':
     case 'hackernews_item':
       return 'hackernews';
@@ -28,7 +30,7 @@ String _getCategoryFromTab(ContentTab? tab) {
     case 'settings':
       return 'settings';
     default:
-      return 'boards'; // Fallback category
+      return '4chan'; // Fallback to 4chan
   }
 }
 
@@ -226,6 +228,57 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
 
+    // Determine context based on initial route name
+    final String? initialRouteName = activeTab?.initialRouteName;
+    final bool isThreadContext = initialRouteName == 'thread';
+    final bool isCatalogContext = initialRouteName == 'catalog';
+    final bool isBoardListContext = initialRouteName == 'boards';
+    final bool isHnListContext = initialRouteName == 'hackernews';
+
+    // Visibility flags for buttons
+    final bool showCatalogViewButton = isCatalogContext || isBoardListContext;
+    final bool showHnSortButton = isHnListContext;
+    final bool showThreadCarouselButton =
+        isThreadContext; // Only for thread view
+    final bool showBoardCarouselButton =
+        isCatalogContext; // Only for catalog view
+
+    // Construct sourceInfo strings conditionally
+    String? boardSourceInfo;
+    String? threadSourceInfo;
+    final params = activeTab?.pathParameters;
+    if (params != null) {
+      final boardId = params['boardId'];
+      final threadId = params['threadId'];
+      final sourceName = _getCategoryFromTab(
+        activeTab,
+      ); // Assuming this gives '4chan', 'hackernews' etc.
+
+      if (boardId != null) {
+        boardSourceInfo = '$sourceName:$boardId';
+        if (threadId != null) {
+          threadSourceInfo = '$sourceName:$boardId/$threadId';
+        }
+      }
+    }
+
+    // Watch the hasMedia providers only if the context matches
+    final boardHasMediaValue =
+        isCatalogContext && boardSourceInfo != null
+            ? ref.watch(boardHasMediaProvider(boardSourceInfo))
+            : const AsyncData(false); // Default to false if not applicable
+
+    final threadHasMediaValue =
+        isThreadContext && threadSourceInfo != null
+            ? ref.watch(threadHasMediaProvider(threadSourceInfo))
+            : const AsyncData(false); // Default to false if not applicable
+
+    // Determine button visibility based on provider state (use .valueOrNull ?? false)
+    final showBoardCarouselButtonFinal =
+        isCatalogContext && (boardHasMediaValue.valueOrNull ?? false);
+    final showThreadCarouselButtonFinal =
+        isThreadContext && (threadHasMediaValue.valueOrNull ?? false);
+
     // Handle search UI logic in AppBar
     Widget appBarTitle;
     if (isSearchVisible) {
@@ -270,299 +323,90 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
       appBarTitle = _buildSourceSelector(context, ref, activeTab, tabNotifier);
     }
 
-    // Create app bar actions
-    final List<Widget> appBarActions = [
-      // Open in browser button (shown when viewing threads)
-      if (!isSearchVisible &&
-          (activeTab?.initialRouteName == 'thread' ||
-              activeTab?.initialRouteName == 'hackernews_item' ||
-              activeTab?.initialRouteName == 'lobsters_story') &&
-          onOpenInBrowserPressed != null)
+    List<Widget> actions = [
+      // Show search icon only if not already searching
+      if (!isSearchVisible)
         IconButton(
-          icon: const Icon(Icons.open_in_browser, size: 24),
-          tooltip: 'Open in browser',
+          icon: const Icon(Icons.search),
+          tooltip: 'Search',
+          onPressed: onSearchToggle,
+        ),
+      // Catalog View Mode Button
+      if (showCatalogViewButton)
+        PopupMenuButton<CatalogViewMode>(
+          icon: const Icon(
+            Icons.view_list,
+          ), // Consider using the extension icon: mode.icon
+          tooltip: 'Change View Mode',
+          onSelected: onCatalogViewModeSelected,
+          itemBuilder:
+              (context) =>
+                  CatalogViewMode.values
+                      .map(
+                        (mode) => PopupMenuItem(
+                          value: mode,
+                          child: Text(mode.displayName), // Use extension
+                        ),
+                      )
+                      .toList(),
+        ),
+      // HN Sort Type Button
+      if (showHnSortButton)
+        PopupMenuButton<HackerNewsSortType>(
+          icon: const Icon(Icons.sort),
+          tooltip: 'Sort Stories',
+          initialValue: currentHnSortType,
+          onSelected: (newType) {
+            ref.read(currentHackerNewsSortTypeProvider.notifier).state =
+                newType;
+          },
+          itemBuilder:
+              (context) =>
+                  HackerNewsSortType.values
+                      .map(
+                        (type) => PopupMenuItem(
+                          value: type,
+                          child: Text(type.displayName), // Use extension
+                        ),
+                      )
+                      .toList(),
+        ),
+      // Board Media Carousel Button
+      if (showBoardCarouselButtonFinal &&
+          boardSourceInfo != null) // Use final variable
+        IconButton(
+          icon: const Icon(Icons.collections_bookmark_outlined),
+          tooltip: 'View Board Media',
+          onPressed: () {
+            context.pushNamed(
+              'carousel',
+              pathParameters: {
+                'sourceInfo': boardSourceInfo!,
+              }, // Safe with check
+            );
+          },
+        ),
+      // Thread Media Carousel Button
+      if (showThreadCarouselButtonFinal &&
+          threadSourceInfo != null) // Use final variable
+        IconButton(
+          icon: const Icon(Icons.photo_library_outlined),
+          tooltip: 'View Thread Media',
+          onPressed: () {
+            context.pushNamed(
+              'carousel',
+              pathParameters: {
+                'sourceInfo': threadSourceInfo!,
+              }, // Safe with check
+            );
+          },
+        ),
+      // Open in Browser Button
+      if (onOpenInBrowserPressed != null)
+        IconButton(
+          icon: const Icon(Icons.open_in_browser),
+          tooltip: 'Open in Browser',
           onPressed: onOpenInBrowserPressed,
-        ),
-
-      // Search button (shown on all screens)
-      IconButton(
-        icon: Icon(isSearchVisible ? Icons.close : Icons.search, size: 24),
-        tooltip: isSearchVisible ? 'Close search' : 'Search content',
-        onPressed: onSearchToggle,
-      ),
-
-      // Layout mode toggle (conditional)
-      if (!isSearchVisible &&
-          (activeTab?.initialRouteName == 'catalog' ||
-              activeTab?.initialRouteName == 'boards'))
-        Consumer(
-          builder: (context, ref, _) {
-            final mode = ref.watch(catalogViewModeProvider);
-            final theme = Theme.of(context);
-            final colorScheme = theme.colorScheme;
-
-            return PopupMenuButton<CatalogViewMode>(
-              tooltip: 'Layout mode',
-              position: PopupMenuPosition.under,
-              offset: const Offset(0, 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              color: colorScheme.surfaceContainer,
-              initialValue: mode,
-              onSelected: onCatalogViewModeSelected,
-              // Show current layout icon
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4.0,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      mode == CatalogViewMode.grid
-                          ? Icons.grid_view
-                          : Icons.photo_library,
-                      color: colorScheme.onSurface,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      color: colorScheme.onSurface,
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ),
-              // Menu items
-              itemBuilder: (context) {
-                return [
-                  PopupMenuItem(
-                    value: CatalogViewMode.grid,
-                    padding: EdgeInsets.zero,
-                    height: 56,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              mode == CatalogViewMode.grid
-                                  ? colorScheme.primaryContainer
-                                  : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.grid_view,
-                              size: 20,
-                              color:
-                                  mode == CatalogViewMode.grid
-                                      ? colorScheme.onPrimaryContainer
-                                      : colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                'Grid View',
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  fontWeight:
-                                      mode == CatalogViewMode.grid
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                  color:
-                                      mode == CatalogViewMode.grid
-                                          ? colorScheme.onPrimaryContainer
-                                          : colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                            if (mode == CatalogViewMode.grid)
-                              Icon(
-                                Icons.check_circle_outline,
-                                size: 18,
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: CatalogViewMode.media,
-                    padding: EdgeInsets.zero,
-                    height: 56,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              mode == CatalogViewMode.media
-                                  ? colorScheme.primaryContainer
-                                  : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.photo_library,
-                              size: 20,
-                              color:
-                                  mode == CatalogViewMode.media
-                                      ? colorScheme.onPrimaryContainer
-                                      : colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                'Media Feed',
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  fontWeight:
-                                      mode == CatalogViewMode.media
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                  color:
-                                      mode == CatalogViewMode.media
-                                          ? colorScheme.onPrimaryContainer
-                                          : colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                            if (mode == CatalogViewMode.media)
-                              Icon(
-                                Icons.check_circle_outline,
-                                size: 18,
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ];
-              },
-            );
-          },
-        ),
-      // HN Sort Dropdown (conditionally shown)
-      if (activeTab?.initialRouteName == 'hackernews')
-        Builder(
-          builder: (context) {
-            final theme = Theme.of(context);
-            final colorScheme = theme.colorScheme;
-
-            return PopupMenuButton<HackerNewsSortType>(
-              tooltip: 'Sort stories',
-              position: PopupMenuPosition.under,
-              offset: const Offset(0, 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              color: colorScheme.surfaceContainer,
-              // Menu items
-              itemBuilder:
-                  (context) =>
-                      HackerNewsSortType.values.map((sortType) {
-                        final isSelected = sortType == currentHnSortType;
-                        final sortName =
-                            sortType.name[0].toUpperCase() +
-                            sortType.name.substring(1);
-
-                        return PopupMenuItem<HackerNewsSortType>(
-                          value: sortType,
-                          padding: EdgeInsets.zero,
-                          height: 56,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? colorScheme.primaryContainer
-                                        : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      sortName,
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            fontWeight:
-                                                isSelected
-                                                    ? FontWeight.w600
-                                                    : FontWeight.normal,
-                                            color:
-                                                isSelected
-                                                    ? colorScheme
-                                                        .onPrimaryContainer
-                                                    : colorScheme.onSurface,
-                                          ),
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Icon(
-                                      Icons.check_circle_outline,
-                                      size: 18,
-                                      color: colorScheme.onPrimaryContainer,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-              onSelected: onHnSortTypeSelected,
-              // Show current sort type
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4.0,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.sort, color: colorScheme.onSurface, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      currentHnSortType.name[0].toUpperCase() +
-                          currentHnSortType.name.substring(1),
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      color: colorScheme.onSurface,
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
         ),
     ];
 
@@ -577,7 +421,7 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 onPressed: onBackButtonPressed,
               )
               : null,
-      actions: appBarActions,
+      actions: actions,
     );
   }
 
