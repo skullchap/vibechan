@@ -15,22 +15,24 @@ class PostMedia extends StatelessWidget {
     if (media == null) return const SizedBox.shrink();
 
     if (media.type == domain.MediaType.video) {
-      return PostVideo(media: media);
+      return Card(child: PostVideo(media: media));
     }
 
     final aspectRatio = media.width / media.height;
-    return CachedNetworkImage(
-      imageUrl: media.url,
-      placeholder:
-          (_, __) => AspectRatio(
-            aspectRatio: aspectRatio,
-            child: const Center(child: CircularProgressIndicator()),
-          ),
-      errorWidget:
-          (_, __, ___) => AspectRatio(
-            aspectRatio: aspectRatio,
-            child: const Icon(Icons.error),
-          ),
+    return Card(
+      child: CachedNetworkImage(
+        imageUrl: media.url,
+        placeholder:
+            (_, __) => AspectRatio(
+              aspectRatio: aspectRatio,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        errorWidget:
+            (_, __, ___) => AspectRatio(
+              aspectRatio: aspectRatio,
+              child: const Icon(Icons.error),
+            ),
+      ),
     );
   }
 }
