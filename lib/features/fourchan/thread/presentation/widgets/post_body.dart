@@ -23,14 +23,20 @@ class PostBody extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: SimpleHtmlRenderer(
-        htmlString: commentHtml,
-        baseStyle: textTheme.bodyMedium?.copyWith(
-          height: 1.4,
-          color: colorScheme.onSurfaceVariant,
-        ),
-        highlightTerms: shouldHighlight ? searchQuery : null,
-        highlightColor: colorScheme.tertiaryContainer,
+      child: Row(
+        children: [
+          Expanded(
+            child: SimpleHtmlRenderer(
+              htmlString: commentHtml,
+              baseStyle: textTheme.bodyMedium?.copyWith(
+                height: 1.4,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              highlightTerms: shouldHighlight ? searchQuery : null,
+              highlightColor: colorScheme.tertiaryContainer,
+            ),
+          ),
+        ],
       ),
     );
   }

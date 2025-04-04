@@ -20,6 +20,7 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PostHeader(post: post, isOriginalPost: isOriginalPost),
