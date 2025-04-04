@@ -13,6 +13,7 @@ class GenericPreviewCard extends StatelessWidget {
   final bool squareAspect;
   final bool useFullMedia;
   final String? searchQuery;
+  final int? orderIndex;
 
   const GenericPreviewCard({
     super.key,
@@ -23,6 +24,7 @@ class GenericPreviewCard extends StatelessWidget {
     this.squareAspect = false,
     this.useFullMedia = false,
     this.searchQuery,
+    this.orderIndex,
   });
 
   @override
@@ -34,148 +36,179 @@ class GenericPreviewCard extends StatelessWidget {
         useFullMedia ? item.mediaPreviewUrl : item.thumbnailUrl;
     final double aspectRatio = item.mediaAspectRatio ?? 1.0;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (mediaUrl != null)
-              Card(
-                margin: EdgeInsets.zero,
-                child: AspectRatio(
-                  aspectRatio: useFullMedia ? 1 : aspectRatio,
-                  child:
-                      item.isVideo && item.mediaObject != null
-                          ? PostVideo(media: item.mediaObject!, isPreview: true)
-                          : Container(
-                            color: colorScheme.surfaceVariant,
-                            child: CachedNetworkImage(
-                              imageUrl: mediaUrl,
-                              fit: useFullMedia ? BoxFit.cover : BoxFit.contain,
-                              placeholder:
-                                  (context, url) => Shimmer.fromColors(
-                                    baseColor:
-                                        colorScheme.surfaceContainerHighest,
-                                    highlightColor:
-                                        colorScheme.surfaceContainerLow,
-                                    child: Container(
-                                      color:
-                                          colorScheme.surfaceContainerHighest,
-                                    ),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) => Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      color: colorScheme.outline,
-                                    ),
-                                  ),
-                            ),
-                          ),
-                ),
-              ),
+    return Stack(
+      children: [
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (mediaUrl != null)
+                  Card(
+                    margin: EdgeInsets.zero,
+                    child: AspectRatio(
+                      aspectRatio: useFullMedia ? 1 : aspectRatio,
+                      child:
+                          item.isVideo && item.mediaObject != null
+                              ? PostVideo(
+                                media: item.mediaObject!,
+                                isPreview: true,
+                              )
+                              : Container(
+                                color: colorScheme.surfaceVariant,
+                                child: CachedNetworkImage(
+                                  imageUrl: mediaUrl,
+                                  fit:
+                                      useFullMedia
+                                          ? BoxFit.cover
+                                          : BoxFit.contain,
+                                  placeholder:
+                                      (context, url) => Shimmer.fromColors(
+                                        baseColor:
+                                            colorScheme.surfaceContainerHighest,
+                                        highlightColor:
+                                            colorScheme.surfaceContainerLow,
+                                        child: Container(
+                                          color:
+                                              colorScheme
+                                                  .surfaceContainerHighest,
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          color: colorScheme.outline,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                    ),
+                  ),
 
-            if (!useFullMedia)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (item.subject != null) ...[
-                      if (searchQuery != null && searchQuery!.isNotEmpty)
-                        RichText(
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          text: TextSpan(
-                            children: _getHighlightedSpans(
+                if (!useFullMedia)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (item.subject != null) ...[
+                          if (searchQuery != null && searchQuery!.isNotEmpty)
+                            RichText(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              text: TextSpan(
+                                children: _getHighlightedSpans(
+                                  item.subject!,
+                                  textTheme.titleMedium!.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                  searchQuery!,
+                                  colorScheme.tertiaryContainer,
+                                ),
+                              ),
+                            )
+                          else
+                            Text(
                               item.subject!,
-                              textTheme.titleMedium!.copyWith(
+                              style: textTheme.titleMedium!.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: colorScheme.onSurface,
                               ),
-                              searchQuery!,
-                              colorScheme.tertiaryContainer,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                          const SizedBox(height: 4),
+                        ],
+                        if (searchQuery != null &&
+                            searchQuery!.isNotEmpty &&
+                            item.commentSnippet != null)
+                          SimpleHtmlRenderer(
+                            htmlString: item.commentSnippet ?? '',
+                            baseStyle: textTheme.bodyMedium!.copyWith(
+                              height: 1.4,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 12,
+                            highlightTerms: searchQuery,
+                            highlightColor: colorScheme.tertiaryContainer,
+                          )
+                        else if (item.commentSnippet != null)
+                          SimpleHtmlRenderer(
+                            htmlString: item.commentSnippet!,
+                            baseStyle: textTheme.bodyMedium!.copyWith(
+                              height: 1.4,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 12,
                           ),
-                        )
-                      else
-                        Text(
-                          item.subject!,
-                          style: textTheme.titleMedium!.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      const SizedBox(height: 4),
-                    ],
-                    if (searchQuery != null &&
-                        searchQuery!.isNotEmpty &&
-                        item.commentSnippet != null)
-                      SimpleHtmlRenderer(
-                        htmlString: item.commentSnippet ?? '',
-                        baseStyle: textTheme.bodyMedium!.copyWith(
-                          height: 1.4,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 12,
-                        highlightTerms: searchQuery,
-                        highlightColor: colorScheme.tertiaryContainer,
-                      )
-                    else if (item.commentSnippet != null)
-                      SimpleHtmlRenderer(
-                        htmlString: item.commentSnippet!,
-                        baseStyle: textTheme.bodyMedium!.copyWith(
-                          height: 1.4,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 12,
-                      ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 12.0,
-                      runSpacing: 4.0,
-                      children:
-                          item.stats.map((stat) {
-                            final statWidget = Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  stat.icon,
-                                  size: 16,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                                if (stat.value.isNotEmpty) ...[
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    stat.value,
-                                    style: textTheme.bodySmall?.copyWith(
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 12.0,
+                          runSpacing: 4.0,
+                          children:
+                              item.stats.map((stat) {
+                                final statWidget = Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      stat.icon,
+                                      size: 16,
                                       color: colorScheme.onSurfaceVariant,
                                     ),
-                                  ),
-                                ],
-                              ],
-                            );
-                            if (stat.tooltip != null) {
-                              return Tooltip(
-                                message: stat.tooltip!,
-                                child: statWidget,
-                              );
-                            } else {
-                              return statWidget;
-                            }
-                          }).toList(),
+                                    if (stat.value.isNotEmpty) ...[
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        stat.value,
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                );
+                                if (stat.tooltip != null) {
+                                  return Tooltip(
+                                    message: stat.tooltip!,
+                                    child: statWidget,
+                                  );
+                                } else {
+                                  return statWidget;
+                                }
+                              }).toList(),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (orderIndex != null && orderIndex! > 0)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                '#${orderIndex}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onTertiaryContainer,
                 ),
               ),
-          ],
-        ),
-      ),
+            ),
+          ),
+      ],
     );
   }
 

@@ -108,6 +108,7 @@ class ThreadDetailScreen extends ConsumerWidget {
                   return PostCard(
                     post: post,
                     isOriginalPost: isOp,
+                    orderIndex: index,
                     onQuoteLink: (quotedPostId) {
                       // TODO: Implement quote link handling
                     },

@@ -174,7 +174,7 @@ class BoardCatalogScreen extends ConsumerWidget {
           // Update widget name and pass previewItem
           child: GenericPreviewCard(
             item: previewItem, // Pass the adapted item
-            // index: index, // index no longer needed by GenericPreviewCard?
+            orderIndex: index,
             onTap:
                 () => _navigateToThread(
                   context,
