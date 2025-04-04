@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart';
-import 'package:vibechan/core/domain/models/generic_list_item.dart';
+import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/features/hackernews/data/models/hacker_news_item.dart';
 import 'package:vibechan/features/hackernews/domain/repositories/hackernews_repository.dart';
 
@@ -18,7 +18,7 @@ final currentHackerNewsSortTypeProvider = StateProvider<HackerNewsSortType>(
   keepAlive: true,
 ) // Make this provider persistent to cache data across tab changes
 Future<List<GenericListItem>> hackerNewsStories(
-  HackerNewsStoriesRef ref,
+  Ref ref,
   HackerNewsSortType sortType,
 ) async {
   final repository = getIt<HackerNewsRepository>();

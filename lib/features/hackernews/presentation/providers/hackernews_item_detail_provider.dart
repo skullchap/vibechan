@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart';
 import 'package:vibechan/features/hackernews/data/models/hacker_news_item.dart';
@@ -7,10 +8,7 @@ part 'hackernews_item_detail_provider.g.dart';
 
 // Changed from keepAlive: true to false to ensure proper refresh
 @Riverpod()
-Future<HackerNewsItem> hackerNewsItemDetail(
-  HackerNewsItemDetailRef ref,
-  int itemId,
-) async {
+Future<HackerNewsItem> hackerNewsItemDetail(Ref ref, int itemId) async {
   final repository = getIt<HackerNewsRepository>();
 
   // Add auto-disposal to ensure proper refresh

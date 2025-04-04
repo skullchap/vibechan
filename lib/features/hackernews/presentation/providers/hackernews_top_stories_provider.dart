@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:vibechan/core/domain/models/generic_list_item.dart';
+import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/features/hackernews/data/models/hacker_news_item.dart';
 import 'package:vibechan/features/hackernews/domain/repositories/hackernews_repository.dart';
 import 'package:vibechan/core/di/injection.dart'; // Import getIt
@@ -8,9 +8,7 @@ import 'package:vibechan/core/di/injection.dart'; // Import getIt
 part 'hackernews_top_stories_provider.g.dart';
 
 @riverpod
-Future<List<GenericListItem>> hackerNewsTopStories(
-  HackerNewsTopStoriesRef ref,
-) async {
+Future<List<GenericListItem>> hackerNewsTopStories(Ref ref) async {
   final repository = getIt<HackerNewsRepository>();
   final hnItems = await repository.getTopStories(
     count: 50,

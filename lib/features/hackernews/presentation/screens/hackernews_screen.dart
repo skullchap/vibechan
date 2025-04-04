@@ -5,7 +5,7 @@ import 'package:vibechan/shared/widgets/generic_list_card.dart';
 import 'package:vibechan/shared/providers/tab_manager_provider.dart'; // For potentially opening links
 import 'package:vibechan/shared/providers/search_provider.dart'; // Import search provider
 import 'package:url_launcher/url_launcher.dart'; // To launch URLs
-import 'package:vibechan/core/domain/models/generic_list_item.dart';
+import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import '../../data/models/hacker_news_item.dart'; // Import the item model
 
 class HackerNewsScreen extends ConsumerWidget {

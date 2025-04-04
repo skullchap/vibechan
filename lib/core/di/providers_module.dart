@@ -1,12 +1,8 @@
 import 'package:injectable/injectable.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibechan/features/fourchan/data/repositories/fourchan_repository.dart';
 
-import '../domain/repositories/board_repository.dart';
-import '../domain/repositories/thread_repository.dart';
-import '../data/repositories/fourchan_repository.dart';
-// Remove unused provider imports if they were only for the container override
-// import '../presentation/providers/board_providers.dart';
-// import '../presentation/providers/thread_providers.dart';
+import '../../features/fourchan/domain/repositories/board_repository.dart';
+import '../../features/fourchan/domain/repositories/thread_repository.dart';
 
 @module
 abstract class ProvidersModule {
@@ -21,21 +17,4 @@ abstract class ProvidersModule {
   ThreadRepository provideThreadRepository(
     @Named('4chan') FourChanRepository repository,
   ) => repository;
-
-  // Remove the ProviderContainer registration
-  /*
-  @singleton
-  ProviderContainer provideContainer(
-    @Named('4chan') BoardRepository boardRepository,
-    @Named('4chan') ThreadRepository threadRepository,
-  ) {
-    final container = ProviderContainer(
-      overrides: [
-        boardRepositoryProvider.overrideWithValue(boardRepository),
-        threadRepositoryProvider.overrideWithValue(threadRepository),
-      ],
-    );
-    return container;
-  }
-  */
 }

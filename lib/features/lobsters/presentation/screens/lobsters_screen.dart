@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibechan/features/lobsters/presentation/providers/lobsters_stories_provider.dart';
 import 'package:vibechan/shared/widgets/generic_list_card.dart';
 import 'package:vibechan/shared/providers/tab_manager_provider.dart';
-import 'package:vibechan/core/domain/models/generic_list_item.dart';
+import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
 
 class LobstersScreen extends ConsumerWidget {

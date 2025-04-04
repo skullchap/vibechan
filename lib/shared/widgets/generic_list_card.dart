@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:vibechan/core/domain/models/generic_list_item.dart';
+import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 
 // Placeholder for video widget if needed later

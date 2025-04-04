@@ -14,6 +14,16 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../../features/fourchan/data/repositories/fourchan_repository.dart'
+    as _i1063;
+import '../../features/fourchan/data/sources/fourchan/chan_data_source.dart'
+    as _i394;
+import '../../features/fourchan/data/sources/fourchan/fourchan_data_source.dart'
+    as _i347;
+import '../../features/fourchan/domain/repositories/board_repository.dart'
+    as _i736;
+import '../../features/fourchan/domain/repositories/thread_repository.dart'
+    as _i481;
 import '../../features/hackernews/data/datasources/hackernews_api_client.dart'
     as _i765;
 import '../../features/hackernews/data/repositories/hackernews_repository_impl.dart'
@@ -26,11 +36,6 @@ import '../../features/lobsters/data/repositories/lobsters_repository_impl.dart'
     as _i934;
 import '../../features/lobsters/domain/repositories/lobsters_repository.dart'
     as _i756;
-import '../data/repositories/fourchan_repository.dart' as _i313;
-import '../data/sources/chan_data_source.dart' as _i932;
-import '../data/sources/fourchan/fourchan_data_source.dart' as _i508;
-import '../domain/repositories/board_repository.dart' as _i1048;
-import '../domain/repositories/thread_repository.dart' as _i609;
 import '../services/theme_persistence_service.dart' as _i565;
 import 'providers_module.dart' as _i770;
 import 'service_module.dart' as _i180;
@@ -52,38 +57,38 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i565.ThemePersistenceService>(
       () => _i565.ThemePersistenceService(gh<_i460.SharedPreferences>()),
     );
-    gh.factory<_i470.LobstersApiClient>(
-      () => _i470.LobstersApiClient(gh<_i361.Dio>()),
+    gh.lazySingleton<_i394.ChanDataSource>(
+      () => _i347.FourChanDataSource(gh<_i361.Dio>()),
+      instanceName: '4chan',
     );
     gh.factory<_i765.HackerNewsApiClient>(
       () => _i765.HackerNewsApiClient(gh<_i361.Dio>()),
     );
-    gh.lazySingleton<_i932.ChanDataSource>(
-      () => _i508.FourChanDataSource(gh<_i361.Dio>()),
-      instanceName: '4chan',
+    gh.factory<_i470.LobstersApiClient>(
+      () => _i470.LobstersApiClient(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i756.LobstersRepository>(
       () => _i934.LobstersRepositoryImpl(gh<_i470.LobstersApiClient>()),
     );
-    gh.lazySingleton<_i313.FourChanRepository>(
-      () => _i313.FourChanRepository(
-        gh<_i932.ChanDataSource>(instanceName: '4chan'),
+    gh.lazySingleton<_i117.HackerNewsRepository>(
+      () => _i321.HackerNewsRepositoryImpl(gh<_i765.HackerNewsApiClient>()),
+    );
+    gh.lazySingleton<_i1063.FourChanRepository>(
+      () => _i1063.FourChanRepository(
+        gh<_i394.ChanDataSource>(instanceName: '4chan'),
         gh<_i460.SharedPreferences>(),
       ),
       instanceName: '4chan',
     );
-    gh.lazySingleton<_i117.HackerNewsRepository>(
-      () => _i321.HackerNewsRepositoryImpl(gh<_i765.HackerNewsApiClient>()),
-    );
-    gh.lazySingleton<_i1048.BoardRepository>(
+    gh.lazySingleton<_i736.BoardRepository>(
       () => providersModule.provideBoardRepository(
-        gh<_i313.FourChanRepository>(instanceName: '4chan'),
+        gh<_i1063.FourChanRepository>(instanceName: '4chan'),
       ),
       instanceName: '4chan',
     );
-    gh.lazySingleton<_i609.ThreadRepository>(
+    gh.lazySingleton<_i481.ThreadRepository>(
       () => providersModule.provideThreadRepository(
-        gh<_i313.FourChanRepository>(instanceName: '4chan'),
+        gh<_i1063.FourChanRepository>(instanceName: '4chan'),
       ),
       instanceName: '4chan',
     );

@@ -7,7 +7,7 @@ part of 'hackernews_top_stories_provider.dart';
 // **************************************************************************
 
 String _$hackerNewsTopStoriesHash() =>
-    r'1078da709d184c5a7464cec4f6bd494e89e97856';
+    r'56f7708b35acfa42329c9a97e376a2f28063caf0';
 
 /// See also [hackerNewsTopStories].
 @ProviderFor(hackerNewsTopStories)

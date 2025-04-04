@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/board/presentation/screens/board_list_screen.dart';
-import '../features/board/presentation/screens/board_catalog_screen.dart';
-import '../features/board/presentation/screens/favorites_screen.dart';
-import '../features/board/presentation/screens/settings_screen.dart';
-import '../features/thread/presentation/screens/thread_detail_screen.dart';
-import '../shared/widgets/app_shell.dart';
+// Update imports to new paths using package-relative format
+import 'package:vibechan/features/fourchan/board/presentation/screens/board_list_screen.dart';
+import 'package:vibechan/features/fourchan/board/presentation/screens/board_catalog_screen.dart';
+import 'package:vibechan/features/fourchan/board/presentation/screens/favorites_screen.dart'; // Assuming this moved too
+import 'package:vibechan/features/fourchan/board/presentation/screens/settings_screen.dart'; // Assuming this moved too
+import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_detail_screen.dart';
+import 'package:vibechan/shared/widgets/app_shell.dart';
 
 // Remove navigator keys unless needed for specific non-shell scenarios
 // final _rootNavigatorKey = GlobalKey<NavigatorState>();

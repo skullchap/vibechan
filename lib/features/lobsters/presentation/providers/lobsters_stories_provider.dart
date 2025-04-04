@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart';
-import 'package:vibechan/core/domain/models/generic_list_item.dart';
+import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart';
 import 'package:vibechan/features/lobsters/data/models/lobsters_story.dart';
 import 'package:vibechan/features/lobsters/domain/repositories/lobsters_repository.dart';
 

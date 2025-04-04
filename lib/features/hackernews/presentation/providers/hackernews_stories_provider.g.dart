@@ -6,7 +6,7 @@ part of 'hackernews_stories_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$hackerNewsStoriesHash() => r'93d362969b496456cc530aa4661d662eea190975';
+String _$hackerNewsStoriesHash() => r'2dc0b599f1f949696f10df29a4af2f559cbcc8de';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -7,7 +7,7 @@ part of 'hackernews_item_detail_provider.dart';
 // **************************************************************************
 
 String _$hackerNewsItemDetailHash() =>
-    r'9e81856b20b644544e02f4f41bf75267154af38c';
+    r'e896b2880ae9113c2568c9430a6782324fb5ae0a';
 
 /// Copied from Dart SDK
 class _SystemHash {

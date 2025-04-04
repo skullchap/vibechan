@@ -9,10 +9,10 @@ import 'config/router.dart';
 import 'core/di/injection.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/services/theme_persistence_service.dart';
-import 'core/presentation/providers/board_providers.dart';
-import 'core/presentation/providers/thread_providers.dart';
-import 'core/domain/repositories/board_repository.dart';
-import 'core/domain/repositories/thread_repository.dart';
+import 'features/fourchan/presentation/providers/board_providers.dart';
+import 'features/fourchan/presentation/providers/thread_providers.dart';
+import 'features/fourchan/domain/repositories/board_repository.dart';
+import 'features/fourchan/domain/repositories/thread_repository.dart';
 // Import layout service for responsive layout
 import 'core/services/layout_service.dart';
 

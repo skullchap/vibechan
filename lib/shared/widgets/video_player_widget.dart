@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart' as mk;
 import 'package:media_kit_video/media_kit_video.dart';
-import '../../core/presentation/managers/post_video_manager.dart';
+import '../../features/fourchan/presentation/managers/post_video_manager.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
