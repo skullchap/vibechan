@@ -48,6 +48,7 @@ class CatalogMediaFeed extends StatelessWidget {
           squareAspect: true,
           useFullMedia: true,
           searchQuery: searchQuery,
+          orderIndex: index,
         );
 
         // --- TEMPORARILY REMOVED ANIMATION ---
