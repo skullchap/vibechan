@@ -136,7 +136,7 @@ class AppShellBottomTabBar extends ConsumerWidget {
           child: ReorderableListView.builder(
             key: const Key('tab-reorderable-list'),
             scrollDirection: Axis.horizontal,
-            buildDefaultDragHandles: true,
+            buildDefaultDragHandles: false,
             itemCount: tabs.length,
             // Don't use the ScrollController here since we're using SingleChildScrollView
             shrinkWrap: true,
@@ -144,8 +144,12 @@ class AppShellBottomTabBar extends ConsumerWidget {
             itemBuilder: (context, index) {
               final tab = tabs[index];
               final bool isActive = activeTab?.id == tab.id;
-              // MUST provide a unique key for each item
-              return _buildTabButton(context, ref, tab, isActive);
+              // Wrap the button with ReorderableDragStartListener
+              return ReorderableDragStartListener(
+                key: ValueKey(tab.id), // Key for reordering logic
+                index: index,
+                child: _buildTabButton(context, ref, tab, isActive),
+              );
             },
             onReorder: onReorder,
             proxyDecorator: (
