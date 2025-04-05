@@ -6,7 +6,7 @@ part of 'subreddit_search_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$subredditSearchHash() => r'60ec463ffad077ede61cfff9e4391b94fe38dd70';
+String _$subredditSearchHash() => r'579d15205f4bb4d0888eae3a29b8d81d9e0ba85d';
 
 /// Copied from Dart SDK
 class _SystemHash {

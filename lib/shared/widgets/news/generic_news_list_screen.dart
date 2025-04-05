@@ -19,6 +19,7 @@ class GenericNewsListScreen extends ConsumerWidget {
   final StateProvider<dynamic>? sortTypeProvider;
   final IconData itemIcon;
   final String? listContextId;
+  final void Function()? onLoadMore;
 
   const GenericNewsListScreen({
     super.key,
@@ -31,6 +32,7 @@ class GenericNewsListScreen extends ConsumerWidget {
     this.sortTypeProvider,
     this.itemIcon = Icons.article,
     this.listContextId,
+    this.onLoadMore,
   });
 
   @override
@@ -171,8 +173,19 @@ class GenericNewsListScreen extends ConsumerWidget {
             sortTypeProvider != null
                 ? ValueKey(ref.watch(sortTypeProvider!))
                 : null,
-        itemCount: items.length,
+        itemCount: items.length + (onLoadMore != null ? 1 : 0),
         itemBuilder: (context, index) {
+          if (onLoadMore != null && index == items.length) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              onLoadMore!();
+            });
+
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
           final item = items[index];
 
           return Padding(
@@ -229,7 +242,7 @@ class GenericNewsListScreen extends ConsumerWidget {
                   isSearchActive && searchQuery.isNotEmpty ? searchQuery : null,
               highlightColor: Theme.of(
                 context,
-              ).colorScheme.primaryContainer.withOpacity(0.5),
+              ).colorScheme.primaryContainer.withAlpha((0.7 * 255).toInt()),
             ),
           );
         },

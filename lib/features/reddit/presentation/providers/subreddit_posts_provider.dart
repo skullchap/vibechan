@@ -1,7 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart'; // Assuming GetIt setup is here
 import 'package:vibechan/features/reddit/domain/models/reddit_post.dart';
 import 'package:vibechan/features/reddit/domain/repositories/reddit_repository.dart';
+import 'package:vibechan/features/reddit/presentation/providers/reddit_sort_provider.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 
@@ -11,7 +13,8 @@ part 'subreddit_posts_provider.g.dart';
 // Using Family to pass the subreddit name
 @Riverpod(keepAlive: true)
 class SubredditPosts extends _$SubredditPosts {
-  late final RedditRepository _repository;
+  // Use nullable and initialize in constructor instead of using 'late'
+  RedditRepository? _repository;
 
   // Keep track of the 'after' token for pagination
   String? _lastAfter;
@@ -19,25 +22,36 @@ class SubredditPosts extends _$SubredditPosts {
 
   @override
   Future<List<RedditPost>> build(String subreddit) async {
-    _repository =
-        getIt<RedditRepository>(); // Get repository from GetIt/Injectable
-    _lastAfter = null; // Reset pagination on initial build/rebuild
+    // Initialize repository only once
+    _repository ??= getIt<RedditRepository>();
+
+    // Reset pagination on initial build/rebuild
+    _lastAfter = null;
+
+    // Watch the sort type provider to rebuild this provider when sort changes
+    final sortType = ref.watch(currentRedditSortTypeProvider);
+
     // Initial fetch
-    final posts = await _fetchPosts(subreddit);
+    final posts = await _fetchPosts(subreddit, sortType: sortType);
     return posts;
   }
 
   Future<List<RedditPost>> _fetchPosts(
     String subreddit, {
     String? after,
+    required RedditSortType sortType,
   }) async {
+    // Ensure repository is available
+    final repository = _repository!;
+
     // Hardcoded limit for now, could be configurable
     const int fetchLimit = 25;
-    final posts = await _repository.getSubredditPosts(
+    final posts = await repository.getSubredditPosts(
       subreddit: subreddit,
       after: after,
       limit: fetchLimit,
-      // You might want to expose sort/timeFilter as parameters to build() later
+      sort: sortType.apiValue,
+      // Time filter can be added later (for top/controversial)
     );
 
     // Update the 'after' token based on the fetched posts
@@ -50,52 +64,36 @@ class SubredditPosts extends _$SubredditPosts {
     return posts;
   }
 
-  Future<void> fetchMorePosts() async {
-    // Prevent simultaneous fetches or fetching when there are no more pages
-    if (_isLoadingMore ||
-        _lastAfter == null ||
-        state.isRefreshing ||
-        state.isLoading) {
-      return;
+  // Method to load more posts
+  Future<void> loadMore() async {
+    if (_isLoadingMore || _lastAfter == null || state is! AsyncData) {
+      return; // Already loading or no more to load or still loading initially
     }
 
-    _isLoadingMore = true;
+    try {
+      _isLoadingMore = true;
+      final sortType = ref.read(currentRedditSortTypeProvider);
+      final currentPosts = (state as AsyncData<List<RedditPost>>).value;
 
-    // Get current subreddit directly from the instance property
-    // (The generator makes the family parameter available as a property)
-    final String subreddit = this.subreddit;
-
-    // Read current state safely
-    final currentState = state;
-    if (currentState is AsyncData<List<RedditPost>>) {
-      final currentPosts = currentState.value;
-      try {
-        final newPosts = await _fetchPosts(subreddit, after: _lastAfter);
-        // Update state with combined list
-        state = AsyncData([...currentPosts, ...newPosts]);
-      } catch (e, stackTrace) {
-        // Handle error, perhaps revert state or show error message
-        final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
-        logger.e(
-          "Error fetching more posts for r/$subreddit",
-          error: e,
-          stackTrace: stackTrace,
-        );
-        // Keep existing data but signal error (or could set state to AsyncError)
-        // Using copyWithPrevious preserves the previous data while showing the error
-        state = AsyncError<List<RedditPost>>(
-          e,
-          stackTrace,
-        ).copyWithPrevious(currentState);
-      } finally {
-        _isLoadingMore = false;
-      }
-    } else {
-      // If current state is error or loading, don't fetch more
-      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
-      logger.d(
-        "Skipping fetchMorePosts as current state is not AsyncData: $currentState",
+      // Fetch more posts using the last post as 'after' token
+      final newPosts = await _fetchPosts(
+        subreddit,
+        after: _lastAfter,
+        sortType: sortType,
       );
+
+      // Update state with combined list
+      state = AsyncData([...currentPosts, ...newPosts]);
+    } catch (e, stack) {
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.e(
+        "Error loading more posts for r/$subreddit",
+        error: e,
+        stackTrace: stack,
+      );
+      // Do not update state on error, keep previous posts
+      // Optionally show an error message to the user
+    } finally {
       _isLoadingMore = false;
     }
   }

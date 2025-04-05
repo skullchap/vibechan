@@ -5,6 +5,9 @@ import 'package:vibechan/features/hackernews/presentation/providers/hackernews_i
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_stories_provider.dart';
 import 'package:vibechan/features/lobsters/presentation/providers/lobsters_stories_provider.dart';
 import 'package:vibechan/features/lobsters/presentation/providers/lobsters_story_detail_provider.dart';
+import 'package:vibechan/features/reddit/presentation/providers/reddit_sort_provider.dart';
+import 'package:vibechan/features/reddit/presentation/providers/subreddit_posts_provider.dart';
+import 'package:vibechan/features/reddit/presentation/providers/post_detail_provider.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_item_refresher_provider.dart';
 import 'package:vibechan/features/lobsters/presentation/providers/lobsters_story_refresher_provider.dart';
@@ -12,28 +15,45 @@ import 'package:vibechan/features/lobsters/presentation/providers/lobsters_story
 /// A generic provider factory that gets the correct providers based on source
 class NewsProviderFactory {
   /// Get a provider for list of news items based on source and sort type
-  static dynamic getNewsListProvider(NewsSource source, dynamic sortType) {
+  static dynamic getNewsListProvider(
+    NewsSource source,
+    dynamic sortType, [
+    String? contextId,
+  ]) {
     switch (source) {
       case NewsSource.hackernews:
         return hackerNewsStoriesProvider(sortType as HackerNewsSortType);
       case NewsSource.lobsters:
         return lobstersStoriesProvider(sortType as LobstersSortType);
       case NewsSource.reddit:
-        // Will be implemented when Reddit support is added
-        throw UnimplementedError('Reddit provider not yet implemented');
+        if (contextId == null) {
+          throw ArgumentError('contextId (subreddit) is required for Reddit');
+        }
+        return subredditPostsProvider(contextId);
     }
   }
 
   /// Get a provider for news item details based on source and id
-  static dynamic getNewsItemDetailProvider(NewsSource source, String itemId) {
+  static dynamic getNewsItemDetailProvider(
+    NewsSource source,
+    String itemId, [
+    Map<String, String>? params,
+  ]) {
     switch (source) {
       case NewsSource.hackernews:
         return hackerNewsItemDetailProvider(int.parse(itemId));
       case NewsSource.lobsters:
         return lobstersStoryDetailProvider(itemId);
       case NewsSource.reddit:
-        // Will be implemented when Reddit support is added
-        throw UnimplementedError('Reddit provider not yet implemented');
+        final subreddit = params?['subredditName'];
+        if (subreddit == null) {
+          throw ArgumentError(
+            'subredditName is required for Reddit post details',
+          );
+        }
+        return postDetailProvider(
+          PostDetailParams(subreddit: subreddit, postId: itemId),
+        );
     }
   }
 
@@ -45,8 +65,9 @@ class NewsProviderFactory {
       case NewsSource.lobsters:
         return lobstersStoryRefresherProvider;
       case NewsSource.reddit:
-        // Will be implemented when Reddit support is added
-        throw UnimplementedError('Reddit provider not yet implemented');
+        // Currently Reddit doesn't have a dedicated refresher provider
+        // Can be implemented later with proper refresh functionality
+        return null;
     }
   }
 
@@ -58,8 +79,7 @@ class NewsProviderFactory {
       case NewsSource.lobsters:
         return currentLobstersSortTypeProvider;
       case NewsSource.reddit:
-        // Will be implemented when Reddit support is added
-        throw UnimplementedError('Reddit provider not yet implemented');
+        return currentRedditSortTypeProvider;
     }
   }
 
@@ -71,8 +91,7 @@ class NewsProviderFactory {
       case NewsSource.lobsters:
         return LobstersSortType.hottest;
       case NewsSource.reddit:
-        // Will use hot as default for Reddit when implemented
-        return null;
+        return RedditSortType.hot;
     }
   }
 

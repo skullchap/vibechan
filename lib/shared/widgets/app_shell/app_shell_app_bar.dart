@@ -11,6 +11,8 @@ import '../../providers/settings_provider.dart'; // Import for settings access i
 // import '../../../features/board/presentation/widgets/catalog/catalog_view_mode.dart'; // Old path
 import 'package:vibechan/shared/enums/catalog_view_mode.dart'; // New package path
 import '../../../features/hackernews/presentation/providers/hackernews_stories_provider.dart'; // Needed for HN sort type
+import '../../../features/lobsters/presentation/providers/lobsters_stories_provider.dart'; // Import for Lobsters sort
+import '../../../features/reddit/presentation/providers/reddit_sort_provider.dart'; // Import for Reddit sort
 import '../../../features/fourchan/presentation/providers/carousel_providers.dart'; // Import hasMedia providers
 
 // Helper function to determine the general category of a tab (moved here)
@@ -250,6 +252,8 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
+    final currentLobstersSortType = ref.watch(currentLobstersSortTypeProvider);
+    final currentRedditSortType = ref.watch(currentRedditSortTypeProvider);
 
     // Determine context based on initial route name
     final String? initialRouteName = activeTab?.initialRouteName;
@@ -257,10 +261,15 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final bool isCatalogContext = initialRouteName == 'catalog';
     final bool isBoardListContext = initialRouteName == 'boards';
     final bool isHnListContext = initialRouteName == 'hackernews';
+    final bool isLobstersListContext = initialRouteName == 'lobsters';
+    final bool isRedditContext =
+        initialRouteName == 'subreddit' || initialRouteName == 'subredditGrid';
 
     // Visibility flags for buttons
     final bool showCatalogViewButton = isCatalogContext || isBoardListContext;
     final bool showHnSortButton = isHnListContext;
+    final bool showLobstersSortButton = isLobstersListContext;
+    final bool showRedditSortButton = isRedditContext;
 
     // Construct sourceInfo strings conditionally
     String? boardSourceInfo;
@@ -386,6 +395,46 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         (type) => PopupMenuItem(
                           value: type,
                           child: Text(type.displayName), // Use extension
+                        ),
+                      )
+                      .toList(),
+        ),
+      // Lobsters Sort Type Button
+      if (showLobstersSortButton)
+        PopupMenuButton<LobstersSortType>(
+          icon: const Icon(Icons.sort),
+          tooltip: 'Sort Stories',
+          initialValue: currentLobstersSortType,
+          onSelected: (newType) {
+            ref.read(currentLobstersSortTypeProvider.notifier).state = newType;
+          },
+          itemBuilder:
+              (context) =>
+                  LobstersSortType.values
+                      .map(
+                        (type) => PopupMenuItem(
+                          value: type,
+                          child: Text(type.displayName),
+                        ),
+                      )
+                      .toList(),
+        ),
+      // Reddit Sort Type Button
+      if (showRedditSortButton)
+        PopupMenuButton<RedditSortType>(
+          icon: const Icon(Icons.sort),
+          tooltip: 'Sort Posts',
+          initialValue: currentRedditSortType,
+          onSelected: (newType) {
+            ref.read(currentRedditSortTypeProvider.notifier).state = newType;
+          },
+          itemBuilder:
+              (context) =>
+                  RedditSortType.values
+                      .map(
+                        (type) => PopupMenuItem(
+                          value: type,
+                          child: Text(type.displayName),
                         ),
                       )
                       .toList(),

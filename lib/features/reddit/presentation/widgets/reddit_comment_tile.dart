@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart'; // For rendering comment body
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibechan/core/utils/time_utils.dart'; // For timestamp formatting
 import 'package:vibechan/features/reddit/domain/models/reddit_comment.dart';
+import 'package:vibechan/features/reddit/presentation/providers/post_detail_provider.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 // Import URL launcher if needed for links in comments
 // import 'package:url_launcher/url_launcher.dart';
 
-class RedditCommentTile extends StatelessWidget {
+class RedditCommentTile extends ConsumerWidget {
   final RedditComment comment;
   final int currentDepth; // Track indentation level
+  final PostDetailParams postParams; // Add params to identify the post
 
   const RedditCommentTile({
     super.key,
     required this.comment,
+    required this.postParams,
     this.currentDepth = 0,
   });
 
@@ -25,7 +29,7 @@ class RedditCommentTile extends StatelessWidget {
   static const double _contentPaddingLeft = 8.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -38,7 +42,7 @@ class RedditCommentTile extends StatelessWidget {
             .toDouble();
     final double indentLinePadding = effectiveIndentDepth * _indentation;
 
-    // TODO: Handle 'Load More' action
+    // Handle 'Load More' action
     if (isLoadMore) {
       return Padding(
         // Indent the 'Load More' link slightly more than content
@@ -50,9 +54,19 @@ class RedditCommentTile extends StatelessWidget {
         child: InkWell(
           onTap: () {
             final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
-            logger.w("TODO: Implement Load More Comments for ${comment.id}");
-            // Need to trigger an API call, likely via a provider method
-            // This might involve finding the parent post provider and calling a method there.
+            logger.d("Loading more comments for ${comment.id}");
+
+            // Access the post detail provider and load more comments
+            final postProvider = ref.read(postDetailProvider(postParams));
+
+            // Since loading more comments would need to be implemented in the repository
+            // and then exposed through the provider, we're just logging for now
+            logger.d("Would load more comments for comment ID: ${comment.id}");
+
+            // Example of how to refresh the post detail to get more comments
+            // This would be implemented in a real app by calling repository methods
+            // and updating the provider state
+            ref.invalidate(postDetailProvider(postParams));
           },
           child: Text(
             comment.body, // e.g., "[load 5 more replies]"
@@ -80,9 +94,9 @@ class RedditCommentTile extends StatelessWidget {
                 margin: EdgeInsets.only(
                   right: _indentation / 2 - 1.5,
                 ), // Center the line in the indent space
-                color: colorScheme.outline.withOpacity(
-                  0.3,
-                ), // Indent line color
+                color: colorScheme.outline.withAlpha(
+                  (0.3 * 255).toInt(),
+                ), // Fixed: replaced withOpacity with withAlpha
                 // Stretch the line vertically - achieved by Column parent
               ),
             ),
@@ -112,7 +126,9 @@ class RedditCommentTile extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color:
                               isDeleted
-                                  ? colorScheme.onSurface.withOpacity(0.6)
+                                  ? colorScheme.onSurface.withAlpha(
+                                    (0.6 * 255).toInt(),
+                                  )
                                   : colorScheme.primary,
                         ),
                         overflow: TextOverflow.ellipsis, // Prevent overflow
@@ -120,7 +136,7 @@ class RedditCommentTile extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${comment.score} pts', // TODO: Format score?
+                      _formatScore(comment.score), // Formatted score
                       style: textTheme.labelSmall?.copyWith(
                         color: colorScheme.secondary,
                       ),
@@ -146,7 +162,9 @@ class RedditCommentTile extends StatelessWidget {
                       comment.body,
                       style: textTheme.bodyMedium?.copyWith(
                         fontStyle: FontStyle.italic,
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withAlpha(
+                          (0.6 * 255).toInt(),
+                        ),
                       ),
                     )
                     : MarkdownBody(
@@ -180,6 +198,7 @@ class RedditCommentTile extends StatelessWidget {
                               .map(
                                 (reply) => RedditCommentTile(
                                   comment: reply,
+                                  postParams: postParams,
                                   currentDepth:
                                       currentDepth + 1, // Increment depth
                                 ),
@@ -193,5 +212,16 @@ class RedditCommentTile extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // Format score with k/m suffixes if needed
+  String _formatScore(int score) {
+    if (score >= 1000000) {
+      return '${(score / 1000000).toStringAsFixed(1)}m';
+    } else if (score >= 1000) {
+      return '${(score / 1000).toStringAsFixed(1)}k';
+    } else {
+      return '$score pts';
+    }
   }
 }

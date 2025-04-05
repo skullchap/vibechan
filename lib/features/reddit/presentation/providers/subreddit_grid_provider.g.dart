@@ -6,7 +6,7 @@ part of 'subreddit_grid_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$subredditGridHash() => r'74f4bcf5e4c9686f1e7cae1047ccaa58eb01bb50';
+String _$subredditGridHash() => r'c76473fae176de2243baff4b13ff07c490742976';
 
 /// See also [subredditGrid].
 @ProviderFor(subredditGrid)

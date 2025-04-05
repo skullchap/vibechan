@@ -9,6 +9,18 @@ part 'lobsters_stories_provider.g.dart';
 
 enum LobstersSortType { hottest, newest }
 
+// Add extension for display name
+extension LobstersSortTypeExtension on LobstersSortType {
+  String get displayName {
+    switch (this) {
+      case LobstersSortType.hottest:
+        return 'Hottest';
+      case LobstersSortType.newest:
+        return 'Newest';
+    }
+  }
+}
+
 final currentLobstersSortTypeProvider = StateProvider<LobstersSortType>(
   (ref) => LobstersSortType.hottest,
 );
