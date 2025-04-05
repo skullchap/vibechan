@@ -17,6 +17,7 @@ abstract class RedditPost with _$RedditPost {
     required double
     createdUtc, // Keep as double for precision from Unix timestamp
     @Default('') String selftext,
+    String? selftextHtml, // Add HTML field
     String? url, // Link or media URL
     String? thumbnail, // URL for thumbnail
     @Default(false) bool isVideo,
@@ -35,12 +36,19 @@ abstract class RedditPost with _$RedditPost {
       );
       try {
         // Apply defaults to the dataMap
+        print(
+          "--- RedditPost.fromJson --- Trying nested 'data' field.",
+        ); // Log entry
+        print(
+          "Incoming dataMap id: ${dataMap['id']}",
+        ); // Log the ID before default
         dataMap['id'] ??= 'missing_id_${DateTime.now().millisecondsSinceEpoch}';
         dataMap['subreddit'] ??= 'unknown';
         dataMap['title'] ??= '[Missing Title]';
         dataMap['author'] ??= '[deleted]';
         dataMap['permalink'] ??= '';
         dataMap['selftext'] ??= '';
+        dataMap['selftext_html'] ??= null; // Default to null if missing
 
         return _$RedditPostFromJson(dataMap);
       } catch (e) {
@@ -54,14 +62,20 @@ abstract class RedditPost with _$RedditPost {
 
     // Fallback: Try parsing the original JSON directly (less common for posts)
     try {
-      print("Attempting direct parse of RedditPost for object: $json");
+      print(
+        "--- RedditPost.fromJson --- Trying direct parse (fallback).",
+      ); // Log entry
       // Apply defaults BEFORE parsing
+      print(
+        "Incoming direct json id: ${json['id']}",
+      ); // Log the ID before default
       json['id'] ??= 'missing_id_${DateTime.now().millisecondsSinceEpoch}';
       json['subreddit'] ??= 'unknown';
       json['title'] ??= '[Missing Title]';
       json['author'] ??= '[deleted]';
       json['permalink'] ??= '';
       json['selftext'] ??= ''; // Ensure selftext has default too
+      json['selftext_html'] ??= null; // Default to null if missing
 
       return _$RedditPostFromJson(json);
     } catch (e) {

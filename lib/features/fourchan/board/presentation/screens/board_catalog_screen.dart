@@ -13,6 +13,7 @@ import 'package:vibechan/shared/enums/catalog_view_mode.dart';
 import 'package:vibechan/features/fourchan/board/presentation/widgets/catalog/catalog_media_feed.dart';
 import 'package:vibechan/shared/widgets/preview_card.dart'; // Use generic card
 import 'package:vibechan/features/fourchan/board/domain/adapters/thread_preview_adapter.dart'; // Import adapter
+import 'package:vibechan/app/app_routes.dart'; // Import AppRoute
 
 class BoardCatalogScreen extends ConsumerWidget {
   final String boardId;
@@ -212,7 +213,7 @@ class BoardCatalogScreen extends ConsumerWidget {
 
     tabNotifier.navigateToOrReplaceActiveTab(
       title: threadTitle,
-      initialRouteName: 'thread',
+      initialRouteName: AppRoute.thread.name,
       pathParameters: {'boardId': boardId, 'threadId': thread.id.toString()},
       icon: Icons.comment,
     );

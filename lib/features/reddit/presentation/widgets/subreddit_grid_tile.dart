@@ -52,7 +52,9 @@ class SubredditGridTile extends ConsumerWidget {
                 subreddit.displayNamePrefixed ??
                 'r/?', // Use prefixed name for title
             initialRouteName: AppRoute.subreddit.name,
-            pathParameters: {'subreddit': subreddit.displayName ?? 'unknown'},
+            pathParameters: {
+              'subredditName': subreddit.displayName ?? 'unknown',
+            },
             icon: Icons.reddit, // Or a more specific icon if available
           );
         },
@@ -81,7 +83,8 @@ class SubredditGridTile extends ConsumerWidget {
                                   ),
                               placeholder:
                                   (context, url) => Shimmer.fromColors(
-                                    baseColor: colorScheme.surfaceContainerHighest,
+                                    baseColor:
+                                        colorScheme.surfaceContainerHighest,
                                     highlightColor: colorScheme.onSurfaceVariant
                                         .withOpacity(0.1),
                                     child: CircleAvatar(

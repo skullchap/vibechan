@@ -29,6 +29,8 @@ import 'app_shell/app_shell_bottom_tab_bar.dart';
 import 'app_shell/app_shell_side_navigation.dart';
 import 'app_shell/app_shell_content_view.dart';
 
+import 'package:vibechan/app/app_routes.dart'; // Import AppRoute
+
 // Revert to ConsumerStatefulWidget
 class AppShell extends ConsumerStatefulWidget {
   // Remove child parameter
@@ -84,46 +86,60 @@ class _AppShellState extends ConsumerState<AppShell>
     if (currentTab == null) return; // Safety check
 
     final tabNotifier = ref.read(tabManagerProvider.notifier);
+    final routeName = currentTab.initialRouteName;
 
     // Define navigation targets based on the current detail view route
-    switch (currentTab.initialRouteName) {
-      case 'thread':
-        final boardId = currentTab.pathParameters['boardId'];
-        if (boardId != null) {
-          tabNotifier.navigateToOrReplaceActiveTab(
-            title: '/$boardId/ Catalog',
-            initialRouteName: 'catalog',
-            pathParameters: {'boardId': boardId},
-            icon: Icons.view_list,
-          );
-        } else {
-          // Fallback if boardId is missing
-          tabNotifier.navigateToOrReplaceActiveTab(
-            title: 'Boards',
-            initialRouteName: 'boards',
-            pathParameters: {},
-            icon: Icons.dashboard,
-          );
-        }
-        break;
-      case 'hackernews_item':
+    // Compare routeName (String?) with the actual string values from AppRoute
+    if (routeName == AppRoute.thread.name) {
+      final boardId = currentTab.pathParameters['boardId'];
+      if (boardId != null) {
         tabNotifier.navigateToOrReplaceActiveTab(
-          title: 'Hacker News',
-          initialRouteName: 'hackernews',
-          pathParameters: {},
-          icon: Icons.newspaper,
+          title: '/$boardId/ Catalog',
+          initialRouteName: AppRoute.boardCatalog.name,
+          pathParameters: {'boardId': boardId},
+          icon: Icons.view_list,
         );
-        break;
-      case 'lobsters_story':
+      } else {
         tabNotifier.navigateToOrReplaceActiveTab(
-          title: 'Lobsters',
-          initialRouteName: 'lobsters',
+          title: 'Boards',
+          initialRouteName: AppRoute.boardList.name,
           pathParameters: {},
-          icon: Icons.rss_feed,
+          icon: Icons.dashboard,
         );
-        break;
-      // No default needed as this is only called for specific detail routes
+      }
+    } else if (routeName == AppRoute.hackernewsItem.name) {
+      tabNotifier.navigateToOrReplaceActiveTab(
+        title: 'Hacker News',
+        initialRouteName: AppRoute.hackernews.name,
+        pathParameters: {},
+        icon: Icons.newspaper,
+      );
+    } else if (routeName == AppRoute.lobstersStory.name) {
+      tabNotifier.navigateToOrReplaceActiveTab(
+        title: 'Lobsters',
+        initialRouteName: AppRoute.lobsters.name,
+        pathParameters: {},
+        icon: Icons.rss_feed,
+      );
+    } else if (routeName == AppRoute.postDetail.name) {
+      final subredditName = currentTab.pathParameters['subredditName'];
+      if (subredditName != null) {
+        tabNotifier.navigateToOrReplaceActiveTab(
+          title: 'r/$subredditName',
+          initialRouteName: AppRoute.subreddit.name,
+          pathParameters: {'subredditName': subredditName},
+          icon: Icons.reddit,
+        );
+      } else {
+        tabNotifier.navigateToOrReplaceActiveTab(
+          title: 'Reddit',
+          initialRouteName: AppRoute.subredditGrid.name,
+          pathParameters: {},
+          icon: Icons.grid_view,
+        );
+      }
     }
+    // No else needed, as this function is only relevant for specific detail routes
   }
 
   @override
@@ -140,11 +156,12 @@ class _AppShellState extends ConsumerState<AppShell>
     // final viewMode = ref.watch(catalogViewModeProvider); // Remove watch here if only needed in AppBar
 
     // Determine UI states based on providers
+    final String? currentRouteName = activeTab?.initialRouteName;
     final bool showBackButton =
-        activeTab != null &&
-        (activeTab.initialRouteName == 'hackernews_item' ||
-            activeTab.initialRouteName == 'lobsters_story' ||
-            activeTab.initialRouteName == 'thread');
+        currentRouteName == AppRoute.hackernewsItem.name ||
+        currentRouteName == AppRoute.lobstersStory.name ||
+        currentRouteName == AppRoute.thread.name ||
+        currentRouteName == AppRoute.postDetail.name;
 
     final bool useSideNavigation = layoutService.shouldShowSidePanel(
       layoutState.currentLayout,
@@ -153,11 +170,8 @@ class _AppShellState extends ConsumerState<AppShell>
     // Use WillPopScope to handle system back button presses for detail views
     return WillPopScope(
       onWillPop: () async {
-        final isDetailView =
-            activeTab != null &&
-            (activeTab.initialRouteName == 'thread' ||
-                activeTab.initialRouteName == 'hackernews_item' ||
-                activeTab.initialRouteName == 'lobsters_story');
+        // Re-check the condition using the local variable
+        final bool isDetailView = showBackButton; // We already calculated this
 
         if (isDetailView) {
           _handleBackButton(ref, activeTab); // Use our custom back logic

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RedditComment {
 
- String get id; String get author; String get body; int get score; double get createdUtc; int get depth; RedditCommentListing? get replies;
+ String get id; String get author; String get body; String? get bodyHtml; int get score; double get createdUtc; int get depth; RedditCommentListing? get replies;
 /// Create a copy of RedditComment
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $RedditCommentCopyWith<RedditComment> get copyWith => _$RedditCommentCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RedditComment&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body)&&(identical(other.score, score) || other.score == score)&&(identical(other.createdUtc, createdUtc) || other.createdUtc == createdUtc)&&(identical(other.depth, depth) || other.depth == depth)&&(identical(other.replies, replies) || other.replies == replies));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RedditComment&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body)&&(identical(other.bodyHtml, bodyHtml) || other.bodyHtml == bodyHtml)&&(identical(other.score, score) || other.score == score)&&(identical(other.createdUtc, createdUtc) || other.createdUtc == createdUtc)&&(identical(other.depth, depth) || other.depth == depth)&&(identical(other.replies, replies) || other.replies == replies));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,author,body,score,createdUtc,depth,replies);
+int get hashCode => Object.hash(runtimeType,id,author,body,bodyHtml,score,createdUtc,depth,replies);
 
 @override
 String toString() {
-  return 'RedditComment(id: $id, author: $author, body: $body, score: $score, createdUtc: $createdUtc, depth: $depth, replies: $replies)';
+  return 'RedditComment(id: $id, author: $author, body: $body, bodyHtml: $bodyHtml, score: $score, createdUtc: $createdUtc, depth: $depth, replies: $replies)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $RedditCommentCopyWith<$Res>  {
   factory $RedditCommentCopyWith(RedditComment value, $Res Function(RedditComment) _then) = _$RedditCommentCopyWithImpl;
 @useResult
 $Res call({
- String id, String author, String body, int score, double createdUtc, int depth, RedditCommentListing? replies
+ String id, String author, String body, String? bodyHtml, int score, double createdUtc, int depth, RedditCommentListing? replies
 });
 
 
@@ -66,12 +66,13 @@ class _$RedditCommentCopyWithImpl<$Res>
 
 /// Create a copy of RedditComment
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? author = null,Object? body = null,Object? score = null,Object? createdUtc = null,Object? depth = null,Object? replies = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? author = null,Object? body = null,Object? bodyHtml = freezed,Object? score = null,Object? createdUtc = null,Object? depth = null,Object? replies = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
-as String,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as String,bodyHtml: freezed == bodyHtml ? _self.bodyHtml : bodyHtml // ignore: cast_nullable_to_non_nullable
+as String?,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
 as int,createdUtc: null == createdUtc ? _self.createdUtc : createdUtc // ignore: cast_nullable_to_non_nullable
 as double,depth: null == depth ? _self.depth : depth // ignore: cast_nullable_to_non_nullable
 as int,replies: freezed == replies ? _self.replies : replies // ignore: cast_nullable_to_non_nullable
@@ -98,12 +99,13 @@ $RedditCommentListingCopyWith<$Res>? get replies {
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class _RedditComment implements RedditComment {
-  const _RedditComment({required this.id, required this.author, required this.body, required this.score, required this.createdUtc, this.depth = 0, this.replies});
+  const _RedditComment({required this.id, required this.author, required this.body, this.bodyHtml, required this.score, required this.createdUtc, this.depth = 0, this.replies});
   factory _RedditComment.fromJson(Map<String, dynamic> json) => _$RedditCommentFromJson(json);
 
 @override final  String id;
 @override final  String author;
 @override final  String body;
+@override final  String? bodyHtml;
 @override final  int score;
 @override final  double createdUtc;
 @override@JsonKey() final  int depth;
@@ -122,16 +124,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RedditComment&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body)&&(identical(other.score, score) || other.score == score)&&(identical(other.createdUtc, createdUtc) || other.createdUtc == createdUtc)&&(identical(other.depth, depth) || other.depth == depth)&&(identical(other.replies, replies) || other.replies == replies));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RedditComment&&(identical(other.id, id) || other.id == id)&&(identical(other.author, author) || other.author == author)&&(identical(other.body, body) || other.body == body)&&(identical(other.bodyHtml, bodyHtml) || other.bodyHtml == bodyHtml)&&(identical(other.score, score) || other.score == score)&&(identical(other.createdUtc, createdUtc) || other.createdUtc == createdUtc)&&(identical(other.depth, depth) || other.depth == depth)&&(identical(other.replies, replies) || other.replies == replies));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,author,body,score,createdUtc,depth,replies);
+int get hashCode => Object.hash(runtimeType,id,author,body,bodyHtml,score,createdUtc,depth,replies);
 
 @override
 String toString() {
-  return 'RedditComment(id: $id, author: $author, body: $body, score: $score, createdUtc: $createdUtc, depth: $depth, replies: $replies)';
+  return 'RedditComment(id: $id, author: $author, body: $body, bodyHtml: $bodyHtml, score: $score, createdUtc: $createdUtc, depth: $depth, replies: $replies)';
 }
 
 
@@ -142,7 +144,7 @@ abstract mixin class _$RedditCommentCopyWith<$Res> implements $RedditCommentCopy
   factory _$RedditCommentCopyWith(_RedditComment value, $Res Function(_RedditComment) _then) = __$RedditCommentCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String author, String body, int score, double createdUtc, int depth, RedditCommentListing? replies
+ String id, String author, String body, String? bodyHtml, int score, double createdUtc, int depth, RedditCommentListing? replies
 });
 
 
@@ -159,12 +161,13 @@ class __$RedditCommentCopyWithImpl<$Res>
 
 /// Create a copy of RedditComment
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? author = null,Object? body = null,Object? score = null,Object? createdUtc = null,Object? depth = null,Object? replies = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? author = null,Object? body = null,Object? bodyHtml = freezed,Object? score = null,Object? createdUtc = null,Object? depth = null,Object? replies = freezed,}) {
   return _then(_RedditComment(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,author: null == author ? _self.author : author // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
-as String,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as String,bodyHtml: freezed == bodyHtml ? _self.bodyHtml : bodyHtml // ignore: cast_nullable_to_non_nullable
+as String?,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
 as int,createdUtc: null == createdUtc ? _self.createdUtc : createdUtc // ignore: cast_nullable_to_non_nullable
 as double,depth: null == depth ? _self.depth : depth // ignore: cast_nullable_to_non_nullable
 as int,replies: freezed == replies ? _self.replies : replies // ignore: cast_nullable_to_non_nullable

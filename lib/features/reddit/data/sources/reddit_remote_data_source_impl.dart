@@ -54,9 +54,6 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
     // Use effectiveSort in the URL
     final url = '$_baseUrl/r/$subreddit/$effectiveSort.json';
 
-    // Log the URL being requested
-    print("ℹ️ Fetching Reddit posts from: $url with params: $queryParameters");
-
     try {
       final response = await _dio.get(url, queryParameters: queryParameters);
       final responseData = _handleResponse(response);
@@ -137,14 +134,8 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
     // Using the /comments/article endpoint
     final url = '$_baseUrl/r/$subreddit/comments/$postId.json';
 
-    // Log the request URL and parameters
-    print("ℹ️ Fetching post/comments from: $url with params: $queryParameters");
-
     try {
       final response = await _dio.get(url, queryParameters: queryParameters);
-
-      // Log the raw response data
-      print("ℹ️ Raw response data for $subreddit/$postId: ${response.data}");
 
       final responseData = _handleResponse(response);
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibechan/shared/providers/tab_manager_provider.dart';
+import 'package:vibechan/app/app_routes.dart'; // Import AppRoute
 
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
@@ -70,7 +71,8 @@ class FavoritesScreen extends ConsumerWidget {
                   final tabNotifier = ref.read(tabManagerProvider.notifier);
                   tabNotifier.navigateToOrReplaceActiveTab(
                     title: favorite['title']!,
-                    initialRouteName: 'catalog',
+                    initialRouteName:
+                        AppRoute.boardCatalog.name, // Use enum name
                     pathParameters: {'boardId': favorite['boardId']!},
                     icon: Icons.folder_special, // Example icon for favorite
                   );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibechan/app/app_routes.dart';
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_item_detail_provider.dart'
     hide hackerNewsItemRefresherProvider;
 import 'package:vibechan/features/hackernews/presentation/providers/hackernews_stories_provider.dart';
@@ -79,11 +81,11 @@ class NewsProviderFactory {
   static String getDetailRouteName(NewsSource source) {
     switch (source) {
       case NewsSource.hackernews:
-        return 'hackernews_item';
+        return AppRoute.hackernewsItem.name;
       case NewsSource.lobsters:
-        return 'lobsters_story';
+        return AppRoute.lobstersStory.name;
       case NewsSource.reddit:
-        return 'reddit_post'; // Will be used when Reddit is implemented
+        return AppRoute.postDetail.name;
     }
   }
 }

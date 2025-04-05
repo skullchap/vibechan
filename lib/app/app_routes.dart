@@ -2,31 +2,36 @@
 
 // Using an enum for type-safe route names
 enum AppRoute {
-  // Existing routes (assuming some exist)
+  // Core Shell route
   home(name: 'home', path: '/'),
+
+  // Settings (likely within shell context)
   settings(name: 'settings', path: '/settings'),
-  search(name: 'search', path: '/search'),
 
-  // FourChan routes (assuming)
-  board(name: 'board', path: '/board/:boardId'),
-  thread(name: 'thread', path: '/board/:boardId/thread/:threadId'),
+  // FourChan (assuming top-level access needed for TabManager)
+  boardList(name: 'boards', path: '/boards'),
+  boardCatalog(name: 'catalog', path: '/boards/board/:boardId'),
+  thread(name: 'thread', path: '/boards/board/:boardId/thread/:threadId'),
+  favorites(name: 'favorites', path: '/favorites'),
 
-  // Lobsters routes (assuming)
+  // Lobsters (top-level)
   lobsters(name: 'lobsters', path: '/lobsters'),
+  lobstersStory(name: 'lobsters_story', path: '/lobsters/story/:storyId'),
 
-  // --- New Reddit Routes ---
-  subredditGrid(
-    name: 'subredditGrid',
-    path: '/reddit',
-  ), // Entry point for Reddit section
-  subreddit(
-    name: 'subreddit',
-    path: '/reddit/r/:subreddit',
-  ), // Shows posts in a subreddit
+  // HackerNews (top-level)
+  hackernews(name: 'hackernews', path: '/hackernews'),
+  hackernewsItem(name: 'hackernews_item', path: '/hackernews/item/:itemId'),
+
+  // Reddit (top-level)
+  subredditGrid(name: 'subredditGrid', path: '/reddit'),
+  subreddit(name: 'subreddit', path: '/reddit/r/:subredditName'),
   postDetail(
     name: 'postDetail',
-    path: '/reddit/r/:subreddit/comments/:postId',
-  ); // Shows post and comments
+    path: '/reddit/r/:subredditName/comments/:postId',
+  ),
+
+  // Carousel (separate/non-shell)
+  carousel(name: 'carousel', path: '/carousel/:sourceInfo');
 
   const AppRoute({required this.name, required this.path});
 

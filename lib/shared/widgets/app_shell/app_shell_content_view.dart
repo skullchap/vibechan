@@ -11,6 +11,13 @@ import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_s
 import 'package:vibechan/features/reddit/presentation/screens/post_detail_screen.dart';
 import 'package:vibechan/features/reddit/presentation/screens/subreddit_grid_screen.dart';
 import 'package:vibechan/features/reddit/presentation/screens/subreddit_screen.dart';
+import 'package:vibechan/features/reddit/presentation/providers/subreddit_posts_provider.dart';
+import 'package:vibechan/features/reddit/presentation/providers/post_detail_provider.dart';
+import 'package:vibechan/features/reddit/domain/adapters/reddit_post_adapter.dart';
+import 'package:vibechan/shared/widgets/news/generic_news_list_screen.dart';
+import 'package:vibechan/shared/widgets/news/generic_news_detail_screen.dart';
+import 'package:vibechan/shared/enums/news_source.dart';
+import 'package:vibechan/app/app_routes.dart';
 
 import '../../models/content_tab.dart';
 import '../../../core/services/layout_service.dart';
@@ -97,19 +104,60 @@ class AppShellContentView extends ConsumerWidget {
           content = const SubredditGridScreen();
           break;
         case 'subreddit':
-          final subredditName = activeTab!.pathParameters['subreddit'];
+          final subredditName = activeTab!.pathParameters['subredditName'];
           content =
               subredditName != null
-                  ? SubredditScreen(subreddit: subredditName)
+                  ? Consumer(
+                    builder: (context, ref, _) {
+                      final postsAsync = ref.watch(
+                        subredditPostsProvider(subredditName),
+                      );
+                      return GenericNewsListScreen(
+                        source: NewsSource.reddit,
+                        title: 'r/$subredditName',
+                        itemsAsync: postsAsync.when(
+                          data:
+                              (posts) => AsyncData(
+                                posts
+                                    .map((p) => p.toGenericListItem())
+                                    .toList(),
+                              ),
+                          loading: () => const AsyncLoading(),
+                          error: (e, s) => AsyncError(e, s),
+                        ),
+                        detailRouteName: AppRoute.postDetail.name,
+                        listContextId: subredditName,
+                        onRefresh:
+                            () => ref.refresh(
+                              subredditPostsProvider(subredditName).future,
+                            ),
+                      );
+                    },
+                  )
                   : const Center(child: Text('Error: Missing subreddit name'));
           addPadding = false;
           break;
         case 'postDetail':
-          final subredditName = activeTab!.pathParameters['subreddit'];
+          final subredditName = activeTab!.pathParameters['subredditName'];
           final postId = activeTab!.pathParameters['postId'];
           content =
               (subredditName != null && postId != null)
-                  ? PostDetailScreen(subreddit: subredditName, postId: postId)
+                  ? Consumer(
+                    builder: (context, ref, _) {
+                      final params = PostDetailParams(
+                        subreddit: subredditName,
+                        postId: postId,
+                      );
+                      final detailAsync = ref.watch(postDetailProvider(params));
+                      return GenericNewsDetailScreen(
+                        source: NewsSource.reddit,
+                        itemDetailAsync: detailAsync,
+                        onRefresh:
+                            () =>
+                                ref.refresh(postDetailProvider(params).future),
+                      );
+                    },
+                  )
                   : const Center(
                     child: Text('Error: Missing subreddit/post ID'),
                   );

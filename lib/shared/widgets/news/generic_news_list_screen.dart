@@ -16,6 +16,7 @@ class GenericNewsListScreen extends ConsumerWidget {
   final String? sortTypeParameterName;
   final StateProvider<dynamic>? sortTypeProvider;
   final IconData itemIcon;
+  final String? listContextId;
 
   const GenericNewsListScreen({
     super.key,
@@ -27,19 +28,18 @@ class GenericNewsListScreen extends ConsumerWidget {
     this.sortTypeParameterName,
     this.sortTypeProvider,
     this.itemIcon = Icons.article,
+    this.listContextId,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Get search state
     final isSearchActive = ref.watch(searchVisibleProvider);
     final searchQuery = ref.watch(searchQueryProvider);
 
-    // Get current sort type from provider if available
+    // Get current sort type from provider if available - TODO: Implement if needed
 
     return itemsAsync.when(
       data: (items) {
-        // Apply search filtering
         final filteredItems =
             isSearchActive && searchQuery.isNotEmpty
                 ? _filterItemsBySearch(items, searchQuery)
@@ -49,12 +49,10 @@ class GenericNewsListScreen extends ConsumerWidget {
           return _buildEmptyState(context, ref);
         }
 
-        // Show "no results" message when search is active but no matches found
         if (isSearchActive && searchQuery.isNotEmpty && filteredItems.isEmpty) {
           return _buildNoSearchResultsState(context, ref, searchQuery);
         }
 
-        // Display items in a list
         return _buildItemsList(
           context,
           ref,
@@ -68,7 +66,6 @@ class GenericNewsListScreen extends ConsumerWidget {
     );
   }
 
-  // Helper method to filter items based on search query
   List<GenericListItem> _filterItemsBySearch(
     List<GenericListItem> items,
     String query,
@@ -81,11 +78,9 @@ class GenericNewsListScreen extends ConsumerWidget {
       final body = item.body?.toLowerCase() ?? '';
       final metadata = item.metadata;
 
-      // Check common fields
       bool matchesCommonFields =
           title.contains(searchTerms) || body.contains(searchTerms);
 
-      // Check source-specific fields
       bool matchesSourceSpecific = false;
       switch (source) {
         case NewsSource.hackernews:
@@ -103,7 +98,7 @@ class GenericNewsListScreen extends ConsumerWidget {
               true;
           break;
         case NewsSource.reddit:
-          // Add Reddit-specific search when implemented
+          // TODO: Add more Reddit-specific search fields if needed
           matchesSourceSpecific =
               (metadata['author'] as String?)?.toLowerCase().contains(
                 searchTerms,
@@ -116,7 +111,6 @@ class GenericNewsListScreen extends ConsumerWidget {
     }).toList();
   }
 
-  // Widget builders for different states
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     return Center(
       child: Column(
@@ -168,17 +162,7 @@ class GenericNewsListScreen extends ConsumerWidget {
   ) {
     return RefreshIndicator(
       onRefresh: () async {
-        if (onRefresh != null) {
-          onRefresh!();
-        }
-
-        // If we have a sort type provider, try to refresh based on it
-        if (sortTypeProvider != null && sortTypeParameterName != null) {
-          // For now, just call onRefresh again which should handle invalidation
-          if (onRefresh != null) {
-            onRefresh!();
-          }
-        }
+        onRefresh?.call();
       },
       child: ListView.builder(
         key:
@@ -198,34 +182,40 @@ class GenericNewsListScreen extends ConsumerWidget {
                   final tappedItem = items[index];
                   final tabNotifier = ref.read(tabManagerProvider.notifier);
 
-                  // Get a title for the tab
                   final title = tappedItem.title ?? '${source.name} Item';
-
-                  // Determine the path parameter for navigation based on source
-                  String paramName;
-                  String paramValue;
+                  Map<String, String> pathParameters;
 
                   switch (source) {
                     case NewsSource.hackernews:
-                      paramName = 'itemId';
-                      paramValue = tappedItem.id;
+                      pathParameters = {'itemId': tappedItem.id};
                       break;
                     case NewsSource.lobsters:
-                      paramName = 'storyId';
-                      paramValue =
+                      final lobstersId =
                           tappedItem.metadata['short_id'] as String? ??
                           tappedItem.id;
+                      pathParameters = {'storyId': lobstersId};
                       break;
                     case NewsSource.reddit:
-                      paramName = 'postId';
-                      paramValue = tappedItem.id;
+                      pathParameters = {
+                        'subredditName': listContextId ?? 'unknown',
+                        'postId': tappedItem.id,
+                      };
                       break;
                   }
+
+                  // --- Add Logging Here ---
+                  print("--- GenericNewsListScreen onTap ---");
+                  print("Source: $source");
+                  print("Detail Route Name Param: $detailRouteName");
+                  print("List Context ID (Subreddit): $listContextId");
+                  print("Tapped Item ID (Post ID): ${tappedItem.id}");
+                  print("Constructed Path Params: $pathParameters");
+                  // --- End Logging ---
 
                   tabNotifier.navigateToOrReplaceActiveTab(
                     title: title,
                     initialRouteName: detailRouteName,
-                    pathParameters: {paramName: paramValue},
+                    pathParameters: pathParameters,
                     icon: itemIcon,
                   );
                 }

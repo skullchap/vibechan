@@ -39,6 +39,8 @@ class RedditCommentConverter
           }
           // Add depth if missing in data, might get it from outer context if available
           dataMap['depth'] ??= json['depth'] as int? ?? 0;
+          // Ensure body_html is handled (default to null)
+          dataMap['body_html'] ??= null;
 
           return _$RedditCommentFromJson(dataMap);
         } catch (e, stackTrace) {
@@ -71,6 +73,7 @@ class RedditCommentConverter
             author: '[loader]',
             body:
                 '[load ${count > 0 ? '$count ' : ''}more replies (${children.length} threads)]',
+            bodyHtml: null, // 'more' items don't have bodyHtml
             score: 0,
             createdUtc: 0.0,
             depth: depth,
@@ -83,6 +86,7 @@ class RedditCommentConverter
             id: 'error-more-${DateTime.now().millisecondsSinceEpoch}',
             author: 'error',
             body: 'Error parsing RedditComment',
+            bodyHtml: null,
             score: 0,
             createdUtc: 0.0,
             depth: json['depth'] as int? ?? 0,
@@ -107,11 +111,14 @@ class RedditCommentConverter
               (dataMap['created_utc'] as num?)?.toDouble() ?? 0.0;
           // Depth might not be relevant/present for a t3 in a comment list context
           final depth = dataMap['depth'] as int? ?? json['depth'] as int? ?? 0;
+          // Ensure body_html is handled (default to null)
+          dataMap['body_html'] ??= null;
 
           return _RedditComment(
             id: id,
             author: author,
             body: 'Unsupported Item Type: t3',
+            bodyHtml: null,
             score: score,
             createdUtc: createdUtc,
             depth: depth,
@@ -125,6 +132,7 @@ class RedditCommentConverter
             id: 'error-t3-${DateTime.now().millisecondsSinceEpoch}',
             author: 'error',
             body: 'Error parsing RedditComment',
+            bodyHtml: null,
             score: 0,
             createdUtc: 0.0,
             depth: json['depth'] as int? ?? 0,
@@ -155,9 +163,11 @@ class RedditCommentConverter
       }
       // Ensure depth exists for the error case too
       fallbackData['depth'] ??= json['depth'] as int? ?? 0;
+      // Ensure body_html is handled in fallback
+      fallbackData['body_html'] ??= null;
 
-      // Log the map being passed to the generated parser in fallback
-      logger.d("Converter: Parsing fallbackData: $fallbackData");
+      // REMOVE Log the map being passed to the generated parser in fallback
+      // logger.d("Converter: Parsing fallbackData: $fallbackData");
       return _$RedditCommentFromJson(fallbackData);
     } catch (e, stackTrace) {
       // Capture stack trace
@@ -171,6 +181,7 @@ class RedditCommentConverter
         id: 'error-${DateTime.now().millisecondsSinceEpoch}',
         author: 'error',
         body: 'Error parsing RedditComment',
+        bodyHtml: null,
         score: 0,
         createdUtc: 0.0,
         depth: json['depth'] as int? ?? 0,
@@ -180,16 +191,25 @@ class RedditCommentConverter
 
   @override
   Map<String, dynamic> toJson(RedditComment data) {
-    if (data.isLoadMorePlaceholder) {
-      // Serialize 'more' placeholders
+    if (data.isLoadMorePlaceholder ||
+        data.body == 'Unsupported Item Type: t3' ||
+        data.author == 'error') {
+      // Simplified serialization for placeholders/errors
+      // (Adjust as needed if you need to serialize these differently)
       return {
-        'kind': 'more',
+        'kind':
+            (data.isLoadMorePlaceholder
+                ? 'more'
+                : 't1'), // Assuming t1 for others
         'data': {
           'id': data.id,
-          'name': 'more_${data.id}', // 'more' items often just use the id
+          'name': '${data.isLoadMorePlaceholder ? 'more' : 't1'}_${data.id}',
+          'author': data.author,
+          'body': data.body,
           'depth': data.depth,
-          'count': 0, // Example default
-          'children': [], // Example default
+          'score': data.score,
+          'created_utc': data.createdUtc,
+          // No replies or body_html needed for these types
         },
       };
     } else {
@@ -198,6 +218,7 @@ class RedditCommentConverter
         'id': data.id,
         'author': data.author,
         'body': data.body,
+        'body_html': data.bodyHtml, // Include HTML field
         'score': data.score,
         'created_utc': data.createdUtc,
         'depth': data.depth,
@@ -239,6 +260,7 @@ abstract class RedditComment with _$RedditComment {
     required String id,
     required String author,
     required String body,
+    String? bodyHtml,
     required int score,
     required double createdUtc,
     @Default(0) int depth,
