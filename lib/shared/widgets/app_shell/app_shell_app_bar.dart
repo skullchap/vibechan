@@ -64,11 +64,7 @@ Widget _buildSourceSelector(
       'icon': Icons.newspaper_outlined,
     },
     {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
-    {
-      'title': 'Reddit',
-      'routeName': 'subredditGrid',
-      'icon': Icons.reddit_outlined,
-    },
+    {'title': 'Reddit', 'routeName': 'reddit', 'icon': Icons.reddit_outlined},
     {
       'title': 'Favorites',
       'routeName': 'favorites',
