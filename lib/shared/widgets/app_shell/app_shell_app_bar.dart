@@ -258,10 +258,6 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
     // Visibility flags for buttons
     final bool showCatalogViewButton = isCatalogContext || isBoardListContext;
     final bool showHnSortButton = isHnListContext;
-    final bool showThreadCarouselButton =
-        isThreadContext; // Only for thread view
-    final bool showBoardCarouselButton =
-        isCatalogContext; // Only for catalog view
 
     // Construct sourceInfo strings conditionally
     String? boardSourceInfo;

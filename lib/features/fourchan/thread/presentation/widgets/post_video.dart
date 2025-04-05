@@ -65,9 +65,6 @@ class _PostVideoState extends State<PostVideo> {
 
     if (widget.isPreview) {
       return GestureDetector(
-        onTap: () {
-          print('Video preview tapped');
-        },
         child: AspectRatio(
           aspectRatio: aspectRatio,
           child: Stack(
@@ -118,7 +115,8 @@ class _PostVideoState extends State<PostVideo> {
                   fit: StackFit.expand,
                   children: [
                     Container(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: Image.network(
                         widget.media.thumbnailUrl,
                         fit: BoxFit.contain,

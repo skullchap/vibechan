@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:vibechan/core/utils/time_utils.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
-import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
-// Import Reddit models needed for type checking/casting
 import 'package:vibechan/features/reddit/domain/models/reddit_post.dart';
 import 'package:vibechan/features/reddit/domain/models/reddit_comment.dart';
-// Import Lobsters model for type checking
-import 'package:vibechan/features/lobsters/data/models/lobsters_story.dart';
 
 // Import the extracted public widgets
 import 'news_comment_item.dart';
@@ -215,8 +209,6 @@ class GenericNewsDetailScreen extends ConsumerWidget {
         return comment.body != null &&
             comment.body != "[deleted]" &&
             comment.body != "[removed]";
-      default:
-        return false;
     }
   }
 

@@ -8,9 +8,7 @@ import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_de
 import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart';
 import 'package:vibechan/features/lobsters/presentation/screens/lobsters_screen.dart';
 import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart';
-import 'package:vibechan/features/reddit/presentation/screens/post_detail_screen.dart';
 import 'package:vibechan/features/reddit/presentation/screens/subreddit_grid_screen.dart';
-import 'package:vibechan/features/reddit/presentation/screens/subreddit_screen.dart';
 import 'package:vibechan/features/reddit/presentation/providers/subreddit_posts_provider.dart';
 import 'package:vibechan/features/reddit/presentation/providers/post_detail_provider.dart';
 import 'package:vibechan/features/reddit/domain/adapters/reddit_post_adapter.dart';

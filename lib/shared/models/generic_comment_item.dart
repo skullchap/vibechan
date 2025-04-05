@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart'; // For IconData potentially
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'generic_comment_item.freezed.dart';

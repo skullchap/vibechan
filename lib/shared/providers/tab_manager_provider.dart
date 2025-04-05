@@ -49,16 +49,11 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
         // Ensure at least one tab is active if tabs were loaded
         if (loadedTabs.isNotEmpty &&
             loadedTabs.where((t) => t.isActive).isEmpty) {
-          // Find the *first* non-null tab to activate
-          final firstValidTabIndex = loadedTabs.indexWhere((t) => t != null);
-          if (firstValidTabIndex != -1) {
-            loadedTabs[firstValidTabIndex] = loadedTabs[firstValidTabIndex]
-                .copyWith(isActive: true);
-          }
+          loadedTabs[0] = loadedTabs[0].copyWith(isActive: true);
         }
 
         // Filter out any potential nulls from bad saves (though unlikely with freezed)
-        state = loadedTabs.where((t) => t != null).toList();
+        state = loadedTabs;
       } catch (e) {
         print('Error loading/decoding tabs: $e');
         state = [];

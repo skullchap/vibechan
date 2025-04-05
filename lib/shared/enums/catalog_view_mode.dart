@@ -19,8 +19,6 @@ extension CatalogViewModeExtension on CatalogViewMode {
         return 'Grid View';
       case CatalogViewMode.media:
         return 'Media Feed';
-      default:
-        return name; // Fallback to enum name
     }
   }
 

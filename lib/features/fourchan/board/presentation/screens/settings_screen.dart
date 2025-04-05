@@ -350,13 +350,15 @@ class SettingsScreen extends ConsumerWidget {
                           final String? newPath =
                               await downloadService.selectDownloadDirectory();
                           if (newPath != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Download folder set to: $newPath',
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Download folder set to: $newPath',
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
                             setState(() {});
                           }
                         },

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibechan/core/utils/time_utils.dart';
 import 'package:vibechan/features/lobsters/data/models/lobsters_story.dart';
-import 'package:vibechan/features/reddit/domain/models/reddit_comment.dart';
 import 'package:vibechan/features/reddit/domain/models/reddit_post.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';

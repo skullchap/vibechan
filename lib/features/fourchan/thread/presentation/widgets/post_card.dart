@@ -230,27 +230,29 @@ class PostCard extends StatelessWidget {
         bool success = await downloadService.saveMedia(mediaUrl, mediaFilename);
 
         // Show result message
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Media saved successfully!'
-                  : 'Failed to save media. Check permissions and storage.',
-            ),
-            action:
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
                 success
-                    ? null
-                    : SnackBarAction(
-                      label: 'Settings',
-                      onPressed: () {
-                        // Navigate to settings screen
-                        // Replace with your navigation logic
-                        Navigator.of(context).pushNamed('/settings');
-                      },
-                    ),
-          ),
-        );
+                    ? 'Media saved successfully!'
+                    : 'Failed to save media. Check permissions and storage.',
+              ),
+              action:
+                  success
+                      ? null
+                      : SnackBarAction(
+                        label: 'Settings',
+                        onPressed: () {
+                          // Navigate to settings screen
+                          // Replace with your navigation logic
+                          Navigator.of(context).pushNamed('/settings');
+                        },
+                      ),
+            ),
+          );
+        }
         break;
       case 'share_media':
         if (mediaUrl == null) return;
@@ -264,8 +266,9 @@ class PostCard extends StatelessWidget {
           mediaUrl,
           mediaFilename,
         );
-
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        }
 
         if (tempFile != null) {
           logger.i("Sharing temporary file: ${tempFile.path}");
@@ -274,18 +277,22 @@ class PostCard extends StatelessWidget {
           ], text: 'Media from post: $postLink');
         } else {
           logger.w("Failed to download media for sharing");
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not share media')),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not share media')),
+            );
+          }
         }
         break;
       case 'copy_media':
         if (mediaUrl == null) return;
         // Just copy the URL for now
         await Clipboard.setData(ClipboardData(text: mediaUrl));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied media URL to clipboard')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Copied media URL to clipboard')),
+          );
+        }
         break;
       case 'share_link':
         await Share.share(
@@ -295,15 +302,19 @@ class PostCard extends StatelessWidget {
         break;
       case 'copy_link':
         await Clipboard.setData(ClipboardData(text: postLink));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied link to clipboard')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Copied link to clipboard')),
+          );
+        }
         break;
       case 'copy_text':
         await Clipboard.setData(ClipboardData(text: post.comment));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copied text to clipboard')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Copied text to clipboard')),
+          );
+        }
         break;
       case 'open_in_browser':
         final url = Uri.parse(threadUrl);
@@ -313,9 +324,11 @@ class PostCard extends StatelessWidget {
           }
         } catch (e) {
           logger.e("Could not launch URL: $threadUrl", error: e);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Could not open link: $e')));
+          if (context.mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Could not open link: $e')));
+          }
         }
         break;
     }

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart';
 import 'package:vibechan/features/reddit/domain/models/models.dart'; // Using barrel file
@@ -30,7 +31,7 @@ class PostDetailParams {
 // KeepAlive can be useful if users frequently navigate back and forth
 @Riverpod(keepAlive: true)
 Future<(RedditPost, List<RedditComment>)> postDetail(
-  PostDetailRef ref,
+  Ref ref,
   PostDetailParams params,
 ) async {
   final repository = getIt<RedditRepository>();

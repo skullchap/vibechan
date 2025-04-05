@@ -40,8 +40,6 @@ class RedditCommentConverter
           // Add depth if missing in data, might get it from outer context if available
           dataMap['depth'] ??= json['depth'] as int? ?? 0;
           // Ensure body_html is handled (default to null)
-          dataMap['body_html'] ??= null;
-
           return _$RedditCommentFromJson(dataMap);
         } catch (e, stackTrace) {
           logger.e(

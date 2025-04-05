@@ -106,8 +106,6 @@ class NewsCommentItem extends StatelessWidget {
         return comment.commentingUser ?? 'anonymous';
       case NewsSource.reddit:
         return comment.author ?? 'anonymous';
-      default:
-        return 'anonymous';
     }
   }
 
@@ -126,8 +124,6 @@ class NewsCommentItem extends StatelessWidget {
         return (comment is RedditComment)
             ? comment.createdDateTime
             : DateTime.now();
-      default:
-        return DateTime.now();
     }
   }
 
@@ -140,8 +136,6 @@ class NewsCommentItem extends StatelessWidget {
         return comment.score;
       case NewsSource.reddit:
         return comment.score;
-      default:
-        return null;
     }
   }
 
@@ -160,10 +154,8 @@ class NewsCommentItem extends StatelessWidget {
             return _decodeHtmlEntities(comment.bodyHtml!);
           }
           // Fallback to plain text
-          return comment.body ?? '';
+          return comment.body;
         }
-        return '';
-      default:
         return '';
     }
   }
