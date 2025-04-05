@@ -26,6 +26,7 @@ class NewsItemHeader extends StatelessWidget {
   final bool isRefreshing;
 
   const NewsItemHeader({
+    super.key,
     required this.item,
     required this.source,
     required this.theme,
@@ -182,8 +183,6 @@ class NewsItemHeader extends StatelessWidget {
         return item.url;
       case NewsSource.reddit:
         return item.url;
-      default:
-        return null;
     }
   }
 
@@ -195,8 +194,6 @@ class NewsItemHeader extends StatelessWidget {
         return item.score;
       case NewsSource.reddit:
         return item.score;
-      default:
-        return null;
     }
   }
 
@@ -209,8 +206,6 @@ class NewsItemHeader extends StatelessWidget {
         return (item is LobstersStory) ? item.submitterUser : 'anonymous';
       case NewsSource.reddit:
         return item.author ?? 'anonymous';
-      default:
-        return 'anonymous';
     }
   }
 
@@ -228,8 +223,6 @@ class NewsItemHeader extends StatelessWidget {
       case NewsSource.reddit:
         // Assuming item is RedditPost
         return (item is RedditPost) ? item.createdDateTime : DateTime.now();
-      default:
-        return DateTime.now();
     }
   }
 
@@ -250,8 +243,6 @@ class NewsItemHeader extends StatelessWidget {
           return item.selftext;
         }
         return null;
-      default:
-        return null;
     }
   }
 
@@ -266,8 +257,6 @@ class NewsItemHeader extends StatelessWidget {
         // Reddit uses 'link_flair_text', handle potential null
         final flair = (item is RedditPost) ? item.linkFlairText : null;
         return flair != null && flair.isNotEmpty ? [flair] : null;
-      default:
-        return null;
     }
   }
 }

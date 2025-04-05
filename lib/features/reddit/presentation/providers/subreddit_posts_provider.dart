@@ -2,6 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/core/di/injection.dart'; // Assuming GetIt setup is here
 import 'package:vibechan/features/reddit/domain/models/reddit_post.dart';
 import 'package:vibechan/features/reddit/domain/repositories/reddit_repository.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 part 'subreddit_posts_provider.g.dart';
 
@@ -73,7 +75,12 @@ class SubredditPosts extends _$SubredditPosts {
         state = AsyncData([...currentPosts, ...newPosts]);
       } catch (e, stackTrace) {
         // Handle error, perhaps revert state or show error message
-        print("Error fetching more posts for r/$subreddit: $e");
+        final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+        logger.e(
+          "Error fetching more posts for r/$subreddit",
+          error: e,
+          stackTrace: stackTrace,
+        );
         // Keep existing data but signal error (or could set state to AsyncError)
         // Using copyWithPrevious preserves the previous data while showing the error
         state = AsyncError<List<RedditPost>>(
@@ -85,7 +92,8 @@ class SubredditPosts extends _$SubredditPosts {
       }
     } else {
       // If current state is error or loading, don't fetch more
-      print(
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.d(
         "Skipping fetchMorePosts as current state is not AsyncData: $currentState",
       );
       _isLoadingMore = false;

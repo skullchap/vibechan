@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart'; // For rendering comment body
 import 'package:vibechan/core/utils/time_utils.dart'; // For timestamp formatting
 import 'package:vibechan/features/reddit/domain/models/reddit_comment.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 // Import URL launcher if needed for links in comments
 // import 'package:url_launcher/url_launcher.dart';
 
@@ -47,7 +49,8 @@ class RedditCommentTile extends StatelessWidget {
         ),
         child: InkWell(
           onTap: () {
-            print("TODO: Implement Load More Comments for ${comment.id}");
+            final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+            logger.w("TODO: Implement Load More Comments for ${comment.id}");
             // Need to trigger an API call, likely via a provider method
             // This might involve finding the parent post provider and calling a method there.
           },
@@ -157,7 +160,10 @@ class RedditCommentTile extends StatelessWidget {
                         // Handle link taps, e.g., launch URL
                         if (href != null) {
                           // await launchUrl(Uri.parse(href));
-                          print("Tapped link: $href");
+                          final logger = GetIt.instance<Logger>(
+                            instanceName: "AppLogger",
+                          );
+                          logger.d("Tapped link: $href");
                         }
                       },
                     ),

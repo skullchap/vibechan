@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouter for navigation
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 import '../../models/content_tab.dart';
 import '../../providers/tab_manager_provider.dart';
@@ -34,7 +36,8 @@ String _getCategoryFromTab(ContentTab? tab) {
     case 'settings':
       return 'settings';
     default:
-      print(
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.w(
         "Warning: Unknown initialRouteName '${tab.initialRouteName}' in _getCategoryFromTab, defaulting to boards",
       );
       return 'boards'; // Fallback
@@ -317,7 +320,7 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
             filled: true,
             fillColor: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 128),
             contentPadding: const EdgeInsets.symmetric(
               vertical: 8,
               horizontal: 16,

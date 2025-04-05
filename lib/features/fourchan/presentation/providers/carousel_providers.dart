@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibechan/features/fourchan/domain/models/media.dart';
 import './board_providers.dart';
 import './thread_providers.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 part 'carousel_providers.g.dart';
 
 @riverpod
 Future<List<Media>> carouselMediaList(Ref ref, String sourceInfo) async {
+  final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
   final parts = sourceInfo.split(':');
   if (parts.length < 2) {
     throw ArgumentError('Invalid sourceInfo format: $sourceInfo');
@@ -16,9 +20,10 @@ Future<List<Media>> carouselMediaList(Ref ref, String sourceInfo) async {
   final argsString = parts[1];
   final sourceArgs = argsString.split('/');
 
-  if (sourceName == '4chan') {
+  // Support both '4chan' and 'boards' as source names for 4chan content
+  if (sourceName == '4chan' || sourceName == 'boards') {
     if (sourceArgs.isEmpty) {
-      throw ArgumentError('Missing boardId for 4chan source');
+      throw ArgumentError('Missing boardId for ${sourceName} source');
     }
     final boardId = sourceArgs[0];
 
@@ -26,17 +31,21 @@ Future<List<Media>> carouselMediaList(Ref ref, String sourceInfo) async {
       final threadId = sourceArgs[1];
       try {
         final repository = ref.read(threadRepositoryProvider);
+        logger.d(
+          'Getting media from thread context: $boardId/$threadId (source: $sourceName)',
+        );
         return repository.getAllMediaFromThreadContext(boardId, threadId);
       } catch (e) {
-        print('Error getting ThreadRepository for $sourceName: $e');
+        logger.e('Error getting ThreadRepository for $sourceName', error: e);
         rethrow;
       }
     } else {
       try {
         final repository = ref.read(boardRepositoryProvider);
+        logger.d('Getting media from board: $boardId (source: $sourceName)');
         return repository.getAllMediaFromBoard(boardId);
       } catch (e) {
-        print('Error getting BoardRepository for $sourceName: $e');
+        logger.e('Error getting BoardRepository for $sourceName', error: e);
         rethrow;
       }
     }
@@ -49,22 +58,30 @@ Future<List<Media>> carouselMediaList(Ref ref, String sourceInfo) async {
 
 @riverpod
 Future<bool> boardHasMedia(Ref ref, String sourceInfo) async {
+  final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
   final parts = sourceInfo.split(':');
   if (parts.length < 2) return false;
   final sourceName = parts[0];
   final boardId = parts[1];
 
+  // Support both '4chan' and 'boards' as source names
+  if (sourceName != '4chan' && sourceName != 'boards') {
+    logger.w('boardHasMedia called with unsupported source: $sourceName');
+    return false;
+  }
+
   try {
     final repository = ref.read(boardRepositoryProvider);
     return await repository.boardHasMedia(boardId);
   } catch (e) {
-    print('Error checking board media for $sourceName: $e');
+    logger.e('Error checking board media for $sourceName', error: e);
     return false;
   }
 }
 
 @riverpod
 Future<bool> threadHasMedia(Ref ref, String sourceInfo) async {
+  final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
   final parts = sourceInfo.split(':');
   if (parts.length < 2) return false;
   final sourceName = parts[0];
@@ -73,11 +90,17 @@ Future<bool> threadHasMedia(Ref ref, String sourceInfo) async {
   final boardId = args[0];
   final threadId = args[1];
 
+  // Support both '4chan' and 'boards' as source names
+  if (sourceName != '4chan' && sourceName != 'boards') {
+    logger.w('threadHasMedia called with unsupported source: $sourceName');
+    return false;
+  }
+
   try {
     final repository = ref.read(threadRepositoryProvider);
     return await repository.threadHasMedia(boardId, threadId);
   } catch (e) {
-    print('Error checking thread media for $sourceName: $e');
+    logger.e('Error checking thread media for $sourceName', error: e);
     return false;
   }
 }

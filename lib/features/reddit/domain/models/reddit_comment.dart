@@ -77,8 +77,10 @@ class RedditCommentConverter
             depth: depth,
           );
         } catch (e, stackTrace) {
-          print(
-            "Converter: Error parsing RedditComment (kind more) from nested 'data': $e\n$stackTrace",
+          logger.e(
+            "Converter: Error parsing RedditComment (kind more) from nested 'data'",
+            error: e,
+            stackTrace: stackTrace,
           );
           return _RedditComment(
             id: 'error-more-${DateTime.now().millisecondsSinceEpoch}',
@@ -95,7 +97,7 @@ class RedditCommentConverter
           json['data'] is Map<String, dynamic>) {
         try {
           final dataMap = json['data'] as Map<String, dynamic>;
-          print(
+          logger.d(
             "Converter: Encountered 't3' (Link Post), creating placeholder.",
           );
 
@@ -122,8 +124,10 @@ class RedditCommentConverter
             depth: depth,
           );
         } catch (e, stackTrace) {
-          print(
-            "Converter: Error parsing placeholder for unexpected 't3' item: $e\n$stackTrace",
+          logger.e(
+            "Converter: Error parsing placeholder for unexpected 't3' item",
+            error: e,
+            stackTrace: stackTrace,
           );
           // Fallback to a generic error if parsing the t3 fails
           return _RedditComment(

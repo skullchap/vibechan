@@ -190,8 +190,6 @@ class GenericNewsDetailScreen extends ConsumerWidget {
       case NewsSource.reddit:
         // Return the comment list from the tuple
         return (item is (RedditPost, List<RedditComment>)) ? item.$2 : null;
-      default:
-        return null;
     }
   }
 

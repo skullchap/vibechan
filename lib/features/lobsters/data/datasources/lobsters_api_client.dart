@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 @injectable
 class LobstersApiClient {
@@ -55,7 +57,8 @@ class LobstersApiClient {
         return response.data as Map<String, dynamic>;
       } else {
         // Log more details about the response for debugging
-        print(
+        final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+        logger.w(
           'Lobsters API error: ${response.statusCode}, data: ${response.data.runtimeType}',
         );
         throw Exception(
@@ -63,12 +66,14 @@ class LobstersApiClient {
         );
       }
     } on DioException catch (e) {
-      print('Dio error for Lobsters story: $url - ${e.message} - ${e.type}');
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.e('Dio error for Lobsters story: $url - ${e.message} - ${e.type}');
       throw Exception(
         'Network error fetching Lobsters story from $url: ${e.message}',
       );
     } catch (e) {
-      print('Unexpected error for Lobsters story: $url - $e');
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.e('Unexpected error for Lobsters story: $url - $e');
       throw Exception('Unexpected error fetching Lobsters story from $url: $e');
     }
   }

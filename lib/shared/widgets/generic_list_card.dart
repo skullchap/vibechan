@@ -12,6 +12,7 @@ import 'package:vibechan/features/fourchan/domain/models/generic_list_item.dart'
 import 'package:vibechan/shared/widgets/simple_html_renderer.dart';
 import 'package:vibechan/core/utils/time_utils.dart';
 import 'package:vibechan/config/app_config.dart'; // ADD BACK for AppConfig
+import 'package:get_it/get_it.dart';
 
 // Placeholder for video widget if needed later
 // import 'package:vibechan/features/thread/presentation/widgets/post_video.dart';
@@ -496,8 +497,8 @@ class GenericListCard extends StatelessWidget {
   }
 
   void _handleMenuSelection(BuildContext context, String value) async {
-    final logger = getIt<Logger>();
-    final downloadService = getIt<DownloadService>();
+    final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+    final downloadService = GetIt.instance<DownloadService>();
     // Assume services are available via getIt
     // final urlLauncher = getIt<UrlLauncherService>();
     // final clipboard = getIt<ClipboardService>();
@@ -592,12 +593,12 @@ class GenericListCard extends StatelessWidget {
       case 'upvote':
       case 'downvote':
         // TODO: Call VotingService (only for sources that support it, like Reddit)
-        print('Voting action ($value) not implemented yet.');
+        logger.w('Voting action ($value) not implemented yet.');
         break;
       case 'add_favorite':
       case 'remove_favorite':
         // TODO: Call FavoritesService
-        print('Favorite action ($value) not implemented yet.');
+        logger.w('Favorite action ($value) not implemented yet.');
         break;
     }
   }

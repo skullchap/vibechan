@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:uuid/uuid.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 import '../models/content_tab.dart';
 
@@ -55,7 +57,8 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
         // Filter out any potential nulls from bad saves (though unlikely with freezed)
         state = loadedTabs;
       } catch (e) {
-        print('Error loading/decoding tabs: $e');
+        final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+        logger.e('Error loading/decoding tabs: $e');
         state = [];
         await _saveTabs(); // Clear potentially corrupted data
       }
@@ -75,7 +78,8 @@ class TabManagerNotifier extends StateNotifier<List<ContentTab>> {
       );
       await _prefs.setString(_tabsStorageKey, tabsJson);
     } catch (e) {
-      print('Error saving tabs: $e');
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.e('Error saving tabs: $e');
     }
   }
 
@@ -254,7 +258,8 @@ final tabManagerProvider = StateNotifierProvider<
     data: (prefs) => TabManagerNotifier(prefs),
     loading: () => TabManagerNotifier(null),
     error: (err, stack) {
-      print("Error loading SharedPreferences: $err");
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.e("Error loading SharedPreferences: $err");
       // Optionally, return a notifier that signals an error state?
       return TabManagerNotifier(null);
     },

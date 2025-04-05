@@ -24,6 +24,7 @@ class NewsCommentItem extends StatelessWidget {
   final String? searchQuery;
 
   const NewsCommentItem({
+    super.key,
     required this.comment,
     required this.source,
     required this.theme,

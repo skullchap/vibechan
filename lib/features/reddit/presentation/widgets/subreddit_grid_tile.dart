@@ -48,13 +48,9 @@ class SubredditGridTile extends ConsumerWidget {
           final tabNotifier = ref.read(tabManagerProvider.notifier);
           // Use the TabManager to navigate within the active tab
           tabNotifier.navigateToOrReplaceActiveTab(
-            title:
-                subreddit.displayNamePrefixed ??
-                'r/?', // Use prefixed name for title
+            title: subreddit.displayNamePrefixed, // Use prefixed name for title
             initialRouteName: AppRoute.subreddit.name,
-            pathParameters: {
-              'subredditName': subreddit.displayName ?? 'unknown',
-            },
+            pathParameters: {'subredditName': subreddit.displayName},
             icon: Icons.reddit, // Or a more specific icon if available
           );
         },
@@ -102,7 +98,7 @@ class SubredditGridTile extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       // Add null check for displayNamePrefixed
-                      subreddit.displayNamePrefixed ?? 'r/?',
+                      subreddit.displayNamePrefixed,
                       style: textTheme.titleMedium,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -128,7 +124,7 @@ class SubredditGridTile extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 // Add null check and formatting for subscriberCount
-                '${subreddit.subscriberCount ?? 0} subscribers',
+                '${subreddit.subscriberCount} subscribers',
                 style: textTheme.labelSmall?.copyWith(
                   color: colorScheme.secondary,
                 ),

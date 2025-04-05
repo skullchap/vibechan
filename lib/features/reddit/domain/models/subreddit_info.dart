@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 part 'subreddit_info.freezed.dart';
 part 'subreddit_info.g.dart';
@@ -33,7 +35,12 @@ abstract class SubredditInfo with _$SubredditInfo {
     try {
       return _$SubredditInfoFromJson(json);
     } catch (e) {
-      print("Failed to parse SubredditInfo from JSON: $e. JSON: $json");
+      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+      logger.e(
+        "Failed to parse SubredditInfo from JSON",
+        error: e,
+        stackTrace: StackTrace.current,
+      );
       rethrow;
     }
   }

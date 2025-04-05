@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 part 'reddit_post.freezed.dart';
 part 'reddit_post.g.dart';
@@ -29,6 +31,8 @@ abstract class RedditPost with _$RedditPost {
   }) = _RedditPost;
 
   factory RedditPost.fromJson(Map<String, dynamic> json) {
+    final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+
     // Prioritize using the 'data' field if it exists and is a Map
     if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
       final dataMap = Map<String, dynamic>.from(
@@ -36,12 +40,8 @@ abstract class RedditPost with _$RedditPost {
       );
       try {
         // Apply defaults to the dataMap
-        print(
-          "--- RedditPost.fromJson --- Trying nested 'data' field.",
-        ); // Log entry
-        print(
-          "Incoming dataMap id: ${dataMap['id']}",
-        ); // Log the ID before default
+        logger.d("--- RedditPost.fromJson --- Trying nested 'data' field.");
+        logger.d("Incoming dataMap id: ${dataMap['id']}");
         dataMap['id'] ??= 'missing_id_${DateTime.now().millisecondsSinceEpoch}';
         dataMap['subreddit'] ??= 'unknown';
         dataMap['title'] ??= '[Missing Title]';
@@ -52,8 +52,9 @@ abstract class RedditPost with _$RedditPost {
 
         return _$RedditPostFromJson(dataMap);
       } catch (e) {
-        print(
-          "Error parsing RedditPost from nested 'data' field (Kind: ${json['kindd'] ?? json['kind'] ?? 'unknown'}): $e",
+        logger.e(
+          "Error parsing RedditPost from nested 'data' field (Kind: ${json['kindd'] ?? json['kind'] ?? 'unknown'})",
+          error: e,
         );
         // Rethrow immediately to see the specific error from dataMap parsing
         rethrow;
@@ -62,13 +63,9 @@ abstract class RedditPost with _$RedditPost {
 
     // Fallback: Try parsing the original JSON directly (less common for posts)
     try {
-      print(
-        "--- RedditPost.fromJson --- Trying direct parse (fallback).",
-      ); // Log entry
+      logger.d("--- RedditPost.fromJson --- Trying direct parse (fallback).");
       // Apply defaults BEFORE parsing
-      print(
-        "Incoming direct json id: ${json['id']}",
-      ); // Log the ID before default
+      logger.d("Incoming direct json id: ${json['id']}");
       json['id'] ??= 'missing_id_${DateTime.now().millisecondsSinceEpoch}';
       json['subreddit'] ??= 'unknown';
       json['title'] ??= '[Missing Title]';
@@ -79,7 +76,10 @@ abstract class RedditPost with _$RedditPost {
 
       return _$RedditPostFromJson(json);
     } catch (e) {
-      print("Failed to parse RedditPost directly or from nested data: $e");
+      logger.e(
+        "Failed to parse RedditPost directly or from nested data",
+        error: e,
+      );
       rethrow; // Rethrow if all parsing attempts fail
     }
   }

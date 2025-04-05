@@ -30,7 +30,8 @@ class _CarouselScreenState extends ConsumerState<CarouselScreen> {
       final parts = sourceInfo.split(':');
       final sourceName = parts[0];
       final args = parts[1].split('/');
-      if (sourceName == '4chan') {
+      // Support both '4chan' and 'boards' as source names
+      if (sourceName == '4chan' || sourceName == 'boards') {
         final boardId = args[0];
         final threadId = args.length > 1 ? args[1] : null;
         final context = threadId != null ? '/$threadId' : '';

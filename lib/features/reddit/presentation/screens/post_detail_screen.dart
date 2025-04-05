@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vibechan/features/reddit/domain/adapters/reddit_post_adapter.dart';
 import 'package:vibechan/features/reddit/presentation/providers/post_detail_provider.dart';
-import 'package:vibechan/features/reddit/presentation/widgets/reddit_comment_tile.dart';
-import 'package:vibechan/shared/widgets/generic_list_card.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/shared/widgets/news/generic_news_detail_screen.dart';
 

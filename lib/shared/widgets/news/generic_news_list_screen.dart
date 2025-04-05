@@ -5,6 +5,8 @@ import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/shared/providers/search_provider.dart';
 import 'package:vibechan/shared/providers/tab_manager_provider.dart';
 import 'package:vibechan/shared/widgets/generic_list_card.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 /// A generic news list screen that works with different news sources
 class GenericNewsListScreen extends ConsumerWidget {
@@ -204,12 +206,15 @@ class GenericNewsListScreen extends ConsumerWidget {
                   }
 
                   // --- Add Logging Here ---
-                  print("--- GenericNewsListScreen onTap ---");
-                  print("Source: $source");
-                  print("Detail Route Name Param: $detailRouteName");
-                  print("List Context ID (Subreddit): $listContextId");
-                  print("Tapped Item ID (Post ID): ${tappedItem.id}");
-                  print("Constructed Path Params: $pathParameters");
+                  final logger = GetIt.instance<Logger>(
+                    instanceName: "AppLogger",
+                  );
+                  logger.d("--- GenericNewsListScreen onTap ---");
+                  logger.d("Source: $source");
+                  logger.d("Detail Route Name Param: $detailRouteName");
+                  logger.d("List Context ID (Subreddit): $listContextId");
+                  logger.d("Tapped Item ID (Post ID): ${tappedItem.id}");
+                  logger.d("Constructed Path Params: $pathParameters");
                   // --- End Logging ---
 
                   tabNotifier.navigateToOrReplaceActiveTab(

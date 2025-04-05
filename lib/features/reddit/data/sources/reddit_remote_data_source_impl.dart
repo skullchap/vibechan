@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 import '../../domain/models/models.dart';
 import 'reddit_remote_data_source.dart';
 
@@ -9,8 +11,11 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
   // Using www.reddit.com as it often works better for the JSON API than old.reddit.com
   // and handles redirects automatically if needed. Adding .json suffix.
   final String _baseUrl = 'https://www.reddit.com';
+  late final Logger _logger;
 
-  RedditRemoteDataSourceImpl(this._dio);
+  RedditRemoteDataSourceImpl(this._dio) {
+    _logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+  }
 
   // Helper to handle potential Dio errors and response structure
   dynamic _handleResponse(Response response) {
@@ -74,19 +79,21 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
         }
       }
       // If structure is invalid or empty, return empty list or throw
-      print(
+      _logger.w(
         'Invalid or empty response structure for subreddit posts: $responseData',
       );
       return []; // Return empty list as a fallback
       // throw Exception('Invalid response structure for subreddit posts');
     } on DioException catch (e) {
-      print(
-        "DioError fetching subreddit posts for r/$subreddit: ${e.message} - ${e.response?.data}",
+      _logger.e(
+        "DioError fetching subreddit posts for r/$subreddit",
+        error: e,
+        stackTrace: StackTrace.current,
       );
       // Consider mapping Dio errors to domain-specific errors
       rethrow;
     } catch (e) {
-      print("Error fetching subreddit posts for r/$subreddit: $e");
+      _logger.e("Error fetching subreddit posts for r/$subreddit", error: e);
       rethrow;
     }
   }
@@ -106,12 +113,14 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      print(
-        "DioError fetching subreddit info for r/$subreddit: ${e.message} - ${e.response?.data}",
+      _logger.e(
+        "DioError fetching subreddit info for r/$subreddit",
+        error: e,
+        stackTrace: StackTrace.current,
       );
       rethrow;
     } catch (e) {
-      print("Error fetching subreddit info for r/$subreddit: $e");
+      _logger.e("Error fetching subreddit info for r/$subreddit", error: e);
       rethrow;
     }
   }
@@ -178,7 +187,7 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
                 }
               }
               // If comment structure is invalid, still return post with empty comments?
-              print(
+              _logger.w(
                 "Post found, but comment structure invalid for $subreddit/$postId",
               );
               return (post, <RedditComment>[]);
@@ -190,14 +199,18 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
         'Invalid response structure for post $subreddit/$postId and comments: $responseData',
       );
     } on DioException catch (e, stackTrace) {
-      print(
-        "DioError fetching post/comments for $subreddit/$postId: ${e.message} - ${e.response?.data}",
+      _logger.e(
+        "DioError fetching post/comments for $subreddit/$postId",
+        error: e,
+        stackTrace: stackTrace,
       );
-      print("Stack trace: $stackTrace");
       rethrow;
     } catch (e, stackTrace) {
-      print("Error fetching post/comments for $subreddit/$postId: $e");
-      print("Stack trace: $stackTrace");
+      _logger.e(
+        "Error fetching post/comments for $subreddit/$postId",
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -238,18 +251,18 @@ class RedditRemoteDataSourceImpl implements RedditRemoteDataSource {
         }
       }
       // If structure is invalid or empty, return empty list
-      print(
-        'Invalid or empty response structure for subreddit search: $responseData',
-      );
+      _logger.w('Invalid or empty response structure for subreddit search');
       return []; // Return empty list as a fallback
       // throw Exception('Invalid response structure for subreddit search');
     } on DioException catch (e) {
-      print(
-        "DioError searching subreddits for '$query': ${e.message} - ${e.response?.data}",
+      _logger.e(
+        "DioError searching subreddits for '$query'",
+        error: e,
+        stackTrace: StackTrace.current,
       );
       rethrow;
     } catch (e) {
-      print("Error searching subreddits for '$query': $e");
+      _logger.e("Error searching subreddits for '$query'", error: e);
       rethrow;
     }
   }

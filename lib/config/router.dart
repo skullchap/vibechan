@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 
 import 'package:vibechan/features/fourchan/board/presentation/screens/board_list_screen.dart';
 import 'package:vibechan/features/fourchan/board/presentation/screens/board_catalog_screen.dart';
@@ -166,21 +168,24 @@ final router = GoRouter(
                   path: 'comments/:postId', // Relative path, no :title
                   name: AppRoute.postDetail.name,
                   builder: (context, state) {
-                    print("--- PostDetail Route Builder ---");
-                    print("state.pathParameters: ${state.pathParameters}");
+                    final logger = GetIt.instance<Logger>(
+                      instanceName: "AppLogger",
+                    );
+                    logger.d("--- PostDetail Route Builder ---");
+                    logger.d("state.pathParameters: ${state.pathParameters}");
 
                     final subredditName =
                         state.pathParameters['subredditName'] ?? 'unknown';
                     final postId = state.pathParameters['postId'] ?? 'unknown';
 
-                    print("Extracted subredditName: $subredditName");
-                    print("Extracted postId: $postId");
+                    logger.d("Extracted subredditName: $subredditName");
+                    logger.d("Extracted postId: $postId");
 
                     if (subredditName == 'unknown' ||
                         subredditName.isEmpty ||
                         postId == 'unknown' ||
                         postId.isEmpty) {
-                      print(
+                      logger.e(
                         "Error: Invalid parameters received by PostDetail route builder.",
                       );
                       return Scaffold(

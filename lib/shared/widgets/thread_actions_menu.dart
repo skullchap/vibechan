@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logger/logger.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/shared/services/thread_url_service.dart';
 
@@ -39,13 +44,17 @@ class ThreadActionsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final logger = GetIt.instance<Logger>(
+      instanceName: "AppLogger",
+    ); // Get logger
+
     if (showAsMenu) {
       return PopupMenuButton<String>(
         icon: Icon(icon ?? Icons.more_vert, size: iconSize),
         tooltip: 'Thread actions',
         onSelected: (action) {
           if (action == 'open_browser') {
-            _openInBrowser();
+            _openInBrowser(context, logger);
           }
         },
         itemBuilder:
@@ -66,12 +75,12 @@ class ThreadActionsButton extends StatelessWidget {
       return IconButton(
         icon: Icon(icon ?? Icons.open_in_browser, size: iconSize),
         tooltip: 'Open in browser',
-        onPressed: () => _openInBrowser(),
+        onPressed: () => _openInBrowser(context, logger),
       );
     }
   }
 
-  void _openInBrowser() async {
+  void _openInBrowser(BuildContext context, Logger logger) async {
     try {
       String url = ThreadUrlService.getExternalUrl(
         source: source,
@@ -83,9 +92,21 @@ class ThreadActionsButton extends StatelessWidget {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        logger.w('Could not launch URL: $url'); // Use logger
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Could not open URL: $url')));
+        }
       }
     } catch (e) {
-      debugPrint('Error opening URL: $e');
+      logger.e('Error opening URL', error: e); // Use logger
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error opening URL: $e')));
+      }
     }
   }
 }

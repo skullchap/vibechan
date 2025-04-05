@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:vibechan/app/app_routes.dart';
 import 'package:vibechan/features/reddit/domain/adapters/reddit_post_adapter.dart';
-import 'package:vibechan/features/reddit/domain/models/reddit_post.dart';
 import 'package:vibechan/features/reddit/presentation/providers/subreddit_posts_provider.dart';
 import 'package:vibechan/shared/enums/news_source.dart';
 import 'package:vibechan/shared/widgets/news/generic_news_list_screen.dart';
