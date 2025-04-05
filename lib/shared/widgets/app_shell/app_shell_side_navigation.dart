@@ -1,12 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';
+import 'package:vibechan/app/app_routes.dart'; // Import AppRoute
+import 'package:get_it/get_it.dart'; // Import GetIt
+import 'package:logger/logger.dart'; // Import Logger
 
 import '../../models/content_tab.dart';
 import '../../providers/tab_manager_provider.dart';
 import '../../providers/settings_provider.dart'; // Import for settings access
 
-// Side navigation source selector builder (moved here)
+// MOVED from app_shell_app_bar.dart and made public
+// Helper function to determine the general category (route name) of a tab using AppRoute
+String getRouteNameFromTab(ContentTab? tab) {
+  if (tab == null) return AppRoute.boardList.name; // Default to boards
+
+  final routeName = tab.initialRouteName;
+
+  // Map specific 4chan routes to the base 'boards' route name for the selector
+  if (routeName == AppRoute.boardList.name ||
+      routeName == AppRoute.boardCatalog.name ||
+      routeName == AppRoute.thread.name) {
+    return AppRoute.boardList.name;
+  }
+  // Map specific HN routes to the base 'hackernews' route name
+  if (routeName == AppRoute.hackernews.name ||
+      routeName == AppRoute.hackernewsItem.name) {
+    return AppRoute.hackernews.name;
+  }
+  // Map specific Lobsters routes to the base 'lobsters' route name
+  if (routeName == AppRoute.lobsters.name ||
+      routeName == AppRoute.lobstersStory.name) {
+    return AppRoute.lobsters.name;
+  }
+  // Map specific Reddit routes to the base 'subredditGrid' route name
+  if (routeName == AppRoute.subredditGrid.name ||
+      routeName == AppRoute.subreddit.name ||
+      routeName == AppRoute.postDetail.name) {
+    return AppRoute.subredditGrid.name;
+  }
+  // Handle other top-level routes directly
+  if (routeName == AppRoute.favorites.name) {
+    return AppRoute.favorites.name;
+  }
+  if (routeName == AppRoute.settings.name) {
+    return AppRoute.settings.name;
+  }
+
+  // Fallback for any unhandled or potentially new routes
+  final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
+  logger.w(
+    "Warning: Unknown initialRouteName '$routeName' in getRouteNameFromTab, defaulting to boards",
+  );
+  return AppRoute.boardList.name; // Fallback
+}
+
+// Side navigation source selector builder (updated to use AppRoute)
 Widget _buildSideSourceSelector(
   BuildContext context,
   WidgetRef ref,
@@ -14,33 +62,40 @@ Widget _buildSideSourceSelector(
 ) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
-  // Get settings state
   final settings = ref.watch(appSettingsProvider);
   final switchToExistingTab =
       ref.read(appSettingsProvider.notifier).switchToExistingTab;
 
-  // Define available sources
+  // Define available sources using AppRoute enums (consistent with AppBar)
   final List<Map<String, dynamic>> sources = [
-    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard_outlined},
+    {
+      'title': '4chan',
+      'routeName': AppRoute.boardList.name,
+      'icon': Icons.dashboard_outlined,
+    },
     {
       'title': 'Hacker News',
-      'routeName': 'hackernews',
+      'routeName': AppRoute.hackernews.name,
       'icon': Icons.newspaper_outlined,
     },
-    {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
+    {
+      'title': 'Lobsters',
+      'routeName': AppRoute.lobsters.name,
+      'icon': Icons.rss_feed,
+    },
     {
       'title': 'Reddit',
-      'routeName': 'subredditGrid',
+      'routeName': AppRoute.subredditGrid.name, // Entry point for Reddit
       'icon': Icons.reddit_outlined,
     },
     {
       'title': 'Favorites',
-      'routeName': 'favorites',
+      'routeName': AppRoute.favorites.name,
       'icon': Icons.favorite_outline,
     },
     {
       'title': 'Settings',
-      'routeName': 'settings',
+      'routeName': AppRoute.settings.name,
       'icon': Icons.settings_outlined,
     },
   ];
@@ -86,14 +141,13 @@ Widget _buildSideSourceSelector(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () {
                   final String newRouteName = source['routeName'] as String;
-                  // Check setting and if a tab with the same routeName already exists
+                  // Check setting and if a tab with the same base routeName already exists
                   ContentTab? existingTab;
                   if (settings.value != null && switchToExistingTab) {
-                    final tabs = ref.read(
-                      tabManagerProvider,
-                    ); // Read current tabs
+                    final tabs = ref.read(tabManagerProvider);
+                    // Use the helper function now defined in this file
                     existingTab = tabs.firstWhereOrNull(
-                      (tab) => tab.initialRouteName == newRouteName,
+                      (tab) => getRouteNameFromTab(tab) == newRouteName,
                     );
                   }
 

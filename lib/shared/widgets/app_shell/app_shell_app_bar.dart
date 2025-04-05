@@ -4,6 +4,9 @@ import 'package:collection/collection.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouter for navigation
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
+import 'package:vibechan/app/app_routes.dart'; // Import AppRoute
+// Ensure the side navigation file is imported to access the public helper
+import 'package:vibechan/shared/widgets/app_shell/app_shell_side_navigation.dart';
 
 import '../../models/content_tab.dart';
 import '../../providers/tab_manager_provider.dart';
@@ -15,38 +18,7 @@ import '../../../features/lobsters/presentation/providers/lobsters_stories_provi
 import '../../../features/reddit/presentation/providers/reddit_sort_provider.dart'; // Import for Reddit sort
 import '../../../features/fourchan/presentation/providers/carousel_providers.dart'; // Import hasMedia providers
 
-// Helper function to determine the general category of a tab (moved here)
-String _getCategoryFromTab(ContentTab? tab) {
-  if (tab == null) return '4chan'; // Default to '4chan'
-  switch (tab.initialRouteName) {
-    case 'boards':
-    case 'catalog':
-    case 'thread':
-      return 'boards'; // Use 'boards' as the primary 4chan key
-    case 'hackernews':
-    case 'hackernews_item':
-      return 'hackernews';
-    case 'lobsters':
-    case 'lobsters_story':
-      return 'lobsters';
-    case 'subredditGrid':
-    case 'subreddit':
-    case 'postDetail':
-      return 'reddit'; // Use 'reddit' as the key
-    case 'favorites':
-      return 'favorites';
-    case 'settings':
-      return 'settings';
-    default:
-      final logger = GetIt.instance<Logger>(instanceName: "AppLogger");
-      logger.w(
-        "Warning: Unknown initialRouteName '${tab.initialRouteName}' in _getCategoryFromTab, defaulting to boards",
-      );
-      return 'boards'; // Fallback
-  }
-}
-
-// Source selector dropdown builder (moved here)
+// Source selector dropdown builder (updated to use AppRoute)
 Widget _buildSourceSelector(
   BuildContext context,
   WidgetRef ref,
@@ -55,42 +27,56 @@ Widget _buildSourceSelector(
 ) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
-  // Get settings state
   final settings = ref.watch(appSettingsProvider);
   final switchToExistingTab =
       ref.read(appSettingsProvider.notifier).switchToExistingTab;
 
-  // Define available sources
+  // Define available sources using AppRoute enums
+  // Note: Reddit uses subredditGrid as its entry point
   final List<Map<String, dynamic>> sources = [
-    {'title': '4chan', 'routeName': 'boards', 'icon': Icons.dashboard_outlined},
+    {
+      'title': '4chan',
+      'routeName': AppRoute.boardList.name,
+      'icon': Icons.dashboard_outlined,
+    },
     {
       'title': 'Hacker News',
-      'routeName': 'hackernews',
+      'routeName': AppRoute.hackernews.name,
       'icon': Icons.newspaper_outlined,
     },
-    {'title': 'Lobsters', 'routeName': 'lobsters', 'icon': Icons.rss_feed},
-    {'title': 'Reddit', 'routeName': 'reddit', 'icon': Icons.reddit_outlined},
+    {
+      'title': 'Lobsters',
+      'routeName': AppRoute.lobsters.name,
+      'icon': Icons.rss_feed,
+    },
+    {
+      'title': 'Reddit',
+      'routeName': AppRoute.subredditGrid.name, // Entry point for Reddit
+      'icon': Icons.reddit_outlined,
+    },
     {
       'title': 'Favorites',
-      'routeName': 'favorites',
+      'routeName': AppRoute.favorites.name,
       'icon': Icons.favorite_outline,
     },
     {
       'title': 'Settings',
-      'routeName': 'settings',
+      'routeName': AppRoute.settings.name,
       'icon': Icons.settings_outlined,
     },
   ];
 
-  final String currentCategory = _getCategoryFromTab(activeTab);
+  // Use the public helper function from app_shell_side_navigation.dart
+  final String currentRouteName = getRouteNameFromTab(activeTab);
 
-  // Find the current source
+  // Find the current source based on route name
   final currentSource = sources.firstWhere(
-    (s) => s['routeName'] == currentCategory,
+    (s) => s['routeName'] == currentRouteName,
     orElse:
         () => sources.firstWhere(
-          (s) => s['routeName'] == 'boards',
-          orElse: () => sources.first,
+          (s) =>
+              s['routeName'] == AppRoute.boardList.name, // Fallback to boards
+          orElse: () => sources.first, // Ultimate fallback
         ),
   );
 
@@ -102,7 +88,6 @@ Widget _buildSourceSelector(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     elevation: 3,
     color: colorScheme.surfaceContainer,
-    // Show the current selection as a child
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: Row(
@@ -126,15 +111,14 @@ Widget _buildSourceSelector(
         ],
       ),
     ),
-    // Menu items
     itemBuilder:
         (context) =>
             sources.map((source) {
-              final isSelected = source['routeName'] == currentCategory;
+              final isSelected = source['routeName'] == currentRouteName;
               return PopupMenuItem<String>(
                 value: source['routeName'] as String,
-                padding: EdgeInsets.zero, // Remove outer padding
-                height: 56, // Standard height for menu items
+                padding: EdgeInsets.zero,
+                height: 56,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: AnimatedContainer(
@@ -194,23 +178,25 @@ Widget _buildSourceSelector(
           (s) => s['routeName'] == newRouteName,
         );
 
-        // Check setting and if a tab with the same routeName already exists
+        // Check setting and if a tab with the *same base route name* already exists
         ContentTab? existingTab;
         if (settings.value != null && switchToExistingTab) {
-          final tabs = ref.read(tabManagerProvider); // Read current tabs
+          final tabs = ref.read(tabManagerProvider);
+          // Use the public helper function from app_shell_side_navigation.dart
           existingTab = tabs.firstWhereOrNull(
-            (tab) => tab.initialRouteName == newRouteName,
+            (tab) => getRouteNameFromTab(tab) == newRouteName,
           );
         }
 
         if (existingTab != null) {
-          // Switch to existing tab
           tabNotifier.setActiveTab(existingTab.id);
         } else {
-          // Add a *new* tab for the selected source
+          // Add a *new* tab for the selected source (using its defined routeName)
           tabNotifier.addTab(
             title: selectedSource['title'] as String,
-            initialRouteName: selectedSource['routeName'] as String,
+            initialRouteName:
+                selectedSource['routeName']
+                    as String, // Use the selected route name
             icon: selectedSource['icon'] ?? Icons.web,
           );
         }
@@ -230,7 +216,9 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback onSearchClear;
   final VoidCallback onBackButtonPressed;
   final Function(CatalogViewMode) onCatalogViewModeSelected;
-  final Function(HackerNewsSortType) onHnSortTypeSelected;
+  final Function(HackerNewsSortType) onHnSortTypeSelected; // Keep this
+  final Function(LobstersSortType) onLobstersSortTypeSelected; // Add this
+  final Function(RedditSortType) onRedditSortTypeSelected; // Add this
   final VoidCallback? onOpenInBrowserPressed;
 
   const AppShellAppBar({
@@ -246,43 +234,63 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
     required this.onBackButtonPressed,
     required this.onCatalogViewModeSelected,
     required this.onHnSortTypeSelected,
+    required this.onLobstersSortTypeSelected, // Add required parameter
+    required this.onRedditSortTypeSelected, // Add required parameter
     this.onOpenInBrowserPressed,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch sort providers (no change needed here)
     final currentHnSortType = ref.watch(currentHackerNewsSortTypeProvider);
     final currentLobstersSortType = ref.watch(currentLobstersSortTypeProvider);
     final currentRedditSortType = ref.watch(currentRedditSortTypeProvider);
 
-    // Determine context based on initial route name
+    // Determine context using AppRoute enums
     final String? initialRouteName = activeTab?.initialRouteName;
-    final bool isThreadContext = initialRouteName == 'thread';
-    final bool isCatalogContext = initialRouteName == 'catalog';
-    final bool isBoardListContext = initialRouteName == 'boards';
-    final bool isHnListContext = initialRouteName == 'hackernews';
-    final bool isLobstersListContext = initialRouteName == 'lobsters';
+    final bool isThreadContext = initialRouteName == AppRoute.thread.name;
+    final bool isCatalogContext =
+        initialRouteName == AppRoute.boardCatalog.name;
+    final bool isBoardListContext = initialRouteName == AppRoute.boardList.name;
+    final bool isHnListContext = initialRouteName == AppRoute.hackernews.name;
+    final bool isLobstersListContext =
+        initialRouteName == AppRoute.lobsters.name;
     final bool isRedditContext =
-        initialRouteName == 'subreddit' || initialRouteName == 'subredditGrid';
+        initialRouteName ==
+        AppRoute.subreddit.name; // Only show sort on subreddit list
+    // Note: subredditGrid does not have a sort button in this logic
 
-    // Visibility flags for buttons
+    // Visibility flags for buttons based on AppRoute
     final bool showCatalogViewButton = isCatalogContext || isBoardListContext;
     final bool showHnSortButton = isHnListContext;
     final bool showLobstersSortButton = isLobstersListContext;
     final bool showRedditSortButton = isRedditContext;
 
-    // Construct sourceInfo strings conditionally
+    // Construct sourceInfo strings conditionally (no change needed here)
     String? boardSourceInfo;
     String? threadSourceInfo;
     final params = activeTab?.pathParameters;
     if (params != null) {
       final boardId = params['boardId'];
       final threadId = params['threadId'];
-      final sourceName = _getCategoryFromTab(
-        activeTab,
-      ); // Assuming this gives '4chan', 'hackernews' etc.
+      // Use the public helper function from app_shell_side_navigation.dart
+      final sourceCategoryRouteName = getRouteNameFromTab(activeTab);
+      // Map route name back to a simple source name if needed for the provider key
+      String sourceName;
+      if (sourceCategoryRouteName == AppRoute.boardList.name) {
+        sourceName = '4chan';
+      } else if (sourceCategoryRouteName == AppRoute.hackernews.name) {
+        sourceName = 'hackernews';
+      } else if (sourceCategoryRouteName == AppRoute.lobsters.name) {
+        sourceName = 'lobsters';
+      } else if (sourceCategoryRouteName == AppRoute.subredditGrid.name) {
+        sourceName = 'reddit';
+      } else {
+        sourceName = 'unknown'; // Handle fallback if necessary
+      }
 
-      if (boardId != null) {
+      if (boardId != null && sourceName == '4chan') {
+        // Be specific for 4chan
         boardSourceInfo = '$sourceName:$boardId';
         if (threadId != null) {
           threadSourceInfo = '$sourceName:$boardId/$threadId';
@@ -292,25 +300,28 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     // Watch the hasMedia providers only if the context matches
     final boardHasMediaValue =
-        isCatalogContext && boardSourceInfo != null
+        isCatalogContext &&
+                boardSourceInfo !=
+                    null // Use AppRoute flag
             ? ref.watch(boardHasMediaProvider(boardSourceInfo))
-            : const AsyncData(false); // Default to false if not applicable
+            : const AsyncData(false);
 
     final threadHasMediaValue =
-        isThreadContext && threadSourceInfo != null
+        isThreadContext &&
+                threadSourceInfo !=
+                    null // Use AppRoute flag
             ? ref.watch(threadHasMediaProvider(threadSourceInfo))
-            : const AsyncData(false); // Default to false if not applicable
+            : const AsyncData(false);
 
-    // Determine button visibility based on provider state (use .valueOrNull ?? false)
+    // Determine button visibility based on provider state
     final showBoardCarouselButtonFinal =
         isCatalogContext && (boardHasMediaValue.valueOrNull ?? false);
     final showThreadCarouselButtonFinal =
         isThreadContext && (threadHasMediaValue.valueOrNull ?? false);
 
-    // Handle search UI logic in AppBar
+    // Handle search UI logic in AppBar (no change needed here)
     Widget appBarTitle;
     if (isSearchVisible) {
-      // Show search field when search is visible
       appBarTitle = Container(
         height: 40,
         margin: const EdgeInsets.only(right: 8),
@@ -327,9 +338,8 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
               borderSide: BorderSide.none,
             ),
             filled: true,
-            fillColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 128),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest
+                .withAlpha(128), // Use withAlpha
             contentPadding: const EdgeInsets.symmetric(
               vertical: 8,
               horizontal: 16,
@@ -347,7 +357,7 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ),
       );
     } else {
-      // Use the source selector in the title position
+      // Use the updated source selector
       appBarTitle = _buildSourceSelector(context, ref, activeTab, tabNotifier);
     }
 
@@ -362,18 +372,17 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
       // Catalog View Mode Button
       if (showCatalogViewButton)
         PopupMenuButton<CatalogViewMode>(
-          icon: const Icon(
-            Icons.view_list,
-          ), // Consider using the extension icon: mode.icon
+          icon: const Icon(Icons.view_list),
           tooltip: 'Change View Mode',
-          onSelected: onCatalogViewModeSelected,
+          onSelected:
+              onCatalogViewModeSelected, // Keep using callback from AppShell
           itemBuilder:
               (context) =>
                   CatalogViewMode.values
                       .map(
                         (mode) => PopupMenuItem(
                           value: mode,
-                          child: Text(mode.displayName), // Use extension
+                          child: Text(mode.displayName),
                         ),
                       )
                       .toList(),
@@ -384,17 +393,15 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.sort),
           tooltip: 'Sort Stories',
           initialValue: currentHnSortType,
-          onSelected: (newType) {
-            ref.read(currentHackerNewsSortTypeProvider.notifier).state =
-                newType;
-          },
+          // Use callback passed from AppShell
+          onSelected: onHnSortTypeSelected,
           itemBuilder:
               (context) =>
                   HackerNewsSortType.values
                       .map(
                         (type) => PopupMenuItem(
                           value: type,
-                          child: Text(type.displayName), // Use extension
+                          child: Text(type.displayName),
                         ),
                       )
                       .toList(),
@@ -405,9 +412,8 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.sort),
           tooltip: 'Sort Stories',
           initialValue: currentLobstersSortType,
-          onSelected: (newType) {
-            ref.read(currentLobstersSortTypeProvider.notifier).state = newType;
-          },
+          // Use callback passed from AppShell
+          onSelected: onLobstersSortTypeSelected,
           itemBuilder:
               (context) =>
                   LobstersSortType.values
@@ -425,9 +431,8 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.sort),
           tooltip: 'Sort Posts',
           initialValue: currentRedditSortType,
-          onSelected: (newType) {
-            ref.read(currentRedditSortTypeProvider.notifier).state = newType;
-          },
+          // Use callback passed from AppShell
+          onSelected: onRedditSortTypeSelected,
           itemBuilder:
               (context) =>
                   RedditSortType.values
@@ -440,32 +445,28 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       .toList(),
         ),
       // Board Media Carousel Button
-      if (showBoardCarouselButtonFinal &&
-          boardSourceInfo != null) // Use final variable
+      if (showBoardCarouselButtonFinal && boardSourceInfo != null)
         IconButton(
           icon: const Icon(Icons.collections_bookmark_outlined),
           tooltip: 'View Board Media',
           onPressed: () {
+            // Use AppRoute name for navigation
             context.pushNamed(
-              'carousel',
-              pathParameters: {
-                'sourceInfo': boardSourceInfo!,
-              }, // Safe with check
+              AppRoute.carousel.name,
+              pathParameters: {'sourceInfo': boardSourceInfo!},
             );
           },
         ),
       // Thread Media Carousel Button
-      if (showThreadCarouselButtonFinal &&
-          threadSourceInfo != null) // Use final variable
+      if (showThreadCarouselButtonFinal && threadSourceInfo != null)
         IconButton(
           icon: const Icon(Icons.photo_library_outlined),
           tooltip: 'View Thread Media',
           onPressed: () {
+            // Use AppRoute name for navigation
             context.pushNamed(
-              'carousel',
-              pathParameters: {
-                'sourceInfo': threadSourceInfo!,
-              }, // Safe with check
+              AppRoute.carousel.name,
+              pathParameters: {'sourceInfo': threadSourceInfo!},
             );
           },
         ),
@@ -480,7 +481,7 @@ class AppShellAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return AppBar(
       title: appBarTitle,
-      automaticallyImplyLeading: false, // Don't automatically add back button
+      automaticallyImplyLeading: false,
       leading:
           showBackButton
               ? IconButton(
