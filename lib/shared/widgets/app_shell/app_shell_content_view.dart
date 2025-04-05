@@ -5,9 +5,7 @@ import 'package:vibechan/features/fourchan/board/presentation/screens/board_list
 import 'package:vibechan/features/fourchan/board/presentation/screens/favorites_screen.dart';
 import 'package:vibechan/features/fourchan/board/presentation/screens/settings_screen.dart';
 import 'package:vibechan/features/fourchan/thread/presentation/screens/thread_detail_screen.dart';
-import 'package:vibechan/features/hackernews/presentation/screens/hackernews_item_screen.dart';
-import 'package:vibechan/features/lobsters/presentation/screens/lobsters_screen.dart';
-import 'package:vibechan/features/lobsters/presentation/screens/lobsters_story_screen.dart';
+import 'package:vibechan/features/lobsters/presentation/providers/lobsters_stories_provider.dart';
 import 'package:vibechan/features/reddit/presentation/screens/subreddit_grid_screen.dart';
 import 'package:vibechan/features/reddit/presentation/providers/subreddit_posts_provider.dart';
 import 'package:vibechan/features/reddit/presentation/providers/post_detail_provider.dart';
@@ -111,30 +109,26 @@ class AppShellContentView extends ConsumerWidget {
       return (
         content: Consumer(
           builder: (context, ref, _) {
-            // Replace with actual Lobsters list provider
-            // Example: final itemsAsync = ref.watch(lobstersStoriesProvider);
-            // For now, placeholder:
-            final itemsAsync =
-                const AsyncLoading<
-                  List<dynamic>
-                >(); // TODO: Replace with actual Lobsters provider
+            // Get the current sort type
+            final currentSortType = ref.watch(currentLobstersSortTypeProvider);
+            // Watch the provider family with the current sort type
+            final itemsAsync = ref.watch(
+              lobstersStoriesProvider(currentSortType),
+            );
             return GenericNewsListScreen(
               source: NewsSource.lobsters,
               title: 'Lobsters', // Or fetch dynamically if needed
               itemsAsync: itemsAsync.when(
-                // Adapt based on your Lobsters data structure and adapter
-                data:
-                    (items) => AsyncData(
-                      [],
-                    ), // Placeholder adapter - TODO: Implement adapter
+                // Provider already returns List<GenericListItem>
+                data: (items) => AsyncData(items),
                 loading: () => const AsyncLoading(),
                 error: (e, s) => AsyncError(e, s),
               ),
               detailRouteName: AppRoute.lobstersStory.name,
               listContextId: 'lobsters_main', // Unique context ID
               onRefresh: () async {
-                // Replace with actual refresh logic
-                // ref.refresh(lobstersStoriesProvider.future); // TODO: Uncomment and use correct provider
+                // Refresh the provider instance with the current sort type
+                ref.refresh(lobstersStoriesProvider(currentSortType).future);
               },
             );
           },
